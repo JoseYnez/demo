@@ -1,0 +1,130 @@
+:host {
+  display: inline-flex;
+}
+
+:host(.is-full-width) {
+  display: flex;
+}
+
+:host(.is-full-width) .btn {
+  width: 100%;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+}
+
+/* Tamaños */
+
+.btn--sm {
+  height: 28px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.btn--md {
+  height: 34px;
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-base);
+}
+
+.btn--lg {
+  height: 40px;
+  padding: 0 var(--space-5);
+  font-size: var(--font-size-lg);
+}
+
+/* Variantes */
+
+.btn--primary {
+  background-color: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.btn--primary:active:not(:disabled) {
+  background-color: var(--accent-active);
+}
+
+.btn--secondary {
+  background-color: var(--bg-surface);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background-color: var(--bg-surface-alt);
+  border-color: var(--accent);
+}
+
+.btn--ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background-color: var(--bg-surface-alt);
+  color: var(--text-primary);
+}
+
+.btn--danger {
+  background-color: var(--color-danger-fg);
+  color: #ffffff;
+}
+
+.btn--danger:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btn--danger:active:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+/* Spinner de carga */
+
+.btn__spinner {
+  width: 0.875em;
+  height: 0.875em;
+  border: 2px solid currentcolor;
+  border-right-color: transparent;
+  border-radius: var(--radius-full);
+  opacity: 0.7;
+  animation: btn-spin 600ms linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn__spinner {
+    animation-duration: 2s;
+  }
+}

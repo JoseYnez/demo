@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+
+.select {
+  position: relative;
+  display: flex;
+}
+
+.ui-control {
+  height: 34px;
+  padding-right: var(--space-8);
+  appearance: none;
+  cursor: pointer;
+}
+
+.ui-control:disabled {
+  cursor: not-allowed;
+}
+
+/* Flecha propia: la nativa no sigue los tokens y desentona en tema oscuro. */
+.select__caret {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}

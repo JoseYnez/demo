@@ -1,0 +1,283 @@
+<div class="sg">
+  <header class="sg__intro">
+    <h1>Styleguide</h1>
+    <p class="sg__lead selectable">
+      Demo viva del design system. Todo lo de aquí sale de
+      <code>src/styles/tokens.css</code>; ningún componente define color,
+      espaciado ni sombra propios. Cambia el tema desde la barra superior para
+      ver los dos modos.
+    </p>
+  </header>
+
+  <!-- ---------- Color ---------- -->
+  <section class="sg__section">
+    <h2 class="sg__title">Color</h2>
+
+    <h3 class="sg__subtitle">Superficies y bordes</h3>
+    <div class="sg__swatches">
+      @for (token of surfaceTokens; track token) {
+        <figure class="swatch">
+          <div class="swatch__chip" [style.background]="'var(' + token + ')'"></div>
+          <figcaption class="swatch__name selectable">{{ token }}</figcaption>
+        </figure>
+      }
+    </div>
+
+    <h3 class="sg__subtitle">Acento</h3>
+    <div class="sg__swatches">
+      @for (token of accentTokens; track token) {
+        <figure class="swatch">
+          <div class="swatch__chip" [style.background]="'var(' + token + ')'"></div>
+          <figcaption class="swatch__name selectable">{{ token }}</figcaption>
+        </figure>
+      }
+    </div>
+
+    <h3 class="sg__subtitle">Estados</h3>
+    <div class="sg__swatches">
+      @for (state of stateTokens; track state) {
+        <figure class="swatch">
+          <div
+            class="swatch__chip swatch__chip--state"
+            [style.background]="'var(--color-' + state + '-bg)'"
+            [style.border-color]="'var(--color-' + state + '-border)'"
+            [style.color]="'var(--color-' + state + '-fg)'"
+          >
+            Aa
+          </div>
+          <figcaption class="swatch__name selectable">{{ state }}</figcaption>
+        </figure>
+      }
+    </div>
+  </section>
+
+  <!-- ---------- Tipografía y escalas ---------- -->
+  <section class="sg__section">
+    <h2 class="sg__title">Tipografía y escalas</h2>
+
+    <div class="sg__cols">
+      <div>
+        <h3 class="sg__subtitle">Tamaños de texto</h3>
+        @for (size of fontSizes; track size) {
+          <p
+            class="sg__type-row"
+            [style.font-size]="'var(--font-size-' + size + ')'"
+          >
+            <span>El veloz murciélago hindú</span>
+            <code class="sg__token selectable">--font-size-{{ size }}</code>
+          </p>
+        }
+      </div>
+
+      <div>
+        <h3 class="sg__subtitle">Espaciado</h3>
+        @for (space of spaces; track space) {
+          <div class="sg__scale-row">
+            <span class="sg__bar" [style.width]="'var(--space-' + space + ')'"></span>
+            <code class="sg__token selectable">--space-{{ space }}</code>
+          </div>
+        }
+
+        <h3 class="sg__subtitle">Radios</h3>
+        <div class="sg__inline">
+          @for (radius of radii; track radius) {
+            <div class="sg__radius" [style.border-radius]="'var(--radius-' + radius + ')'">
+              <code class="sg__token selectable">{{ radius }}</code>
+            </div>
+          }
+        </div>
+
+        <h3 class="sg__subtitle">Sombras</h3>
+        <div class="sg__inline">
+          @for (shadow of shadows; track shadow) {
+            <div class="sg__shadow" [style.box-shadow]="'var(--shadow-' + shadow + ')'">
+              <code class="sg__token selectable">{{ shadow }}</code>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Button ---------- -->
+  <section class="sg__section">
+    <h2 class="sg__title">Button</h2>
+    <p class="sg__note selectable">
+      <code>&lt;app-button&gt;</code> — variant, size, disabled, loading,
+      fullWidth.
+    </p>
+
+    <h3 class="sg__subtitle">Variantes</h3>
+    <div class="sg__inline">
+      @for (variant of buttonVariants; track variant) {
+        <app-button [variant]="variant">{{ variant }}</app-button>
+      }
+    </div>
+
+    <h3 class="sg__subtitle">Tamaños</h3>
+    <div class="sg__inline sg__inline--baseline">
+      <app-button size="sm">Pequeño</app-button>
+      <app-button size="md">Mediano</app-button>
+      <app-button size="lg">Grande</app-button>
+    </div>
+
+    <h3 class="sg__subtitle">Estados</h3>
+    <div class="sg__inline">
+      <app-button [disabled]="true">Deshabilitado</app-button>
+      <app-button [loading]="true">Guardando</app-button>
+      <app-button variant="secondary" [loading]="true">Cargando</app-button>
+    </div>
+
+    <h3 class="sg__subtitle">Ancho completo</h3>
+    <app-button variant="secondary" [fullWidth]="true">Ocupa la fila</app-button>
+  </section>
+
+  <!-- ---------- Badge ---------- -->
+  <section class="sg__section">
+    <h2 class="sg__title">Badge</h2>
+    <p class="sg__note selectable">
+      <code>&lt;app-badge&gt;</code> — variant, size.
+    </p>
+
+    <div class="sg__inline">
+      @for (variant of badgeVariants; track variant) {
+        <app-badge [variant]="variant">{{ variant }}</app-badge>
+      }
+    </div>
+
+    <div class="sg__inline">
+      @for (variant of badgeVariants; track variant) {
+        <app-badge [variant]="variant" size="sm">{{ variant }}</app-badge>
+      }
+    </div>
+  </section>
+
+  <!-- ---------- Card ---------- -->
+  <section class="sg__section">
+    <h2 class="sg__title">Card</h2>
+    <p class="sg__note selectable">
+      <code>&lt;app-card&gt;</code> — variant, padding. Cabecera y pie son slots
+      opcionales: <code>[card-header]</code> y <code>[card-footer]</code>. Si no
+      se proyecta nada, la zona no se dibuja.
+    </p>
+
+    <div class="sg__grid">
+      <app-card variant="elevated">
+        <div card-header>
+          <span>Elevated</span>
+          <app-badge variant="success" size="sm">activo</app-badge>
+        </div>
+        <p>Con sombra. Para superficies que flotan sobre el fondo.</p>
+        <div card-footer>
+          <app-button variant="ghost" size="sm">Cancelar</app-button>
+          <app-button size="sm">Guardar</app-button>
+        </div>
+      </app-card>
+
+      <app-card variant="outlined">
+        <div card-header><span>Outlined</span></div>
+        <p>Sólo borde. Es la variante por defecto y la de uso general.</p>
+      </app-card>
+
+      <app-card variant="flat">
+        <p>Flat, sin cabecera ni pie: aquí sólo hay cuerpo.</p>
+      </app-card>
+    </div>
+  </section>
+
+  <!-- ---------- Formularios sueltos ---------- -->
+  <section class="sg__section">
+    <h2 class="sg__title">Controles sueltos</h2>
+    <p class="sg__note selectable">
+      Two-way con <code>[(value)]</code>, sin formulario. Útil para filtros y
+      búsquedas, donde no hay nada que validar.
+    </p>
+
+    <div class="sg__grid">
+      <app-input
+        label="Buscar"
+        placeholder="Escribe algo…"
+        hint="Se refleja abajo en vivo."
+        [(value)]="sueltoTexto"
+      />
+      <app-select
+        label="Área"
+        placeholder="Selecciona…"
+        [options]="areas"
+        [(value)]="sueltoArea"
+      />
+      <app-textarea
+        label="Notas"
+        placeholder="Texto largo…"
+        [rows]="3"
+        [(value)]="sueltoNotas"
+      />
+    </div>
+
+    <h3 class="sg__subtitle">Estados de los controles</h3>
+    <div class="sg__grid">
+      <app-input label="Deshabilitado" value="No editable" [disabled]="true" />
+      <app-input label="Sólo lectura" value="Se puede copiar" [readonly]="true" />
+      <app-input label="Requerido" placeholder="Obligatorio" [required]="true" />
+    </div>
+
+    <pre class="sg__output selectable">{{ sueltoTexto() }} | {{ sueltoArea() }} | {{ sueltoNotas() }}</pre>
+  </section>
+
+  <!-- ---------- Signal Forms ---------- -->
+  <section class="sg__section">
+    <h2 class="sg__title">Formulario con Signal Forms</h2>
+    <p class="sg__note selectable">
+      Los mismos componentes ligados a un <code>form()</code> mediante
+      <code>[formField]</code>. Nadie pasa errores a mano: el control implementa
+      <code>FormValueControl</code> y Angular le sincroniza
+      <code>errors</code>, <code>touched</code>, <code>required</code> y
+      <code>disabled</code>. Sal de un campo vacío para ver el error.
+    </p>
+
+    <form class="sg__form" [formRoot]="alta" (submit)="enviar()">
+      <div class="sg__grid">
+        <app-input label="Nombre" [formField]="alta.nombre" placeholder="Ada Lovelace" />
+        <app-input
+          label="Correo"
+          type="email"
+          [formField]="alta.correo"
+          placeholder="ada@example.com"
+        />
+        <app-select
+          label="Área"
+          placeholder="Selecciona…"
+          [options]="areas"
+          [formField]="alta.area"
+        />
+      </div>
+
+      <app-textarea
+        label="Notas"
+        [rows]="3"
+        hint="Opcional."
+        [formField]="alta.notas"
+      />
+
+      <div class="sg__form-actions">
+        <app-button variant="ghost" type="button" (click)="reiniciar()">
+          Reiniciar
+        </app-button>
+        <app-button type="submit" [disabled]="alta().invalid()">Enviar</app-button>
+      </div>
+    </form>
+
+    <div class="sg__form-state">
+      <app-badge [variant]="alta().valid() ? 'success' : 'warning'" size="sm">
+        {{ alta().valid() ? "válido" : "incompleto" }}
+      </app-badge>
+      <app-badge [variant]="alta().dirty() ? 'info' : 'neutral'" size="sm">
+        {{ alta().dirty() ? "modificado" : "intacto" }}
+      </app-badge>
+    </div>
+
+    @if (enviado()) {
+      <pre class="sg__output selectable">{{ enviado() }}</pre>
+    }
+  </section>
+</div>

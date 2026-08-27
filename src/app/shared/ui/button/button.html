@@ -1,0 +1,11 @@
+<button
+  [type]="type()"
+  [class]="classes()"
+  [disabled]="disabled() || loading()"
+  [attr.aria-busy]="loading() || null"
+>
+  @if (loading()) {
+    <span class="btn__spinner" aria-hidden="true"></span>
+  }
+  <ng-content />
+</button>

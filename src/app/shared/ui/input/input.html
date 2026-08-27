@@ -1,0 +1,32 @@
+<div class="ui-field">
+  @if (label()) {
+    <label class="ui-label" [attr.for]="id">
+      {{ label() }}
+      @if (required()) {
+        <span class="ui-label__required" aria-hidden="true">*</span>
+      }
+    </label>
+  }
+
+  <input
+    class="ui-control"
+    [class.is-invalid]="!!error()"
+    [id]="id"
+    [type]="type()"
+    [attr.name]="name() || null"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    [readOnly]="readonly()"
+    [required]="required()"
+    [attr.aria-invalid]="!!error()"
+    [value]="value()"
+    (input)="value.set($any($event.target).value)"
+    (blur)="touch.emit()"
+  />
+
+  @if (error()) {
+    <p class="ui-msg ui-msg--error">{{ error() }}</p>
+  } @else if (hint()) {
+    <p class="ui-msg">{{ hint() }}</p>
+  }
+</div>

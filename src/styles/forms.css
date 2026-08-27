@@ -1,0 +1,75 @@
+/* Base compartida de los controles de formulario.
+   Vive en la capa global (y no en cada componente) porque la encapsulación de
+   Angular impide compartir estilos entre input, textarea y select sin
+   duplicarlos. Los componentes de shared/ui/ consumen estas clases y añaden
+   sólo lo suyo. */
+
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.ui-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.ui-label__required {
+  margin-left: 2px;
+  color: var(--color-danger-fg);
+}
+
+.ui-control {
+  width: 100%;
+  padding: 0 var(--space-3);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.ui-control::placeholder {
+  color: var(--text-muted);
+}
+
+.ui-control:hover:not(:disabled):not(:focus) {
+  border-color: var(--border-strong);
+}
+
+.ui-control:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--ring-focus);
+}
+
+.ui-control:disabled {
+  background-color: var(--bg-surface-alt);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.ui-control:read-only:not(select) {
+  background-color: var(--bg-surface-alt);
+}
+
+.ui-control.is-invalid {
+  border-color: var(--color-danger-fg);
+}
+
+.ui-control.is-invalid:focus {
+  box-shadow: 0 0 0 3px var(--color-danger-bg);
+}
+
+.ui-msg {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.ui-msg--error {
+  color: var(--color-danger-fg);
+}

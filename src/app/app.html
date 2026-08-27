@@ -1,0 +1,43 @@
+<header class="shell__bar">
+  <span class="shell__brand">demo</span>
+
+  <nav class="shell__nav">
+    <a routerLink="/styleguide" routerLinkActive="is-active">Styleguide</a>
+    <a routerLink="/tauri-demo" routerLinkActive="is-active">Tauri IPC</a>
+  </nav>
+
+  <button
+    class="shell__theme"
+    type="button"
+    (click)="themes.toggle()"
+    [attr.aria-label]="
+      themes.theme() === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'
+    "
+  >
+    @if (themes.theme() === "dark") {
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <path
+          d="M12 2.4v2.4M12 19.2v2.4M4.4 12H2M22 12h-2.4M6.1 6.1 4.4 4.4M19.6 19.6l-1.7-1.7M17.9 6.1l1.7-1.7M4.4 19.6l1.7-1.7"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
+    } @else {
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path
+          d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2Z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linejoin="round"
+        />
+      </svg>
+    }
+  </button>
+</header>
+
+<main class="shell__content">
+  <router-outlet />
+</main>

@@ -1,0 +1,188 @@
+/* Tokens del design system. Ningún componente define colores, espaciados,
+   radios ni sombras propios: todo sale de aquí. */
+
+:root {
+  /* Tipografía — stack del sistema, sin webfonts */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "Cascadia Code", Consolas,
+    "Liberation Mono", monospace;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.875rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+
+  /* Espaciado — escala de 4px */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Radios */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Transiciones */
+  --transition-fast: 120ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 320ms ease;
+
+  /* ---- Tema claro ---- */
+
+  /* Superficies y texto. Neutros con un tinte verde imperceptible. */
+  --bg-app: #f6f8f7;
+  --bg-surface: #ffffff;
+  --bg-surface-alt: #eff3f1;
+  --text-primary: #1a201d;
+  --text-secondary: #4d5853;
+  --text-muted: #7c8983;
+  --text-on-accent: #ffffff;
+
+  /* Bordes */
+  --border-default: #e0e6e2;
+  --border-strong: #c6d0ca;
+  --border-focus: var(--accent);
+
+  /* Acento — verde sage. Cambiar estos cuatro reajusta toda la identidad. */
+  --accent: #4f7a63;
+  --accent-hover: #446b57;
+  --accent-active: #3a5c4a;
+  --accent-subtle: #eaf1ed;
+
+  /* Estados */
+  --color-success-bg: #e8f3ec;
+  --color-success-fg: #2c6b45;
+  --color-success-border: #b8ddc6;
+
+  --color-warning-bg: #fdf3e3;
+  --color-warning-fg: #8a5d12;
+  --color-warning-border: #f0d9a8;
+
+  --color-danger-bg: #fceceb;
+  --color-danger-fg: #a33630;
+  --color-danger-border: #f2c4c1;
+
+  --color-info-bg: #e9f0f7;
+  --color-info-fg: #2d5a8a;
+  --color-info-border: #c2d7ea;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px rgb(20 34 28 / 6%);
+  --shadow-md: 0 2px 6px rgb(20 34 28 / 8%), 0 1px 2px rgb(20 34 28 / 4%);
+  --shadow-lg: 0 8px 20px rgb(20 34 28 / 10%), 0 2px 6px rgb(20 34 28 / 5%);
+  --shadow-xl: 0 16px 40px rgb(20 34 28 / 14%), 0 4px 10px rgb(20 34 28 / 6%);
+
+  --ring-focus: 0 0 0 3px rgb(79 122 99 / 25%);
+}
+
+/* ---- Tema oscuro ----
+   Se aplica por elección explícita (data-theme="dark") o por preferencia del
+   SO mientras el usuario no haya elegido "light". */
+
+:root[data-theme="dark"] {
+  --bg-app: #111614;
+  --bg-surface: #191f1c;
+  --bg-surface-alt: #212a26;
+  --text-primary: #e8eeea;
+  --text-secondary: #a8b5ae;
+  --text-muted: #78857f;
+  --text-on-accent: #0f1512;
+
+  --border-default: #2b3430;
+  --border-strong: #3d4843;
+
+  --accent: #7ba98f;
+  --accent-hover: #8cb89d;
+  --accent-active: #6b9880;
+  --accent-subtle: #1d2a24;
+
+  --color-success-bg: #16281d;
+  --color-success-fg: #7fc79b;
+  --color-success-border: #284633;
+
+  --color-warning-bg: #2b2113;
+  --color-warning-fg: #e0b063;
+  --color-warning-border: #4a3a1c;
+
+  --color-danger-bg: #2c1817;
+  --color-danger-fg: #e08d87;
+  --color-danger-border: #4a2723;
+
+  --color-info-bg: #152230;
+  --color-info-fg: #84b3e0;
+  --color-info-border: #26415c;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-md: 0 2px 6px rgb(0 0 0 / 45%), 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-lg: 0 8px 20px rgb(0 0 0 / 50%), 0 2px 6px rgb(0 0 0 / 30%);
+  --shadow-xl: 0 16px 40px rgb(0 0 0 / 55%), 0 4px 10px rgb(0 0 0 / 35%);
+
+  --ring-focus: 0 0 0 3px rgb(123 169 143 / 30%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-app: #111614;
+    --bg-surface: #191f1c;
+    --bg-surface-alt: #212a26;
+    --text-primary: #e8eeea;
+    --text-secondary: #a8b5ae;
+    --text-muted: #78857f;
+    --text-on-accent: #0f1512;
+
+    --border-default: #2b3430;
+    --border-strong: #3d4843;
+
+    --accent: #7ba98f;
+    --accent-hover: #8cb89d;
+    --accent-active: #6b9880;
+    --accent-subtle: #1d2a24;
+
+    --color-success-bg: #16281d;
+    --color-success-fg: #7fc79b;
+    --color-success-border: #284633;
+
+    --color-warning-bg: #2b2113;
+    --color-warning-fg: #e0b063;
+    --color-warning-border: #4a3a1c;
+
+    --color-danger-bg: #2c1817;
+    --color-danger-fg: #e08d87;
+    --color-danger-border: #4a2723;
+
+    --color-info-bg: #152230;
+    --color-info-fg: #84b3e0;
+    --color-info-border: #26415c;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-md: 0 2px 6px rgb(0 0 0 / 45%), 0 1px 2px rgb(0 0 0 / 30%);
+    --shadow-lg: 0 8px 20px rgb(0 0 0 / 50%), 0 2px 6px rgb(0 0 0 / 30%);
+    --shadow-xl: 0 16px 40px rgb(0 0 0 / 55%), 0 4px 10px rgb(0 0 0 / 35%);
+
+    --ring-focus: 0 0 0 3px rgb(123 169 143 / 30%);
+  }
+}

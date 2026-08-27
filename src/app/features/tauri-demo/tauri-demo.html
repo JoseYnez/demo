@@ -1,0 +1,31 @@
+<div class="demo">
+  <header>
+    <h1>Tauri IPC</h1>
+    <p class="demo__lead selectable">
+      Llama al comando <code>greet</code> de Rust a través del wrapper
+      <code>greetApi</code>. Fuera de la ventana de Tauri (por ejemplo en
+      <code>pnpm start</code>) la llamada falla, y el error se muestra tal cual
+      lo re-lanza el wrapper.
+    </p>
+  </header>
+
+  <app-card variant="outlined">
+    <div card-header><span>Saludo</span></div>
+
+    <form class="demo__form" (submit)="$event.preventDefault(); greet()">
+      <app-input
+        label="Nombre"
+        placeholder="Escribe un nombre…"
+        [(value)]="name"
+      />
+      <app-button type="submit" [loading]="pending()">Saludar</app-button>
+    </form>
+
+    @if (greeting()) {
+      <p class="demo__result selectable">{{ greeting() }}</p>
+    }
+    @if (error()) {
+      <p class="demo__error selectable">{{ error() }}</p>
+    }
+  </app-card>
+</div>

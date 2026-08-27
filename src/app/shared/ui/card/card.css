@@ -1,0 +1,84 @@
+:host {
+  display: block;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Variantes */
+
+.card--elevated {
+  box-shadow: var(--shadow-md);
+}
+
+.card--outlined {
+  border-color: var(--border-default);
+}
+
+.card--flat {
+  background-color: var(--bg-surface-alt);
+}
+
+/* Padding — se aplica por zona para que header y footer conserven sus
+   separadores de ancho completo. */
+
+.card--pad-none .card__header,
+.card--pad-none .card__body,
+.card--pad-none .card__footer {
+  padding: 0;
+}
+
+.card--pad-sm .card__header,
+.card--pad-sm .card__body,
+.card--pad-sm .card__footer {
+  padding: var(--space-3);
+}
+
+.card--pad-md .card__header,
+.card--pad-md .card__body,
+.card--pad-md .card__footer {
+  padding: var(--space-4);
+}
+
+.card--pad-lg .card__header,
+.card--pad-lg .card__body,
+.card--pad-lg .card__footer {
+  padding: var(--space-6);
+}
+
+/* Zonas. Las vacías desaparecen: `select` sin contenido proyectado deja el
+   contenedor sin hijos, y Angular ya elimina los nodos de sólo espacios. */
+
+.card__header:empty,
+.card__footer:empty {
+  display: none;
+}
+
+.card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  font-weight: var(--font-weight-semibold);
+}
+
+.card__body {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  border-top: 1px solid var(--border-default);
+  background-color: var(--bg-surface-alt);
+}
