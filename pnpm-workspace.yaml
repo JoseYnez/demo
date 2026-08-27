@@ -1,0 +1,18 @@
+# Build scripts allowed to run on install (all belong to the Angular build toolchain).
+allowBuilds:
+  '@parcel/watcher': true   # file watching for `ng serve`
+  esbuild: true             # bundler used by @angular/build
+  lmdb: true                # Angular CLI persistent build cache
+  msgpackr-extract: true    # lmdb serialization helper
+
+# Angular releases are published together; don't hold them behind the release-age gate.
+minimumReleaseAgeExclude:
+  - '@angular/build'
+  - '@angular/cli'
+  - '@angular/common'
+  - '@angular/compiler'
+  - '@angular/compiler-cli'
+  - '@angular/core'
+  - '@angular/forms'
+  - '@angular/platform-browser'
+  - '@angular/router'
