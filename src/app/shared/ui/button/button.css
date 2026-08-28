@@ -87,17 +87,21 @@
   color: var(--text-primary);
 }
 
+/* Tokens propios de relleno: `--color-danger-fg` está calculado para ir SOBRE
+   `--color-danger-bg`. Usarlo como fondo daba 2.52:1 con texto blanco en
+   oscuro. `filter: brightness()` tampoco vale: sube y baja el brillo en la
+   dirección equivocada según el tema. */
 .btn--danger {
-  background-color: var(--color-danger-fg);
-  color: #ffffff;
+  background-color: var(--color-danger-solid);
+  color: var(--color-danger-on-solid);
 }
 
 .btn--danger:hover:not(:disabled) {
-  filter: brightness(1.1);
+  background-color: var(--color-danger-solid-hover);
 }
 
 .btn--danger:active:not(:disabled) {
-  filter: brightness(0.95);
+  background-color: var(--color-danger-solid);
 }
 
 .btn:focus-visible {

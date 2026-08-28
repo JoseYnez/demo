@@ -21,12 +21,16 @@
   color: var(--color-danger-fg);
 }
 
+/* El control se identifica por su relleno además de por el borde: como el
+   composer de ChatGPT, es un pozo más claro que la página. El borde
+   (`--border-strong`) queda deliberadamente suave — ver §11.2 sobre el
+   compromiso con WCAG 1.4.11 — y el indicador fuerte es el anillo de foco. */
 .ui-control {
   width: 100%;
   padding: 0 var(--space-3);
-  background-color: var(--bg-surface);
+  background-color: var(--bg-surface-alt);
   color: var(--text-primary);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   transition:
     border-color var(--transition-fast),
@@ -39,6 +43,7 @@
 
 .ui-control:hover:not(:disabled):not(:focus) {
   border-color: var(--border-strong);
+  background-color: var(--bg-surface-raised);
 }
 
 .ui-control:focus {
@@ -47,21 +52,26 @@
   box-shadow: var(--ring-focus);
 }
 
+/* Inertes: se hunden al color de la página y pierden el borde, en vez de
+   quedarse con el relleno de un control activo. */
 .ui-control:disabled {
-  background-color: var(--bg-surface-alt);
+  background-color: var(--bg-app);
+  border-color: var(--border-default);
   color: var(--text-muted);
   cursor: not-allowed;
 }
 
 .ui-control:read-only:not(select) {
-  background-color: var(--bg-surface-alt);
+  background-color: var(--bg-app);
+  border-color: var(--border-default);
 }
 
 .ui-control.is-invalid {
-  border-color: var(--color-danger-fg);
+  border-color: var(--color-danger-solid);
 }
 
 .ui-control.is-invalid:focus {
+  border-color: var(--color-danger-solid);
   box-shadow: 0 0 0 3px var(--color-danger-bg);
 }
 

@@ -13,8 +13,13 @@
 
 /* Variantes */
 
+/* En oscuro una sombra negra sobre fondo casi negro no se ve, así que la
+   elevación la lleva la superficie: `--bg-surface-raised` es más clara que
+   `--bg-surface`, y `--edge-raised` añade un filo superior. En claro ambos
+   son neutros y el trabajo lo hace la sombra. */
 .card--elevated {
-  box-shadow: var(--shadow-md);
+  background-color: var(--bg-surface-raised);
+  box-shadow: var(--shadow-md), var(--edge-raised);
 }
 
 .card--outlined {

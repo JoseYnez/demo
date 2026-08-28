@@ -1,5 +1,12 @@
 /* Tokens del design system. Ningún componente define colores, espaciados,
-   radios ni sombras propios: todo sale de aquí. */
+   radios ni sombras propios: todo sale de aquí.
+
+   La paleta se generó igualando el contraste PERCEPTUAL (APCA, polarity-aware)
+   entre los dos temas, no la ratio de WCAG 2. WCAG 2 subestima el contraste
+   sobre fondos oscuros: daba por bueno un modo oscuro que APCA medía muy por
+   debajo del claro. Los dos temas pasan WCAG 2.1 AA además de sus umbrales APCA.
+
+   Al retocar un color, revalidar antes de commitear. */
 
 :root {
   /* Tipografía — stack del sistema, sin webfonts */
@@ -51,29 +58,34 @@
   --transition-normal: 200ms ease;
   --transition-slow: 320ms ease;
 
-  /* ---- Tema claro ---- */
+  /* ================= TEMA CLARO ================= */
 
-  /* Superficies y texto. Neutros con un tinte verde imperceptible. */
+  /* Superficies. La elevación se comunica con sombra: `raised` es igual que
+     `surface` porque no hay nada más claro que el blanco. */
   --bg-app: #f6f8f7;
   --bg-surface: #ffffff;
   --bg-surface-alt: #eff3f1;
+  --bg-surface-raised: #ffffff;
+
+  /* Texto */
   --text-primary: #1a201d;
   --text-secondary: #4d5853;
-  --text-muted: #7c8983;
+  --text-muted: #666f6b;
   --text-on-accent: #ffffff;
 
-  /* Bordes */
+  /* Bordes. `default` es decorativo (divisores); `strong` delimita controles
+     y cumple el 3:1 que pide WCAG 1.4.11 para componentes de interfaz. */
   --border-default: #e0e6e2;
-  --border-strong: #c6d0ca;
+  --border-strong: #87928d;
   --border-focus: var(--accent);
 
-  /* Acento — verde sage. Cambiar estos cuatro reajusta toda la identidad. */
-  --accent: #4f7a63;
-  --accent-hover: #446b57;
-  --accent-active: #3a5c4a;
-  --accent-subtle: #eaf1ed;
+  /* Acento — verde sage */
+  --accent: #4f7860;
+  --accent-hover: #446b54;
+  --accent-active: #395e49;
+  --accent-subtle: #e9f6ee;
 
-  /* Estados */
+  /* Estados: `bg`/`fg`/`border` son para avisos y badges (fondo tenue). */
   --color-success-bg: #e8f3ec;
   --color-success-fg: #2c6b45;
   --color-success-border: #b8ddc6;
@@ -90,99 +102,144 @@
   --color-info-fg: #2d5a8a;
   --color-info-border: #c2d7ea;
 
+  /* Destructivo sólido: relleno de un botón, con su propio color de texto.
+     NO reutilizar `--color-danger-fg` como fondo — está calculado para ir
+     SOBRE `--color-danger-bg`, no debajo de texto. */
+  --color-danger-solid: #a33630;
+  --color-danger-solid-hover: #8c2b26;
+  --color-danger-on-solid: #ffffff;
+
   /* Sombras */
   --shadow-sm: 0 1px 2px rgb(20 34 28 / 6%);
   --shadow-md: 0 2px 6px rgb(20 34 28 / 8%), 0 1px 2px rgb(20 34 28 / 4%);
   --shadow-lg: 0 8px 20px rgb(20 34 28 / 10%), 0 2px 6px rgb(20 34 28 / 5%);
   --shadow-xl: 0 16px 40px rgb(20 34 28 / 14%), 0 4px 10px rgb(20 34 28 / 6%);
 
-  --ring-focus: 0 0 0 3px rgb(79 122 99 / 25%);
+  /* Filo superior de las superficies elevadas. En claro no hace falta: la
+     sombra ya separa del fondo. */
+  --edge-raised: 0 0 0 0 transparent;
+
+  --ring-focus: 0 0 0 3px rgb(79 120 96 / 25%);
 }
 
-/* ---- Tema oscuro ----
+/* ================= TEMA OSCURO =================
+
    Se aplica por elección explícita (data-theme="dark") o por preferencia del
-   SO mientras el usuario no haya elegido "light". */
+   SO mientras el usuario no haya elegido "light".
+
+   Los dos bloques de abajo DEBEN ser idénticos. No se pueden fundir en uno
+   solo porque uno vive dentro de una media query, y `light-dark()` se descartó:
+   WebKitGTK < 2.46 (Ubuntu 24.04 LTS) no lo soporta y dejaría la app entera
+   sin colores. Hay un test que falla si los dos bloques divergen. */
 
 :root[data-theme="dark"] {
-  --bg-app: #111614;
-  --bg-surface: #191f1c;
-  --bg-surface-alt: #212a26;
-  --text-primary: #e8eeea;
-  --text-secondary: #a8b5ae;
-  --text-muted: #78857f;
-  --text-on-accent: #0f1512;
+  /* Rampa calcada de la de ChatGPT (sidebar #171717, chat #212121,
+     hover #2f2f2f), con un croma de 0.005 en vez de 0: se lee gris, pero
+     no del todo neutro. El verde vive en el acento, no en el mobiliario. */
+  --bg-app: #181a18;
+  --bg-surface: #212422;
+  --bg-surface-alt: #2a2d2b;
+  --bg-surface-raised: #2e312f;
 
-  --border-default: #2b3430;
-  --border-strong: #3d4843;
+  --text-primary: #e9eeea;
+  --text-secondary: #cfd3d0;
+  --text-muted: #b7bbb9;
+  --text-on-accent: #111713;
 
-  --accent: #7ba98f;
-  --accent-hover: #8cb89d;
-  --accent-active: #6b9880;
-  --accent-subtle: #1d2a24;
+  --border-default: #2d302e;
+  --border-strong: #555956;
 
-  --color-success-bg: #16281d;
-  --color-success-fg: #7fc79b;
-  --color-success-border: #284633;
+  /* Sage apagado: mismo brillo que el menta anterior con 40% menos de croma. */
+  --accent: #a8c7b1;
+  --accent-hover: #b8d9c2;
+  --accent-active: #98b5a1;
+  --accent-subtle: #232d26;
 
-  --color-warning-bg: #2b2113;
-  --color-warning-fg: #e0b063;
-  --color-warning-border: #4a3a1c;
+  --color-success-bg: #203126;
+  --color-success-fg: #a1dfb5;
+  --color-success-border: #364e3e;
 
-  --color-danger-bg: #2c1817;
-  --color-danger-fg: #e08d87;
-  --color-danger-border: #4a2723;
+  --color-warning-bg: #342b1b;
+  --color-warning-fg: #efcc91;
+  --color-warning-border: #53452f;
 
-  --color-info-bg: #152230;
-  --color-info-fg: #84b3e0;
-  --color-info-border: #26415c;
+  --color-danger-bg: #3a2724;
+  --color-danger-fg: #ffc2ba;
+  --color-danger-border: #5c403c;
 
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
-  --shadow-md: 0 2px 6px rgb(0 0 0 / 45%), 0 1px 2px rgb(0 0 0 / 30%);
-  --shadow-lg: 0 8px 20px rgb(0 0 0 / 50%), 0 2px 6px rgb(0 0 0 / 30%);
-  --shadow-xl: 0 16px 40px rgb(0 0 0 / 55%), 0 4px 10px rgb(0 0 0 / 35%);
+  --color-info-bg: #202e3b;
+  --color-info-fg: #a6d6ff;
+  --color-info-border: #354a5c;
 
-  --ring-focus: 0 0 0 3px rgb(123 169 143 / 30%);
+  --color-danger-solid: #b94a42;
+  --color-danger-solid-hover: #cc5b52;
+  --color-danger-on-solid: #ffffff;
+
+  /* Plano, como la referencia: la elevacion la lleva el tono de la superficie
+     y las sombras casi no participan. */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
+  --shadow-md: 0 2px 6px rgb(0 0 0 / 24%);
+  --shadow-lg: 0 8px 20px rgb(0 0 0 / 32%);
+  --shadow-xl: 0 16px 36px rgb(0 0 0 / 40%);
+
+  --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
+
+  --ring-focus: 0 0 0 3px rgb(168 199 177 / 38%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg-app: #111614;
-    --bg-surface: #191f1c;
-    --bg-surface-alt: #212a26;
-    --text-primary: #e8eeea;
-    --text-secondary: #a8b5ae;
-    --text-muted: #78857f;
-    --text-on-accent: #0f1512;
+    /* Rampa calcada de la de ChatGPT (sidebar #171717, chat #212121,
+       hover #2f2f2f), con un croma de 0.005 en vez de 0: se lee gris, pero
+       no del todo neutro. El verde vive en el acento, no en el mobiliario. */
+    --bg-app: #181a18;
+    --bg-surface: #212422;
+    --bg-surface-alt: #2a2d2b;
+    --bg-surface-raised: #2e312f;
 
-    --border-default: #2b3430;
-    --border-strong: #3d4843;
+    --text-primary: #e9eeea;
+    --text-secondary: #cfd3d0;
+    --text-muted: #b7bbb9;
+    --text-on-accent: #111713;
 
-    --accent: #7ba98f;
-    --accent-hover: #8cb89d;
-    --accent-active: #6b9880;
-    --accent-subtle: #1d2a24;
+    --border-default: #2d302e;
+    --border-strong: #555956;
 
-    --color-success-bg: #16281d;
-    --color-success-fg: #7fc79b;
-    --color-success-border: #284633;
+    /* Sage apagado: mismo brillo que el menta anterior con 40% menos de croma. */
+    --accent: #a8c7b1;
+    --accent-hover: #b8d9c2;
+    --accent-active: #98b5a1;
+    --accent-subtle: #232d26;
 
-    --color-warning-bg: #2b2113;
-    --color-warning-fg: #e0b063;
-    --color-warning-border: #4a3a1c;
+    --color-success-bg: #203126;
+    --color-success-fg: #a1dfb5;
+    --color-success-border: #364e3e;
 
-    --color-danger-bg: #2c1817;
-    --color-danger-fg: #e08d87;
-    --color-danger-border: #4a2723;
+    --color-warning-bg: #342b1b;
+    --color-warning-fg: #efcc91;
+    --color-warning-border: #53452f;
 
-    --color-info-bg: #152230;
-    --color-info-fg: #84b3e0;
-    --color-info-border: #26415c;
+    --color-danger-bg: #3a2724;
+    --color-danger-fg: #ffc2ba;
+    --color-danger-border: #5c403c;
 
-    --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
-    --shadow-md: 0 2px 6px rgb(0 0 0 / 45%), 0 1px 2px rgb(0 0 0 / 30%);
-    --shadow-lg: 0 8px 20px rgb(0 0 0 / 50%), 0 2px 6px rgb(0 0 0 / 30%);
-    --shadow-xl: 0 16px 40px rgb(0 0 0 / 55%), 0 4px 10px rgb(0 0 0 / 35%);
+    --color-info-bg: #202e3b;
+    --color-info-fg: #a6d6ff;
+    --color-info-border: #354a5c;
 
-    --ring-focus: 0 0 0 3px rgb(123 169 143 / 30%);
+    --color-danger-solid: #b94a42;
+    --color-danger-solid-hover: #cc5b52;
+    --color-danger-on-solid: #ffffff;
+
+    /* Plano, como la referencia: la elevacion la lleva el tono de la superficie
+       y las sombras casi no participan. */
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
+    --shadow-md: 0 2px 6px rgb(0 0 0 / 24%);
+    --shadow-lg: 0 8px 20px rgb(0 0 0 / 32%);
+    --shadow-xl: 0 16px 36px rgb(0 0 0 / 40%);
+
+    --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
+
+    --ring-focus: 0 0 0 3px rgb(168 199 177 / 38%);
   }
 }

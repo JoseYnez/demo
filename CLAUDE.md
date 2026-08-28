@@ -627,21 +627,48 @@ La capa global son tres hojas, importadas por `src/styles.css` en este orden:
 | `styles/reset.css` | Normalización y estilos base de `body`, títulos, enlaces y foco. |
 | `styles/forms.css` | Base compartida de los controles: `.ui-field`, `.ui-label`, `.ui-control`, `.ui-msg`. Vive en la capa global porque la encapsulación de Angular impide compartir estos estilos entre `input`, `textarea` y `select` sin duplicarlos tres veces. Los componentes consumen esas clases y añaden sólo lo suyo (alto, `resize`, la flecha del select). |
 
-Roles mínimos que los tokens deben cubrir:
+Roles que los tokens cubren:
 
-- **Superficies y texto**: `--bg-app`, `--bg-surface`, `--bg-surface-alt`, `--text-primary`, `--text-secondary`, `--text-muted`.
-- **Bordes y foco**: `--border-default`, `--border-strong`, `--border-focus`.
-- **Acento**: `--accent`, `--accent-hover`, `--accent-active`.
-- **Estados**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
-- **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, transiciones `--transition-fast|normal|slow`.
+- **Superficies**: `--bg-app`, `--bg-surface`, `--bg-surface-alt`, `--bg-surface-raised`.
+- **Texto**: `--text-primary`, `--text-secondary`, `--text-muted`, `--text-on-accent`.
+- **Bordes y foco**: `--border-default`, `--border-strong`, `--border-focus`, `--ring-focus`.
+- **Acento**: `--accent`, `--accent-hover`, `--accent-active`, `--accent-subtle`.
+- **Estados tenues**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
+- **Destructivo sólido**: `--color-danger-solid`, `--color-danger-solid-hover`, `--color-danger-on-solid`.
+- **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
 
 > **Regla dura**: prohibido hardcodear colores, espaciados, radios o sombras en el CSS de un componente. Siempre variables. Es lo único que hace que el tema oscuro funcione solo.
+
+Tres distinciones que hay que respetar, porque confundirlas ya causó un bug:
+
+| No confundir | |
+|---|---|
+| `--border-default` vs `--border-strong` | `default` es **decorativo** (divisores de card): sin requisito de contraste. `strong` delimita **controles** y cumple el 3:1 de WCAG 1.4.11. El borde de un `input` usa `strong`. |
+| `--color-danger-fg` vs `--color-danger-solid` | `fg` es texto **sobre** `--color-danger-bg` (aviso tenue). `solid` es el **relleno** de un botón destructivo, y su texto es `--color-danger-on-solid`. Usar `fg` como fondo daba 2.52:1 en oscuro. |
+| `--bg-surface` vs `--bg-surface-raised` | `raised` es para superficies elevadas. En claro son el mismo blanco (eleva la sombra); en oscuro `raised` es **más clara**. |
 
 ### 11.2 Tema claro/oscuro
 
 - Atributo `data-theme="dark"` en `<html>`; los tokens se redefinen bajo `:root[data-theme="dark"]`.
 - Arranque: leer `localStorage` → si no hay nada, `prefers-color-scheme`.
 - Gestionado por un único `ThemeService` en `core/services/`, con el patrón signal privado + `readonly`.
+
+**El modo oscuro copia la rampa de ChatGPT.** Es una referencia deliberada: grises neutros y planos, sin bordes marcados, elevación por tono. Las anclas son las suyas (sidebar `#171717`, chat `#212121`, hover `#2f2f2f`, texto `#ececec`) y la rampa de aquí queda a menos de un punto de L\* de cada una. La diferencia es un croma de 0.005 en las superficies: se leen grises, pero no del todo neutras. **El verde vive en el acento, no en el mobiliario** — si se sube el croma de las superficies, se pierde el parecido.
+
+**La paleta se calcula, no se elige a ojo.** Los dos temas se generaron igualando el contraste **perceptual (APCA)**, no la ratio de WCAG 2. Importa porque WCAG 2 subestima el contraste sobre fondos oscuros: la paleta anterior daba 7.88:1 para `--text-secondary` en oscuro contra 7.40:1 en claro — aparentemente mejor — mientras APCA medía Lc 58.8 contra Lc 85.7. El modo oscuro estaba muy por debajo y WCAG 2 lo ocultaba.
+
+Criterios que cumple la paleta, y que verifica [tokens.spec.ts](src/styles/tokens.spec.ts) en cada `pnpm test`:
+
+- WCAG 2.1 AA (4.5:1 texto, 3:1 componentes) — es el estándar legal, es el suelo.
+- Umbrales APCA: Lc 90 primario, Lc 74 secundario, Lc 58 muted, contra **todas** las superficies.
+
+Al tocar un color hay que revalidar; el test falla si el contraste baja o si los dos bloques oscuros divergen.
+
+**Una desviación conocida.** WCAG 1.4.11 pide 3:1 para el límite visual de un control. El tema claro lo cumple (3.22:1); el oscuro baja a **2.2:1** para igualar el peso de borde de ChatGPT, y es una decisión estética tomada a sabiendas. Se compensa en parte: el control tiene relleno propio (`--bg-surface-alt`, el "pozo" del composer) y el anillo de foco es fuerte y sí cumple. Pero el borde **en reposo** no llega. Está marcado en [tokens.spec.ts](src/styles/tokens.spec.ts) con `minOscuro`; subirlo a 3.0 recupera el cumplimiento a costa del look.
+
+**Elevación en oscuro**: una sombra negra sobre un fondo casi negro no se ve. La elevación la lleva la **superficie**, que se aclara (`--bg-surface-raised`), más un filo superior (`--edge-raised`). En claro la sombra hace ese trabajo y ambos tokens son neutros. Un componente elevado usa los tres a la vez y funciona en los dos temas sin CSS condicional.
+
+**Duplicación de los bloques oscuros**: `:root[data-theme="dark"]` y el `@media (prefers-color-scheme: dark)` son idénticos y no se pueden fundir, porque uno vive dentro de una media query. `light-dark()` lo resolvería en una línea por token, pero **no se usa**: WebKitGTK < 2.46 (Ubuntu 24.04 LTS) no lo soporta y la declaración inválida dejaría los tokens sin valor — la app entera sin colores, no sólo sin tema oscuro. El test garantiza que los dos bloques no se separen.
 
 **Ojo con el scoping**: el CSS de un componente está encapsulado, así que un bloque `:root { … }` dentro de un `.css` de componente **no aplica nunca**. Los estilos globales van en `src/styles.css` o en `src/styles/`, no en el componente.
 
