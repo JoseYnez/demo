@@ -194,6 +194,123 @@ code {
   overflow-x: auto;
 }
 
+/* Selector de acento.
+   Los chips y la pista duplican la receta L/C de --accent en tokens.css a
+   propósito: son una previsualización de "qué pasaría si", así que no pueden
+   leer var(--accent) — mostrarían todos el tono ya elegido. Si se retocan las
+   constantes allí, retocarlas aquí. */
+
+.sg-preset {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.sg-preset:hover {
+  color: var(--text-primary);
+}
+
+.sg-preset[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  background: var(--accent-subtle);
+}
+
+.sg-preset:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+.sg-preset__chip {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: oklch(0.525 0.06 var(--sw-hue));
+}
+
+:host-context([data-theme="dark"]) .sg-preset__chip {
+  background: oklch(0.8 0.045 var(--sw-hue));
+}
+
+.sg-hue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 420px;
+}
+
+.sg-hue__label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sg-hue__range {
+  appearance: none;
+  height: 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    to right,
+    oklch(0.525 0.06 0),
+    oklch(0.525 0.06 30),
+    oklch(0.525 0.06 60),
+    oklch(0.525 0.06 90),
+    oklch(0.525 0.06 120),
+    oklch(0.525 0.06 150),
+    oklch(0.525 0.06 180),
+    oklch(0.525 0.06 210),
+    oklch(0.525 0.06 240),
+    oklch(0.525 0.06 270),
+    oklch(0.525 0.06 300),
+    oklch(0.525 0.06 330),
+    oklch(0.525 0.06 360)
+  );
+  cursor: pointer;
+}
+
+:host-context([data-theme="dark"]) .sg-hue__range {
+  background: linear-gradient(
+    to right,
+    oklch(0.8 0.045 0),
+    oklch(0.8 0.045 30),
+    oklch(0.8 0.045 60),
+    oklch(0.8 0.045 90),
+    oklch(0.8 0.045 120),
+    oklch(0.8 0.045 150),
+    oklch(0.8 0.045 180),
+    oklch(0.8 0.045 210),
+    oklch(0.8 0.045 240),
+    oklch(0.8 0.045 270),
+    oklch(0.8 0.045 300),
+    oklch(0.8 0.045 330),
+    oklch(0.8 0.045 360)
+  );
+}
+
+.sg-hue__range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  border: 2px solid var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.sg-hue__range:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
 /* Comparativa de modos de etiqueta */
 
 .sg__compare {

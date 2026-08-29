@@ -9,6 +9,59 @@
     </p>
   </header>
 
+  <!-- ---------- Acento configurable ---------- -->
+  <section class="sg__section">
+    <h2 class="sg__title">Acento configurable</h2>
+
+    @if (accents.supported) {
+      <p class="sg__note selectable">
+        El tono es del usuario; la luminosidad y el croma son del sistema, así
+        que cualquier elección mantiene el contraste AA en los dos temas. La
+        elección se guarda y sobrevive al reinicio. Todo lo de abajo se retiñe
+        en vivo.
+      </p>
+
+      <div class="sg__inline" role="group" aria-label="Presets de acento">
+        @for (preset of presets; track preset.hue) {
+          <button
+            type="button"
+            class="sg-preset"
+            [style.--sw-hue]="preset.hue"
+            [attr.aria-pressed]="accents.hue() === preset.hue"
+            (click)="accents.setHue(preset.hue)"
+          >
+            <span class="sg-preset__chip" aria-hidden="true"></span>
+            {{ preset.nombre }}
+          </button>
+        }
+      </div>
+
+      <label class="sg-hue">
+        <span class="sg-hue__label selectable">Tono libre · {{ accents.hue() }}°</span>
+        <input
+          class="sg-hue__range"
+          type="range"
+          min="0"
+          max="359"
+          step="1"
+          [value]="accents.hue()"
+          (input)="cambiarTono($event)"
+        />
+      </label>
+
+      <div class="sg__inline">
+        <app-button variant="ghost" size="sm" (click)="accents.reset()">
+          Restaurar el sage
+        </app-button>
+      </div>
+    } @else {
+      <p class="sg__note selectable">
+        Este WebView no soporta <code>oklch()</code>: la app se queda con el
+        acento sage por defecto y el selector no aplicaría nada.
+      </p>
+    }
+  </section>
+
   <!-- ---------- Color ---------- -->
   <section class="sg__section">
     <h2 class="sg__title">Color</h2>

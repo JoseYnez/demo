@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, inject, signal } from "@angular/core";
 import {
   email,
   form,
@@ -9,6 +9,7 @@ import {
   submit,
 } from "@angular/forms/signals";
 
+import { ACCENT_PRESETS, AccentService } from "../../core/services/accent";
 import { Badge, Button, Card, Input, Select, Textarea } from "../../shared/ui";
 import type { BadgeVariant, ButtonVariant, SelectOption } from "../../shared/ui";
 
@@ -27,6 +28,13 @@ interface Alta {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Styleguide {
+  protected readonly accents = inject(AccentService);
+  protected readonly presets = ACCENT_PRESETS;
+
+  protected cambiarTono(event: Event): void {
+    this.accents.setHue((event.target as HTMLInputElement).valueAsNumber);
+  }
+
   protected readonly surfaceTokens = [
     "--bg-app",
     "--bg-surface",
