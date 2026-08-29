@@ -131,7 +131,7 @@ demo/
 │   │   ├── app.config.ts
 │   │   └── app.routes.ts
 │   ├── assets/
-│   ├── styles/                 # tokens.css, reset.css, forms.css
+│   ├── styles/                 # tokens.css, reset.css, forms.css, testing/ (utilidades de specs)
 │   ├── styles.css              # Entrada global (importa styles/)
 │   ├── index.html
 │   └── main.ts
@@ -670,6 +670,7 @@ Criterios que cumple la paleta, y que verifica [tokens.spec.ts](src/styles/token
 
 - WCAG 2.1 AA (4.5:1 texto, 3:1 componentes) — es el estándar legal, es el suelo.
 - Umbrales APCA: Lc 90 primario, Lc 74 secundario, Lc 58 muted, contra **todas** las superficies.
+- Los pares dependientes del acento, además, en 72 tonos: el acento es configurable (§11.5) y ningún tono elegible puede romper AA.
 
 Al tocar un color hay que revalidar; el test falla si el contraste baja o si los dos bloques oscuros divergen.
 
@@ -677,7 +678,7 @@ Al tocar un color hay que revalidar; el test falla si el contraste baja o si los
 
 **Elevación en oscuro**: una sombra negra sobre un fondo casi negro no se ve. La elevación la lleva la **superficie**, que se aclara (`--bg-surface-raised`), más un filo superior (`--edge-raised`). En claro la sombra hace ese trabajo y ambos tokens son neutros. Un componente elevado usa los tres a la vez y funciona en los dos temas sin CSS condicional.
 
-**Duplicación de los bloques oscuros**: `:root[data-theme="dark"]` y el `@media (prefers-color-scheme: dark)` son idénticos y no se pueden fundir, porque uno vive dentro de una media query. `light-dark()` lo resolvería en una línea por token, pero **no se usa**: WebKitGTK < 2.46 (Ubuntu 24.04 LTS) no lo soporta y la declaración inválida dejaría los tokens sin valor — la app entera sin colores, no sólo sin tema oscuro. El test garantiza que los dos bloques no se separen.
+**Duplicación de los bloques oscuros**: `:root[data-theme="dark"]` y el `@media (prefers-color-scheme: dark)` son idénticos y no se pueden fundir, porque uno vive dentro de una media query. `light-dark()` lo resolvería en una línea por token, pero **no se usa**: WebKitGTK < 2.46 (Ubuntu 24.04 LTS) no lo soporta y la declaración inválida dejaría los tokens sin valor — la app entera sin colores, no sólo sin tema oscuro. El test garantiza que los dos bloques no se separen — y lo mismo con el par de bloques oscuros del `@supports` del acento (§11.5).
 
 **Ojo con el scoping**: el CSS de un componente está encapsulado, así que un bloque `:root { … }` dentro de un `.css` de componente **no aplica nunca**. Los estilos globales van en `src/styles.css` o en `src/styles/`, no en el componente.
 
@@ -735,7 +736,54 @@ Los tres controles de formulario gatean el mensaje de error tras `touched`: ense
 5. Exportar en el barrel `shared/ui/index.ts`.
 6. Añadir un ejemplo a la página `/styleguide`.
 
-### 11.5 Página styleguide
+### 11.5 Acento configurable
+
+El usuario elige **un tono** (0–359) y la app se retiñe entera: la familia del
+acento y el tinte de superficies, texto y bordes. **Luminosidad y croma son
+constantes del sistema y no son configurables**: es lo único que garantiza que
+cualquier tono cumpla AA — [tokens.spec.ts](src/styles/tokens.spec.ts) barre 72
+tonos contra todos los pares de contraste, hover, active y anillo incluidos.
+
+Piezas:
+
+- **`--accent-hue`** (defecto 158, sage) en `tokens.css`: la única variable que
+  el runtime toca.
+- **Bloque `@supports (color: oklch(…))`** al final de `tokens.css`: redefine
+  los tokens dependientes como `oklch(L C var(--accent-hue))`. Los hex estáticos
+  de arriba son el render exacto de esas expresiones a tono 158; un test los
+  ancla canal a canal para que no deriven.
+- **`AccentService`** (`core/services/accent.ts`): signal + persistencia
+  (`localStorage`, clave `accent-hue`) + escritura de la propiedad inline en
+  `<html>`. `reset()` sólo quita la propiedad — el defecto vuelve por CSS.
+  Expone `supported` para ocultar la UI donde no haya `oklch()`, y los presets
+  en `ACCENT_PRESETS`.
+- **Script inline en `index.html`**: aplica tema y tono guardados antes del
+  bootstrap (anti-destello). Si algún día se activa un CSP en
+  `tauri.conf.json`, necesitará su hash.
+- **Selector en `/styleguide`**: presets, tono libre y restaurar.
+
+Reglas:
+
+1. **No rotan** los semánticos (`success/warning/danger/info`), el destructivo
+   sólido ni las sombras: rojo=error es convención, no estética.
+2. **El `@supports` es obligatorio, no cosmético.** Una custom property acepta
+   cualquier valor, así que declararla dos veces NO da fallback: la última gana
+   siempre, y en un motor sin `oklch()` cada `var(--accent)` se volvería
+   inválido a computed-value time — la app entera sin colores, el desastre de
+   `light-dark()`. Con la guarda, un WebKit viejo se queda en el sage estático:
+   pierde la personalización, no los colores. Por eso `oklch()` sí pasa el
+   listón que `light-dark()` no pasa: está en los motores desde 2022 (Chromium
+   111, Safari 15.4, WebKitGTK ~2.36), mientras que `light-dark()` exige
+   WebKitGTK 2.46 y su fallo costaría el tema oscuro entero.
+3. Al tocar una constante L/C: cambiarla en los **tres** contextos del
+   `@supports`, regenerar su hex de fallback y dejar que el spec ancle y barra.
+   El croma del `--accent-subtle` claro es .014 y no más porque a L .965 el
+   azul (H≈258) se sale de sRGB.
+4. Los chips y la pista del selector en la styleguide duplican la receta L/C a
+   propósito (previsualizan "qué pasaría si", no pueden leer `var(--accent)`);
+   si cambian las constantes, cambiarlas también allí.
+
+### 11.6 Página styleguide
 
 Demo viva de todos los componentes en `features/styleguide/`, ruta `/styleguide`. **Mantenerla al día es parte de agregar un componente**, no un extra.
 
