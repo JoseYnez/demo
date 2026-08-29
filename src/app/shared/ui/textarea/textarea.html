@@ -1,32 +1,29 @@
-<div class="ui-field">
-  @if (label()) {
-    <label class="ui-label" [attr.for]="id">
-      {{ label() }}
-      @if (required()) {
-        <span class="ui-label__required" aria-hidden="true">*</span>
-      }
-    </label>
-  }
-
+<app-field-shell
+  [labelMode]="labelMode()"
+  [label]="label()"
+  [controlId]="id"
+  [floated]="floated()"
+  [required]="required()"
+  [disabled]="disabled()"
+  [hint]="hint()"
+  [error]="error()"
+>
   <textarea
     class="ui-control"
+    [class.is-floating]="labelMode() === 'float'"
+    [class.is-inset]="labelMode() === 'inset'"
     [class.is-invalid]="!!error()"
     [id]="id"
     [rows]="rows()"
     [attr.name]="name() || null"
-    [placeholder]="placeholder()"
+    [placeholder]="visiblePlaceholder()"
     [disabled]="disabled()"
     [readOnly]="readonly()"
     [required]="required()"
     [attr.aria-invalid]="!!error()"
     [value]="value()"
     (input)="value.set($any($event.target).value)"
-    (blur)="touch.emit()"
+    (focus)="focused.set(true)"
+    (blur)="onBlur()"
   ></textarea>
-
-  @if (error()) {
-    <p class="ui-msg ui-msg--error">{{ error() }}</p>
-  } @else if (hint()) {
-    <p class="ui-msg">{{ hint() }}</p>
-  }
-</div>
+</app-field-shell>

@@ -5,28 +5,93 @@
 .select {
   position: relative;
   display: flex;
+  flex: 1;
 }
 
 .ui-control {
   height: 34px;
-  padding-right: var(--space-8);
+  /* Hueco para el separador y el chevron. */
+  padding-right: var(--space-10);
   appearance: none;
   cursor: pointer;
+}
+
+.ui-control.is-floating {
+  height: 40px;
+  /* Deja respirar la etiqueta apoyada en el borde. */
+  padding-top: var(--space-2);
+}
+
+.ui-control.is-inset {
+  height: 52px;
 }
 
 .ui-control:disabled {
   cursor: not-allowed;
 }
 
-/* Flecha propia: la nativa no sigue los tokens y desentona en tema oscuro. */
+/* La lista desplegable la pinta el motor. Confiar en él no funcionó:
+   con `color-scheme: dark` toma el color de TEXTO del esquema (claro) pero
+   deja la superficie del popup en blanco, así que las opciones desaparecían
+   sobre fondo blanco. Tampoco valía `CanvasText`: resuelve contra el esquema
+   de la página, no contra lo que el popup pinta de verdad.
+   La única forma de garantizar el par es pintar las filas nosotros: fondo y
+   texto juntos, para que no puedan descasarse. */
+option {
+  background-color: var(--bg-surface-raised);
+  color: var(--text-primary);
+}
+
+option:disabled {
+  color: var(--text-muted);
+}
+
+option:checked {
+  background-color: var(--accent-subtle);
+  color: var(--accent);
+}
+
+/* Afordance de desplegable.
+   Con los controles en outlined, un select y un input son la misma caja: la
+   única pista de que esto abre una lista es lo que hay aquí. Un chevron de
+   7px ocupaba el 0,77% del control y no se leía. Ahora hay separador + un
+   chevron el doble de grueso. */
+.select__divider {
+  position: absolute;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  right: var(--space-8);
+  z-index: 2;
+  width: 1px;
+  background-color: var(--border-strong);
+  pointer-events: none;
+}
+
 .select__caret {
   position: absolute;
   top: 50%;
-  right: var(--space-3);
-  width: 7px;
-  height: 7px;
-  border-right: 1.5px solid var(--text-muted);
-  border-bottom: 1.5px solid var(--text-muted);
+  right: calc(var(--space-4) - 1px);
+  z-index: 2;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
   transform: translateY(-70%) rotate(45deg);
   pointer-events: none;
+  transition: border-color var(--transition-fast);
+}
+
+.select:hover .select__caret,
+.ui-control:focus ~ .select__caret {
+  border-right-color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.ui-control:disabled ~ .select__divider {
+  background-color: var(--border-default);
+}
+
+.ui-control:disabled ~ .select__caret {
+  border-right-color: var(--text-muted);
+  border-bottom-color: var(--text-muted);
 }

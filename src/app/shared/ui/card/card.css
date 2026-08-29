@@ -87,3 +87,17 @@
   border-top: 1px solid var(--border-default);
   background-color: var(--bg-surface-alt);
 }
+
+/* Los campos que caigan dentro necesitan saber qué color tienen detrás para
+   que su etiqueta flotante se recorte bien contra él. */
+.card--elevated {
+  --field-bg: var(--bg-surface-raised);
+}
+
+.card--outlined {
+  --field-bg: var(--bg-surface);
+}
+
+.card--flat {
+  --field-bg: var(--bg-surface-alt);
+}

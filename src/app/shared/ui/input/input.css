@@ -5,3 +5,11 @@
 .ui-control {
   height: 34px;
 }
+
+.ui-control.is-floating {
+  height: 40px;
+}
+
+.ui-control.is-inset {
+  height: 52px;
+}

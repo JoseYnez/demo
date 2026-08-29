@@ -224,6 +224,110 @@
     <pre class="sg__output selectable">{{ sueltoTexto() }} | {{ sueltoArea() }} | {{ sueltoNotas() }}</pre>
   </section>
 
+  <!-- ---------- Comparativa de etiquetas ---------- -->
+  <section class="sg__section" id="comparativa">
+    <h2 class="sg__title">Comparativa: dónde va la etiqueta</h2>
+    <p class="sg__note selectable">
+      El mismo campo en los tres modos, para elegir mirando. Los tres funcionan
+      igual con Signal Forms; sólo cambia dónde vive la etiqueta y cuánto mide
+      la caja. <strong>Elige uno y unifico el sistema entero a ese.</strong>
+    </p>
+
+    <div class="sg__compare">
+      <div class="sg__compare-col">
+        <p class="sg__compare-head selectable"><code>top</code> · 34 px</p>
+        <app-input label="Nombre" [(value)]="cmpTop" />
+        <app-select label="Área" placeholder="Selecciona…" [options]="areas" [(value)]="cmpTopSel" />
+        <p class="sg__note selectable">
+          Etiqueta fuera, en su propia fila. La más convencional y la que menos
+          se rompe con textos largos.
+        </p>
+      </div>
+
+      <div class="sg__compare-col">
+        <p class="sg__compare-head selectable"><code>float</code> · 40 px</p>
+        <app-input label="Nombre" labelMode="float" [(value)]="cmpFloat" />
+        <app-select label="Área" labelMode="float" placeholder="Selecciona…" [options]="areas" [(value)]="cmpFloatSel" />
+        <p class="sg__note selectable">
+          Etiqueta montada en el borde, que se abre para dejarle hueco. La más
+          compacta. Obliga a que el control sea transparente.
+        </p>
+      </div>
+
+      <div class="sg__compare-col">
+        <p class="sg__compare-head selectable"><code>inset</code> · 52 px</p>
+        <app-input label="Nombre" labelMode="inset" [(value)]="cmpInset" />
+        <app-select label="Área" labelMode="inset" placeholder="Selecciona…" [options]="areas" [(value)]="cmpInsetSel" />
+        <p class="sg__note selectable">
+          Etiqueta fija dentro, sin animación. Es el único modo que admite
+          relleno, así que recupera el "pozo" y da más definición.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Etiqueta flotante ---------- -->
+  <section class="sg__section">
+    <h2 class="sg__title">Etiqueta flotante</h2>
+    <p class="sg__note selectable">
+      <code>labelMode="float"</code> en <code>app-input</code>,
+      <code>app-textarea</code> y <code>app-select</code>. La etiqueta arranca
+      dentro haciendo de placeholder y, al enfocar o al haber valor, sube a la
+      línea del borde, que se abre para dejarle hueco. La caja no crece:
+      40&nbsp;px frente a los 34 del modo normal, y la etiqueta deja de ocupar
+      su propia fila.
+    </p>
+
+    <h3 class="sg__subtitle">Vacío contra con valor</h3>
+    <div class="sg__grid">
+      <app-input label="Nombre" labelMode="float" [(value)]="floatVacio" />
+      <app-input label="Nombre" labelMode="float" [(value)]="floatLleno" />
+      <app-input
+        label="Correo"
+        labelMode="float"
+        type="email"
+        hint="Enfoca para ver subir la etiqueta."
+        [(value)]="floatVacio"
+      />
+    </div>
+
+    <h3 class="sg__subtitle">Los tres controles</h3>
+    <div class="sg__grid">
+      <app-input label="Nombre" labelMode="float" [(value)]="floatLleno" />
+      <app-select
+        label="Área"
+        labelMode="float"
+        placeholder="Selecciona…"
+        [options]="areas"
+        [(value)]="floatArea"
+      />
+      <app-textarea label="Notas" labelMode="float" [rows]="3" [(value)]="floatNotas" />
+    </div>
+    <p class="sg__note selectable">
+      El <code>select</code> siempre muestra algo —el placeholder o la opción
+      elegida—, así que su etiqueta nace arriba y no baja nunca.
+    </p>
+
+    <h3 class="sg__subtitle">Estados</h3>
+    <div class="sg__grid">
+      <app-input label="Requerido" labelMode="float" [required]="true" [(value)]="floatVacio" />
+      <app-input label="Deshabilitado" labelMode="float" value="No editable" [disabled]="true" />
+      <app-input
+        label="Con error"
+        labelMode="float"
+        value="ada@"
+        [touched]="true"
+        [errors]="[{ kind: 'email', message: 'Formato no válido.' }]"
+      />
+    </div>
+
+    <h3 class="sg__subtitle">Convive con el modo normal</h3>
+    <div class="sg__grid">
+      <app-input label="Etiqueta arriba" hint="labelMode por defecto" [(value)]="floatVacio" />
+      <app-input label="Etiqueta flotante" labelMode="float" hint="labelMode=&quot;float&quot;" [(value)]="floatVacio" />
+    </div>
+  </section>
+
   <!-- ---------- Signal Forms ---------- -->
   <section class="sg__section">
     <h2 class="sg__title">Formulario con Signal Forms</h2>

@@ -29,6 +29,79 @@ describe("Input", () => {
     );
   });
 
+  describe("labelMode float", () => {
+    it("nace sin flotar y sin placeholder cuando está vacío", async () => {
+      const fixture = TestBed.createComponent(Input);
+      fixture.componentRef.setInput("labelMode", "float");
+      fixture.componentRef.setInput("label", "Nombre");
+      fixture.componentRef.setInput("placeholder", "Escribe algo");
+      await fixture.whenStable();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector(".is-floated")).toBeNull();
+      // La etiqueta hace de placeholder mientras está abajo: los dos a la vez
+      // se solaparían.
+      expect(el.querySelector("input")?.getAttribute("placeholder")).toBe("");
+    });
+
+    it("flota al tener valor y recupera el placeholder", async () => {
+      const fixture = TestBed.createComponent(Input);
+      fixture.componentRef.setInput("labelMode", "float");
+      fixture.componentRef.setInput("label", "Nombre");
+      fixture.componentRef.setInput("placeholder", "Escribe algo");
+      fixture.componentRef.setInput("value", "Ada");
+      await fixture.whenStable();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector(".is-floated")).not.toBeNull();
+      expect(el.querySelector("input")?.getAttribute("placeholder")).toBe("Escribe algo");
+    });
+
+    it("flota al enfocar y vuelve a bajar al salir vacío", async () => {
+      const fixture = TestBed.createComponent(Input);
+      fixture.componentRef.setInput("labelMode", "float");
+      fixture.componentRef.setInput("label", "Nombre");
+      await fixture.whenStable();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const control = el.querySelector("input") as HTMLInputElement;
+
+      control.dispatchEvent(new FocusEvent("focus"));
+      await fixture.whenStable();
+      expect(el.querySelector(".is-floated")).not.toBeNull();
+
+      control.dispatchEvent(new FocusEvent("blur"));
+      await fixture.whenStable();
+      expect(el.querySelector(".is-floated")).toBeNull();
+    });
+
+    it("abre la muesca del borde con el texto de la etiqueta", async () => {
+      const fixture = TestBed.createComponent(Input);
+      fixture.componentRef.setInput("labelMode", "float");
+      fixture.componentRef.setInput("label", "Nombre");
+      fixture.componentRef.setInput("required", true);
+      await fixture.whenStable();
+
+      const el = fixture.nativeElement as HTMLElement;
+      // El legend es decorativo: sólo reserva el hueco, y por eso debe medir
+      // lo mismo que la etiqueta visible.
+      expect(el.querySelector(".fs__legend")?.textContent?.trim()).toBe("Nombre *");
+      expect(el.querySelector(".fs__outline")?.getAttribute("aria-hidden")).toBe("true");
+    });
+
+    it("mantiene el label asociado al control", async () => {
+      const fixture = TestBed.createComponent(Input);
+      fixture.componentRef.setInput("labelMode", "float");
+      fixture.componentRef.setInput("label", "Nombre");
+      await fixture.whenStable();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const id = el.querySelector("input")?.id;
+      expect(id).toBeTruthy();
+      expect(el.querySelector(".fs__label")?.getAttribute("for")).toBe(id);
+    });
+  });
+
   it("propaga lo escrito al signal value", async () => {
     const fixture = TestBed.createComponent(Input);
     await fixture.whenStable();

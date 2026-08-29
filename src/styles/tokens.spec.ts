@@ -49,8 +49,6 @@ interface Par {
   fg: string;
   bg: string;
   min: number;
-  /** Mínimo distinto en oscuro, sólo donde el tema se desvía a propósito. */
-  minOscuro?: number;
 }
 
 const PARES: readonly Par[] = [
@@ -63,14 +61,34 @@ const PARES: readonly Par[] = [
   { fg: "--color-danger-fg", bg: "--color-danger-bg", min: 4.5 },
   { fg: "--color-info-fg", bg: "--color-info-bg", min: 4.5 },
 
-  // DESVIACIÓN CONSCIENTE. WCAG 1.4.11 pide 3:1 para el límite de un control.
-  // El tema claro lo cumple. El oscuro copia el peso de borde de ChatGPT, que
-  // es más suave, y baja a 2.2:1 — decisión estética explícita del usuario.
-  // Se compensa con relleno propio (`--bg-surface-alt`) y un anillo de foco
-  // fuerte, pero el borde en reposo NO cumple 1.4.11. Subir este número a 3.0
-  // devuelve el cumplimiento a costa del look.
-  { fg: "--border-strong", bg: "--bg-surface", min: 3.0, minOscuro: 2.2 },
+  // Los controles son outlined: el borde es su único indicador, así que debe
+  // cumplir el 3:1 de WCAG 1.4.11 contra CUALQUIER superficie sobre la que
+  // pueda caer, no sólo la principal.
+  { fg: "--border-strong", bg: "--bg-app", min: 3.0 },
+  { fg: "--border-strong", bg: "--bg-surface", min: 3.0 },
+  { fg: "--border-strong", bg: "--bg-surface-alt", min: 3.0 },
+  { fg: "--border-strong", bg: "--bg-surface-raised", min: 3.0 },
 ];
+
+/**
+ * Compone el anillo de foco (translúcido) sobre el fondo que tenga detrás.
+ * La etiqueta flotante cae justo encima del anillo, así que su contraste real
+ * NO es contra la página sino contra esta mezcla — que es donde se coló el
+ * fallo: texto de acento sobre halo de acento daba 3.84:1.
+ */
+function ringOver(scope: Record<string, string>, bgToken: string): string {
+  const ring = resolve(scope, "--ring-focus");
+  const m = /rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)\s*\/\s*(\d+)%\s*\)/.exec(ring);
+  if (!m) throw new Error(`No se pudo leer --ring-focus: ${ring}`);
+  const alpha = Number(m[4]) / 100;
+  const bg = resolve(scope, bgToken);
+  const channel = (i: number) => {
+    const over = Number(m[i + 1]);
+    const under = parseInt(bg.slice(1 + i * 2, 3 + i * 2), 16);
+    return Math.round(alpha * over + (1 - alpha) * under);
+  };
+  return "#" + [0, 1, 2].map((i) => channel(i).toString(16).padStart(2, "0")).join("");
+}
 
 describe("tokens.css", () => {
   it("mantiene los dos bloques oscuros idénticos", () => {
@@ -92,9 +110,24 @@ describe("tokens.css", () => {
       }
 
       for (const par of PARES) {
-        const min = tema === "oscuro" ? (par.minOscuro ?? par.min) : par.min;
-        it(`${par.fg} sobre ${par.bg} cumple ${min}:1`, () => {
-          expect(contrast(scope, par.fg, par.bg)).toBeGreaterThanOrEqual(min);
+        it(`${par.fg} sobre ${par.bg} cumple ${par.min}:1`, () => {
+          expect(contrast(scope, par.fg, par.bg)).toBeGreaterThanOrEqual(par.min);
+        });
+      }
+
+      // Margen de seguridad: el anillo no debe volverse tan opaco que el texto
+      // que caiga encima deje de leerse. Hoy la etiqueta flotante se tapa el
+      // anillo con su propio parche (`--field-bg`), pero lo cruza al animarse,
+      // y este umbral evita repetir el fallo original —etiqueta de acento
+      // sobre halo de acento, 3.84:1— si alguien sube la opacidad.
+      for (const surface of ["--bg-app", "--bg-surface"]) {
+        it(`el anillo de foco deja leer texto encima en ${surface}`, () => {
+          const bajoElAnillo = ringOver(scope, surface);
+          const label = resolve(scope, "--text-primary");
+          const a = luminance(label);
+          const b = luminance(bajoElAnillo);
+          const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+          expect(ratio).toBeGreaterThanOrEqual(4.5);
         });
       }
     });

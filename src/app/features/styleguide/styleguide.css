@@ -193,3 +193,26 @@ code {
   white-space: pre-wrap;
   overflow-x: auto;
 }
+
+/* Comparativa de modos de etiqueta */
+
+.sg__compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-6);
+}
+
+.sg__compare-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.sg__compare-head {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}

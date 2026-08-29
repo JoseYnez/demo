@@ -21,14 +21,16 @@
   color: var(--color-danger-fg);
 }
 
-/* El control se identifica por su relleno además de por el borde: como el
-   composer de ChatGPT, es un pozo más claro que la página. El borde
-   (`--border-strong`) queda deliberadamente suave — ver §11.2 sobre el
-   compromiso con WCAG 1.4.11 — y el indicador fuerte es el anillo de foco. */
+/* Todos los controles son OUTLINED: sin relleno, el borde los define.
+   El modo float obliga a ello —la etiqueta cruza la línea del borde y un
+   relleno le partiría el fondo en dos colores— y tener la mitad de los
+   controles rellenos y la otra mitad no sería incoherente. Como el borde pasa
+   a ser el único indicador, `--border-strong` cumple 3:1 (WCAG 1.4.11) contra
+   la superficie más clara sobre la que puede caer. */
 .ui-control {
   width: 100%;
   padding: 0 var(--space-3);
-  background-color: var(--bg-surface-alt);
+  background-color: transparent;
   color: var(--text-primary);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
@@ -42,8 +44,7 @@
 }
 
 .ui-control:hover:not(:disabled):not(:focus) {
-  border-color: var(--border-strong);
-  background-color: var(--bg-surface-raised);
+  border-color: var(--text-muted);
 }
 
 .ui-control:focus {
@@ -52,18 +53,18 @@
   box-shadow: var(--ring-focus);
 }
 
-/* Inertes: se hunden al color de la página y pierden el borde, en vez de
-   quedarse con el relleno de un control activo. */
+/* Inertes: borde discontinuo y apagado. Rellenarlos los haría más visibles
+   que un control activo, justo al revés de lo que deben comunicar. */
 .ui-control:disabled {
-  background-color: var(--bg-app);
   border-color: var(--border-default);
+  border-style: dashed;
   color: var(--text-muted);
   cursor: not-allowed;
 }
 
 .ui-control:read-only:not(select) {
-  background-color: var(--bg-app);
   border-color: var(--border-default);
+  border-style: dashed;
 }
 
 .ui-control.is-invalid {
@@ -73,6 +74,39 @@
 .ui-control.is-invalid:focus {
   border-color: var(--color-danger-solid);
   box-shadow: 0 0 0 3px var(--color-danger-bg);
+}
+
+/* Modo float: el borde lo dibuja el fieldset del shell, que va detrás. El
+   control renuncia al suyo y se coloca por encima. */
+.ui-control.is-floating,
+.ui-control.is-floating:hover:not(:disabled):not(:focus),
+.ui-control.is-floating:disabled,
+.ui-control.is-floating:read-only:not(select) {
+  position: relative;
+  z-index: 1;
+  border-color: transparent;
+  border-style: solid;
+}
+
+.ui-control.is-floating:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Modo inset: la etiqueta vive dentro y no cruza el borde, así que aquí el
+   relleno no parte ningún fondo — es el único modo que admite el "pozo". */
+.ui-control.is-inset {
+  padding-top: var(--space-5);
+  background-color: var(--bg-surface-alt);
+}
+
+.ui-control.is-inset:hover:not(:disabled):not(:focus) {
+  background-color: var(--bg-surface-raised);
+}
+
+.ui-control.is-inset:disabled,
+.ui-control.is-inset:read-only:not(select) {
+  background-color: transparent;
 }
 
 .ui-msg {

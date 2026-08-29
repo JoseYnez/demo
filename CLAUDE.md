@@ -625,11 +625,11 @@ La capa global son tres hojas, importadas por `src/styles.css` en este orden:
 |---|---|
 | `styles/tokens.css` | Las variables. Único sitio donde se escribe un color o una medida literal. |
 | `styles/reset.css` | Normalización y estilos base de `body`, títulos, enlaces y foco. |
-| `styles/forms.css` | Base compartida de los controles: `.ui-field`, `.ui-label`, `.ui-control`, `.ui-msg`. Vive en la capa global porque la encapsulación de Angular impide compartir estos estilos entre `input`, `textarea` y `select` sin duplicarlos tres veces. Los componentes consumen esas clases y añaden sólo lo suyo (alto, `resize`, la flecha del select). |
+| `styles/forms.css` | Base compartida de los controles: `.ui-field`, `.ui-label`, `.ui-control`, `.ui-msg`. Vive en la capa global porque la encapsulación de Angular impide compartir estos estilos entre `input`, `textarea` y `select` sin duplicarlos tres veces. Los componentes consumen esas clases y añaden sólo lo suyo (alto, `resize`, la flecha del select). Todos los controles son **outlined**: fondo transparente, el borde los define. |
 
 Roles que los tokens cubren:
 
-- **Superficies**: `--bg-app`, `--bg-surface`, `--bg-surface-alt`, `--bg-surface-raised`.
+- **Superficies**: `--bg-app`, `--bg-surface`, `--bg-surface-alt`, `--bg-surface-raised`, `--field-bg` (el color que hay *detrás* de un campo; lo redefine cada superficie).
 - **Texto**: `--text-primary`, `--text-secondary`, `--text-muted`, `--text-on-accent`.
 - **Bordes y foco**: `--border-default`, `--border-strong`, `--border-focus`, `--ring-focus`.
 - **Acento**: `--accent`, `--accent-hover`, `--accent-active`, `--accent-subtle`.
@@ -653,6 +653,15 @@ Tres distinciones que hay que respetar, porque confundirlas ya causó un bug:
 - Arranque: leer `localStorage` → si no hay nada, `prefers-color-scheme`.
 - Gestionado por un único `ThemeService` en `core/services/`, con el patrón signal privado + `readonly`.
 
+**`color-scheme` no es opcional, y hay que cambiarlo junto con los tokens.** Es lo único que gobierna la UI nativa que el CSS no alcanza: la lista desplegable del `<select>`, las barras de scroll, los calendarios de `<input type="date">`. Sin declararlo, el navegador asume claro: el popup del select salía blanco mientras sus opciones heredaban `--text-primary` (casi blanco) y desaparecían. Está declarado en los tres bloques de [tokens.css](src/styles/tokens.css) — `light` en `:root`, `dark` en los dos de tema oscuro.
+
+**La lista desplegable del `<select>` hay que pintarla entera a mano** — fondo y texto juntos en `option`. Dos intentos previos fallaron y conviene no repetirlos:
+
+1. Confiar en `color-scheme: dark`. El motor toma de ahí el color de **texto** (claro) pero deja la **superficie** del popup en blanco: texto blanco sobre blanco.
+2. `color: CanvasText`. Resuelve contra el esquema de la página, no contra lo que el popup pinta de verdad, así que reproduce el mismo desajuste.
+
+La regla: **fondo y color de `option` se declaran siempre juntos**, para que no puedan descasarse. Depende de que el motor honre el fondo de `option` — lo hace Chromium/WebView2, que es el objetivo primario; WKWebView lo ignora. Si algún día hace falta un desplegable con garantías en todas las plataformas, la salida es un listbox propio, no seguir peleando con el nativo.
+
 **El modo oscuro copia la rampa de ChatGPT.** Es una referencia deliberada: grises neutros y planos, sin bordes marcados, elevación por tono. Las anclas son las suyas (sidebar `#171717`, chat `#212121`, hover `#2f2f2f`, texto `#ececec`) y la rampa de aquí queda a menos de un punto de L\* de cada una. La diferencia es un croma de 0.005 en las superficies: se leen grises, pero no del todo neutras. **El verde vive en el acento, no en el mobiliario** — si se sube el croma de las superficies, se pierde el parecido.
 
 **La paleta se calcula, no se elige a ojo.** Los dos temas se generaron igualando el contraste **perceptual (APCA)**, no la ratio de WCAG 2. Importa porque WCAG 2 subestima el contraste sobre fondos oscuros: la paleta anterior daba 7.88:1 para `--text-secondary` en oscuro contra 7.40:1 en claro — aparentemente mejor — mientras APCA medía Lc 58.8 contra Lc 85.7. El modo oscuro estaba muy por debajo y WCAG 2 lo ocultaba.
@@ -664,7 +673,7 @@ Criterios que cumple la paleta, y que verifica [tokens.spec.ts](src/styles/token
 
 Al tocar un color hay que revalidar; el test falla si el contraste baja o si los dos bloques oscuros divergen.
 
-**Una desviación conocida.** WCAG 1.4.11 pide 3:1 para el límite visual de un control. El tema claro lo cumple (3.22:1); el oscuro baja a **2.2:1** para igualar el peso de borde de ChatGPT, y es una decisión estética tomada a sabiendas. Se compensa en parte: el control tiene relleno propio (`--bg-surface-alt`, el "pozo" del composer) y el anillo de foco es fuerte y sí cumple. Pero el borde **en reposo** no llega. Está marcado en [tokens.spec.ts](src/styles/tokens.spec.ts) con `minOscuro`; subirlo a 3.0 recupera el cumplimiento a costa del look.
+**Los controles son outlined, no rellenos.** Sin fondo: el borde los define. Viene impuesto por la etiqueta flotante (§11.3) —cruza la línea del borde, y un relleno le partiría el fondo en dos colores a mitad del texto— y se extiende a todos los controles para no tener medio sistema relleno y medio no. Consecuencia: `--border-strong` es el único indicador del control, así que cumple **3:1 contra las cuatro superficies**, no sólo contra la principal. [tokens.spec.ts](src/styles/tokens.spec.ts) lo verifica par a par.
 
 **Elevación en oscuro**: una sombra negra sobre un fondo casi negro no se ve. La elevación la lleva la **superficie**, que se aclara (`--bg-surface-raised`), más un filo superior (`--edge-raised`). En claro la sombra hace ese trabajo y ambos tokens son neutros. Un componente elevado usa los tres a la vez y funciona en los dos temas sin CSS condicional.
 
@@ -689,11 +698,33 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 | `Button` | `<app-button>` | `variant` (primary/secondary/ghost/danger), `size` (sm/md/lg), `type`, `disabled`, `loading`, `fullWidth` | `loading` deshabilita y muestra spinner. |
 | `Card` | `<app-card>` | `variant` (elevated/outlined/flat), `padding` (none/sm/md/lg) | Slots opcionales `[card-header]` y `[card-footer]`; la zona sin contenido no se dibuja. |
 | `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `size` (sm/md) | Sólo presentación. |
-| `Input` | `<app-input>` | `label`, `placeholder`, `type`, `hint` + el contrato de §6.8 | `FormValueControl<string>`. |
-| `Textarea` | `<app-textarea>` | `label`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
-| `Select` | `<app-select>` | `label`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`, flecha propia. |
+| `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint` + el contrato de §6.8 | `FormValueControl<string>`. |
+| `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
+| `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |
+| `FieldShell` | `<app-field-shell>` | `labelMode`, `label`, `controlId`, `floated`, `required`, `disabled`, `hint`, `error` | Carcasa que comparten los tres: etiqueta, muesca y línea de ayuda/error. Sólo se usa directamente al construir un control propio. |
 
 Los tres controles de formulario gatean el mensaje de error tras `touched`: enseñar "requerido" en un formulario recién abierto es hostil.
+
+**`labelMode`** decide dónde vive la etiqueta. Hay tres modos conviviendo **a la espera de que se elija uno**; cuando se decida, el sistema se unifica a ése y los otros se retiran. Comparativa viva en `/styleguide`, sección "Comparativa: dónde va la etiqueta".
+
+| Modo | Alto | Etiqueta | Relleno |
+|---|---|---|---|
+| `top` (por defecto) | 34 px | fuera, en su propia fila | no (outlined) |
+| `float` | 40 px | montada en la línea del borde, con muesca | no — el patrón lo prohíbe |
+| `inset` | 52 px | fija dentro, sin animación | **sí**, es el único que lo admite |
+
+**Etiqueta flotante** (`labelMode="float"`): arranca dentro haciendo de placeholder y sube a la línea del borde al enfocar o al haber valor. La caja pasa de 34 a 40 px, pero la etiqueta deja de ocupar su propia fila.
+
+- La muesca la abre un `<fieldset>` decorativo (`aria-hidden`) mediante su `<legend>`. **No se puede sustituir por un parche de fondo tras la etiqueta**: el parche asomaría como un rectángulo de color sobre la página. El `<label for>` real sigue existiendo aparte, para lectores de pantalla.
+- La etiqueta flotada va centrada en la **línea del borde** (`top: 0` con `translateY(-50%)`), no dentro de la caja. Hundirla aunque sean 4 px la convierte en una etiqueta inline apretada y rompe el patrón.
+- **Ni el fieldset ni el control llevan fondo.** La etiqueta cruza la línea del borde: con relleno, su mitad superior quedaría sobre el fondo de la página y la inferior sobre el relleno, con un escalón de color a mitad de la palabra. *Outlined* y *filled* son excluyentes — ésta es outlined, y por eso lo son también los controles normales (§11.2).
+- El `left` de la etiqueta flotada tiene que coincidir con el del legend (`--space-2` + 1 px del borde del fieldset). Si no, asoma un pellizco de borde por un lado.
+- **La etiqueta flotada lleva su propio parche de fondo (`--field-bg`)**, y no es decorativo: sin él, el anillo de foco —acento translúcido— la ilumina por detrás y el contraste se hundía de 11.6:1 a 3.84:1 justo al enfocar. El parche funciona porque los controles son transparentes: el color tras el campo es uniforme. `--field-bg` vale `--bg-app` por defecto y **cada superficie lo redefine** (ver `card.css`), así que cascadea solo; sólo hay que declararlo a mano en un contenedor con fondo propio que no sea una `Card`.
+- Al enfocar, la etiqueta se ilumina a `--text-primary`; **nunca se pone de acento**. El borde ya comunica el foco, y teñirla del mismo color que el halo fue el error original.
+- La tipografía del `<legend>` debe ser **idéntica** a la de la etiqueta flotada (tamaño y peso). Sólo sirve para medir el hueco: si divergen, la muesca se queda corta y la etiqueta se sale.
+- En `float` el placeholder se suprime mientras la etiqueta está abajo: los dos a la vez se solapan.
+- El `select` en `float` nace flotado y no baja nunca — siempre muestra algo, el placeholder o la opción elegida.
+- Los dos modos conviven en el mismo formulario, pero mezclarlos descuadra las alturas (34 contra 40 px). Elegir uno por formulario.
 
 ### 11.4 Cómo agregar un componente
 

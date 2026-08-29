@@ -9,6 +9,13 @@
    Al retocar un color, revalidar antes de commitear. */
 
 :root {
+  /* Le dice al navegador de qué color pintar TODA la UI nativa que no
+     controlamos por CSS: la lista desplegable del <select>, las barras de
+     scroll, los calendarios de <input type=date>. Sin esto el popup del select
+     sale blanco y sus opciones —que heredan --text-primary— se vuelven
+     invisibles en tema oscuro. */
+  color-scheme: light;
+
   /* Tipografía — stack del sistema, sin webfonts */
   --font-sans:
     -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto,
@@ -76,7 +83,7 @@
   /* Bordes. `default` es decorativo (divisores); `strong` delimita controles
      y cumple el 3:1 que pide WCAG 1.4.11 para componentes de interfaz. */
   --border-default: #e0e6e2;
-  --border-strong: #87928d;
+  --border-strong: #808b86;
   --border-focus: var(--accent);
 
   /* Acento — verde sage */
@@ -120,6 +127,12 @@
   --edge-raised: 0 0 0 0 transparent;
 
   --ring-focus: 0 0 0 3px rgb(79 120 96 / 25%);
+
+  /* Color que hay DETRÁS de un campo. La etiqueta flotante lo usa para taparse
+     el anillo de foco. Lo redefine cada superficie que no sea la página (ver
+     card.css), así que cascadea solo; sólo hay que declararlo a mano en un
+     contenedor con fondo propio. */
+  --field-bg: var(--bg-app);
 }
 
 /* ================= TEMA OSCURO =================
@@ -133,6 +146,8 @@
    sin colores. Hay un test que falla si los dos bloques divergen. */
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
+
   /* Rampa calcada de la de ChatGPT (sidebar #171717, chat #212121,
      hover #2f2f2f), con un croma de 0.005 en vez de 0: se lee gris, pero
      no del todo neutro. El verde vive en el acento, no en el mobiliario. */
@@ -147,7 +162,7 @@
   --text-on-accent: #111713;
 
   --border-default: #2d302e;
-  --border-strong: #555956;
+  --border-strong: #787e7b;
 
   /* Sage apagado: mismo brillo que el menta anterior con 40% menos de croma. */
   --accent: #a8c7b1;
@@ -184,11 +199,13 @@
 
   --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
 
-  --ring-focus: 0 0 0 3px rgb(168 199 177 / 38%);
+  --ring-focus: 0 0 0 3px rgb(168 199 177 / 22%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
     /* Rampa calcada de la de ChatGPT (sidebar #171717, chat #212121,
        hover #2f2f2f), con un croma de 0.005 en vez de 0: se lee gris, pero
        no del todo neutro. El verde vive en el acento, no en el mobiliario. */
@@ -203,7 +220,7 @@
     --text-on-accent: #111713;
 
     --border-default: #2d302e;
-    --border-strong: #555956;
+    --border-strong: #787e7b;
 
     /* Sage apagado: mismo brillo que el menta anterior con 40% menos de croma. */
     --accent: #a8c7b1;
@@ -240,6 +257,6 @@
 
     --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
 
-    --ring-focus: 0 0 0 3px rgb(168 199 177 / 38%);
+    --ring-focus: 0 0 0 3px rgb(168 199 177 / 22%);
   }
 }

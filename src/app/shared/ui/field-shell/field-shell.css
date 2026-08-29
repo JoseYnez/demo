@@ -1,0 +1,181 @@
+:host {
+  display: block;
+}
+
+.fs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.fs__box {
+  position: relative;
+  display: flex;
+}
+
+/* ---------- Modo float ---------- */
+
+.fs--float {
+  /* La etiqueta flotada monta sobre el borde y sobresale media altura: sin
+     este hueco la recortaría el contenedor de la fila. */
+  padding-top: var(--space-2);
+}
+
+/* El fieldset va DETRÁS del control (z-index 0 contra el 1 de .ui-control) y
+   aporta sólo el borde.
+   SIN RELLENO, y no es un descuido: la etiqueta cruza la línea del borde, así
+   que un fondo aquí dejaría medio texto sobre el relleno y medio sobre la
+   página, con un escalón de color a mitad de la palabra. Outlined y filled son
+   variantes excluyentes; ésta es outlined. */
+.fs__outline {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  padding: 0 var(--space-2);
+  min-inline-size: 0;
+  pointer-events: none;
+  background-color: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+/* El legend no se ve, pero su caja sigue ocupando sitio: eso es lo que abre
+   el hueco en el borde. `max-width` animado hace que la muesca se abra y
+   cierre siguiendo a la etiqueta. */
+.fs__legend {
+  display: block;
+  float: unset;
+  width: auto;
+  max-width: 0.01px;
+  height: 10px;
+  padding: 0;
+  overflow: hidden;
+  visibility: hidden;
+  white-space: nowrap;
+  /* Tipografía IDÉNTICA a la de .fs__label flotada: el legend sólo sirve para
+     medir el hueco, así que si divergen, la muesca no le cabe a la etiqueta. */
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: max-width var(--transition-fast);
+}
+
+.fs--float.is-floated .fs__legend {
+  max-width: 100%;
+  padding: 0 var(--space-1);
+}
+
+/* El parche de fondo es lo que impide que el anillo de foco ilumine por
+   detrás del texto. La etiqueta ya se apila por delante (z-index 2), sólo le
+   faltaba con qué tapar. Funciona porque los controles son transparentes: el
+   color detrás del campo es uniforme, y `--field-bg` lo sigue —lo redefine
+   cada superficie, así que dentro de una card también acierta. */
+.fs__label {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  z-index: 2;
+  background-color: var(--field-bg);
+  color: var(--text-muted);
+  font-size: var(--font-size-base);
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  transition:
+    top var(--transition-fast),
+    left var(--transition-fast),
+    font-size var(--transition-fast),
+    color var(--transition-fast);
+}
+
+/* `top: 0` con el translateY(-50%) heredado deja la etiqueta centrada SOBRE la
+   línea del borde, que es el patrón outlined. Con `--space-1` quedaba hundida
+   4px dentro de la caja y parecía una etiqueta inline apretada.
+   `left` tiene que caer justo donde empieza el legend, o se desalinea del hueco
+   y asoma un pellizco de borde: 1px del borde del fieldset + su padding. */
+.fs--float.is-floated .fs__label {
+  top: 0;
+  left: calc(var(--space-2) + 1px);
+  padding: 0 var(--space-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+/* Foco */
+
+.fs--float:focus-within .fs__outline {
+  border-color: var(--accent);
+  box-shadow: var(--ring-focus);
+}
+
+/* Al enfocar, la etiqueta se ILUMINA, no se pone de acento.
+   El anillo de foco es verde translúcido y la etiqueta cae justo encima: con
+   texto verde sobre halo verde el contraste se hundía de 11.6:1 a 3.84:1 —
+   por debajo de AA— precisamente al enfocar, que es cuando más se mira. El
+   borde ya comunica el foco; la etiqueta sólo tiene que leerse. */
+.fs--float:focus-within .fs__label {
+  color: var(--text-primary);
+}
+
+/* Hover: sin relleno que cambiar, el afordance lo da el borde. */
+
+.fs--float:not(:focus-within) .fs__box:hover .fs__outline {
+  border-color: var(--text-muted);
+}
+
+/* Error */
+
+.fs--float.is-invalid .fs__outline {
+  border-color: var(--color-danger-solid);
+}
+
+.fs--float.is-invalid:focus-within .fs__outline {
+  border-color: var(--color-danger-solid);
+  box-shadow: 0 0 0 3px var(--color-danger-bg);
+}
+
+.fs--float.is-invalid.is-floated .fs__label,
+.fs--float.is-invalid:focus-within .fs__label {
+  color: var(--color-danger-fg);
+}
+
+/* Deshabilitado: se apaga el borde. Rellenarlo lo haría MÁS visible que uno
+   activo, que es al revés de lo que debe comunicar. */
+
+.fs--float.is-disabled .fs__outline {
+  border-color: var(--border-default);
+  border-style: dashed;
+}
+
+/* ---------- Modo inset ----------
+   Etiqueta estática dentro de la caja, sin animación y sin muesca. Al no
+   cruzar el borde, este modo SÍ admite relleno (ver forms.css). */
+
+.fs__inset-label {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-3);
+  z-index: 2;
+  font-size: var(--font-size-xs);
+  line-height: 1;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color var(--transition-fast);
+}
+
+.fs--inset:focus-within .fs__inset-label {
+  color: var(--text-primary);
+}
+
+.fs--inset.is-invalid .fs__inset-label {
+  color: var(--color-danger-fg);
+}
+
+.fs--float.is-disabled .fs__label {
+  color: var(--text-muted);
+}

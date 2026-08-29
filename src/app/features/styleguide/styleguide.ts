@@ -73,6 +73,20 @@ export class Styleguide {
   protected readonly sueltoArea = signal("");
   protected readonly sueltoNotas = signal("");
 
+  /* Comparativa de modos de etiqueta */
+  protected readonly cmpTop = signal("Ada Lovelace");
+  protected readonly cmpTopSel = signal("back");
+  protected readonly cmpFloat = signal("Ada Lovelace");
+  protected readonly cmpFloatSel = signal("back");
+  protected readonly cmpInset = signal("Ada Lovelace");
+  protected readonly cmpInsetSel = signal("back");
+
+  /* Etiqueta flotante */
+  protected readonly floatVacio = signal("");
+  protected readonly floatLleno = signal("Ada Lovelace");
+  protected readonly floatArea = signal("");
+  protected readonly floatNotas = signal("");
+
   /* Uso con Signal Forms: el modelo es la fuente de verdad y `form()` le cuelga
      el estado de validación que los controles consumen vía [formField]. */
   protected readonly modelo = signal<Alta>({
