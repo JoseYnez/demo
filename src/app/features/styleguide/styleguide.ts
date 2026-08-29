@@ -11,7 +11,12 @@ import {
 
 import { ACCENT_PRESETS, AccentService } from "../../core/services/accent";
 import { Badge, Button, Card, Input, Select, Textarea } from "../../shared/ui";
-import type { BadgeVariant, ButtonVariant, SelectOption } from "../../shared/ui";
+import type {
+  BadgeAppearance,
+  BadgeVariant,
+  ButtonVariant,
+  SelectOption,
+} from "../../shared/ui";
 
 interface Alta {
   nombre: string;
@@ -47,6 +52,7 @@ export class Styleguide {
     "--accent-hover",
     "--accent-active",
     "--accent-subtle",
+    "--accent-border",
   ];
   protected readonly stateTokens = ["success", "warning", "danger", "info"];
   protected readonly fontSizes = ["xs", "sm", "base", "lg", "xl", "2xl", "3xl"];
@@ -67,6 +73,28 @@ export class Styleguide {
     "warning",
     "danger",
     "info",
+  ];
+
+  protected readonly badgeAppearances: readonly {
+    name: BadgeAppearance;
+    peso: string;
+    nota: string;
+  }[] = [
+    {
+      name: "soft",
+      peso: "relleno tenue",
+      nota: "Fondo de la familia y borde a juego. Es el actual y el más discreto: se lee como una etiqueta, no como un aviso.",
+    },
+    {
+      name: "outline",
+      peso: "sólo trazo",
+      nota: "Sin relleno; el trazo lo lleva el color del texto. Es el que menos ruido mete en una lista larga y el único que no compite con el fondo de la fila.",
+    },
+    {
+      name: "solid",
+      peso: "relleno pleno",
+      nota: "Relleno saturado con texto invertido. Es el que se ve desde lejos, así que sólo aguanta uno o dos por pantalla antes de cansar.",
+    },
   ];
 
   protected readonly areas: readonly SelectOption[] = [

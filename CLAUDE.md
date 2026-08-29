@@ -632,9 +632,9 @@ Roles que los tokens cubren:
 - **Superficies**: `--bg-app`, `--bg-surface`, `--bg-surface-alt`, `--bg-surface-raised`, `--field-bg` (el color que hay *detrás* de un campo; lo redefine cada superficie).
 - **Texto**: `--text-primary`, `--text-secondary`, `--text-muted`, `--text-on-accent`.
 - **Bordes y foco**: `--border-default`, `--border-strong`, `--border-focus`, `--ring-focus`.
-- **Acento**: `--accent`, `--accent-hover`, `--accent-active`, `--accent-subtle`.
+- **Acento**: `--accent`, `--accent-hover`, `--accent-active`, `--accent-subtle`, `--accent-border`.
 - **Estados tenues**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
-- **Destructivo sólido**: `--color-danger-solid`, `--color-danger-solid-hover`, `--color-danger-on-solid`.
+- **Rellenos sólidos**: `--color-{neutral,success,warning,danger,info}-solid` + su `-on-solid`, más `--color-danger-solid-hover`. Son el *fondo* de un botón o un badge, con su propio color de texto encima.
 - **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
 
 > **Regla dura**: prohibido hardcodear colores, espaciados, radios o sombras en el CSS de un componente. Siempre variables. Es lo único que hace que el tema oscuro funcione solo.
@@ -644,7 +644,7 @@ Tres distinciones que hay que respetar, porque confundirlas ya causó un bug:
 | No confundir | |
 |---|---|
 | `--border-default` vs `--border-strong` | `default` es **decorativo** (divisores de card): sin requisito de contraste. `strong` delimita **controles** y cumple el 3:1 de WCAG 1.4.11. El borde de un `input` usa `strong`. |
-| `--color-danger-fg` vs `--color-danger-solid` | `fg` es texto **sobre** `--color-danger-bg` (aviso tenue). `solid` es el **relleno** de un botón destructivo, y su texto es `--color-danger-on-solid`. Usar `fg` como fondo daba 2.52:1 en oscuro. |
+| `--color-*-fg` vs `--color-*-solid` | `fg` es texto **sobre** `--color-*-bg` (aviso tenue). `solid` es el **relleno**, y su texto es `--color-*-on-solid`. En claro los dos valen lo mismo, en oscuro no: usar `fg` como fondo daba 2.52:1. Que coincidan en un tema no los hace un alias. |
 | `--bg-surface` vs `--bg-surface-raised` | `raised` es para superficies elevadas. En claro son el mismo blanco (eleva la sombra); en oscuro `raised` es **más clara**. |
 
 ### 11.2 Tema claro/oscuro
@@ -698,7 +698,7 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 |---|---|---|---|
 | `Button` | `<app-button>` | `variant` (primary/secondary/ghost/danger), `size` (sm/md/lg), `type`, `disabled`, `loading`, `fullWidth` | `loading` deshabilita y muestra spinner. |
 | `Card` | `<app-card>` | `variant` (elevated/outlined/flat), `padding` (none/sm/md/lg) | Slots opcionales `[card-header]` y `[card-footer]`; la zona sin contenido no se dibuja. |
-| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `size` (sm/md) | Sólo presentación. |
+| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (soft/outline/solid), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla. **Las tres apariencias conviven a la espera de que se elija una** — comparativa en `/styleguide`. |
 | `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint` + el contrato de §6.8 | `FormValueControl<string>`. |
 | `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
 | `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |
@@ -764,8 +764,9 @@ Piezas:
 
 Reglas:
 
-1. **No rotan** los semánticos (`success/warning/danger/info`), el destructivo
-   sólido ni las sombras: rojo=error es convención, no estética.
+1. **No rotan** los semánticos (`success/warning/danger/info`), sus rellenos
+   sólidos ni las sombras: rojo=error es convención, no estética. El neutro
+   sólido sí rota: es mobiliario, no semántica.
 2. **El `@supports` es obligatorio, no cosmético.** Una custom property acepta
    cualquier valor, así que declararla dos veces NO da fallback: la última gana
    siempre, y en un motor sin `oklch()` cada `var(--accent)` se volvería

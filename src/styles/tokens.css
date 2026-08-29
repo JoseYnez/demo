@@ -99,6 +99,7 @@
   --accent-hover: #416852;
   --accent-active: #365b46;
   --accent-subtle: #ecf6f0;
+  --accent-border: #bedbc9;
 
   /* Estados: `bg`/`fg`/`border` son para avisos y badges (fondo tenue).
      NO rotan con el acento: rojo=error y verde=éxito son convención. */
@@ -118,12 +119,27 @@
   --color-info-fg: #2d5a8a;
   --color-info-border: #c2d7ea;
 
-  /* Destructivo sólido: relleno de un botón, con su propio color de texto.
-     NO reutilizar `--color-danger-fg` como fondo — está calculado para ir
-     SOBRE `--color-danger-bg`, no debajo de texto. */
+  /* Rellenos sólidos: son el FONDO de un botón o un badge y llevan su propio
+     color de texto. NO reutilizar `--color-*-fg` como fondo — está calculado
+     para ir SOBRE `--color-*-bg`, no debajo de texto.
+     En claro coinciden con su `-fg`: el mismo color que se lee sobre un fondo
+     tenue admite blanco encima. En oscuro divergen, y por eso son tokens
+     aparte y no un alias. */
+  --color-neutral-solid: #4e5852;
+  --color-neutral-on-solid: #ffffff;
+
+  --color-success-solid: #2c6b45;
+  --color-success-on-solid: #ffffff;
+
+  --color-warning-solid: #8a5d12;
+  --color-warning-on-solid: #ffffff;
+
   --color-danger-solid: #a33630;
   --color-danger-solid-hover: #8c2b26;
   --color-danger-on-solid: #ffffff;
+
+  --color-info-solid: #2d5a8a;
+  --color-info-on-solid: #ffffff;
 
   /* Sombras */
   --shadow-sm: 0 1px 2px rgb(20 34 28 / 6%);
@@ -178,6 +194,7 @@
   --accent-hover: #b7d9c4;
   --accent-active: #97b5a2;
   --accent-subtle: #222d26;
+  --accent-border: #394d41;
 
   --color-success-bg: #203126;
   --color-success-fg: #a1dfb5;
@@ -195,9 +212,21 @@
   --color-info-fg: #a6d6ff;
   --color-info-border: #354a5c;
 
+  --color-neutral-solid: #b7bbb9;
+  --color-neutral-on-solid: #111713;
+
+  --color-success-solid: #217c4a;
+  --color-success-on-solid: #ffffff;
+
+  --color-warning-solid: #8b5f19;
+  --color-warning-on-solid: #ffffff;
+
   --color-danger-solid: #b94a42;
   --color-danger-solid-hover: #cc5b52;
   --color-danger-on-solid: #ffffff;
+
+  --color-info-solid: #256bb1;
+  --color-info-on-solid: #ffffff;
 
   /* Plano, como la referencia: la elevacion la lleva el tono de la superficie
      y las sombras casi no participan. */
@@ -236,6 +265,7 @@
     --accent-hover: #b7d9c4;
     --accent-active: #97b5a2;
     --accent-subtle: #222d26;
+    --accent-border: #394d41;
 
     --color-success-bg: #203126;
     --color-success-fg: #a1dfb5;
@@ -253,9 +283,21 @@
     --color-info-fg: #a6d6ff;
     --color-info-border: #354a5c;
 
+    --color-neutral-solid: #b7bbb9;
+    --color-neutral-on-solid: #111713;
+
+    --color-success-solid: #217c4a;
+    --color-success-on-solid: #ffffff;
+
+    --color-warning-solid: #8b5f19;
+    --color-warning-on-solid: #ffffff;
+
     --color-danger-solid: #b94a42;
     --color-danger-solid-hover: #cc5b52;
     --color-danger-on-solid: #ffffff;
+
+    --color-info-solid: #256bb1;
+    --color-info-on-solid: #ffffff;
 
     /* Plano, como la referencia: la elevacion la lleva el tono de la superficie
        y las sombras casi no participan. */
@@ -293,7 +335,12 @@
     --accent-hover: oklch(0.482 0.058 var(--accent-hue));
     --accent-active: oklch(0.437 0.055 var(--accent-hue));
     --accent-subtle: oklch(0.965 0.014 var(--accent-hue));
+    --accent-border: oklch(0.865 0.04 var(--accent-hue));
     --ring-focus: 0 0 0 3px oklch(0.525 0.06 var(--accent-hue) / 25%);
+
+    /* Neutro sólido: es mobiliario, no semántica, así que rota con el tono.
+       Su texto en claro es el blanco estático de arriba. */
+    --color-neutral-solid: oklch(0.449 0.016 var(--accent-hue));
 
     --bg-app: oklch(0.977 0.0025 var(--accent-hue));
     --bg-surface-alt: oklch(0.961 0.005 var(--accent-hue));
@@ -311,8 +358,12 @@
     --accent-hover: oklch(0.855 0.047 var(--accent-hue));
     --accent-active: oklch(0.746 0.043 var(--accent-hue));
     --accent-subtle: oklch(0.285 0.019 var(--accent-hue));
+    --accent-border: oklch(0.4 0.032 var(--accent-hue));
     --text-on-accent: oklch(0.197 0.012 var(--accent-hue));
     --ring-focus: 0 0 0 3px oklch(0.8 0.045 var(--accent-hue) / 22%);
+
+    --color-neutral-solid: oklch(0.788 0.005 var(--accent-hue));
+    --color-neutral-on-solid: oklch(0.197 0.012 var(--accent-hue));
 
     --bg-app: oklch(0.215 0.005 var(--accent-hue));
     --bg-surface: oklch(0.257 0.006 var(--accent-hue));
@@ -333,8 +384,12 @@
       --accent-hover: oklch(0.855 0.047 var(--accent-hue));
       --accent-active: oklch(0.746 0.043 var(--accent-hue));
       --accent-subtle: oklch(0.285 0.019 var(--accent-hue));
+      --accent-border: oklch(0.4 0.032 var(--accent-hue));
       --text-on-accent: oklch(0.197 0.012 var(--accent-hue));
       --ring-focus: 0 0 0 3px oklch(0.8 0.045 var(--accent-hue) / 22%);
+
+      --color-neutral-solid: oklch(0.788 0.005 var(--accent-hue));
+      --color-neutral-on-solid: oklch(0.197 0.012 var(--accent-hue));
 
       --bg-app: oklch(0.215 0.005 var(--accent-hue));
       --bg-surface: oklch(0.257 0.006 var(--accent-hue));

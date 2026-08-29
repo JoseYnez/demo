@@ -186,22 +186,88 @@
   </section>
 
   <!-- ---------- Badge ---------- -->
-  <section class="sg__section">
+  <section class="sg__section" id="badge">
     <h2 class="sg__title">Badge</h2>
     <p class="sg__note selectable">
-      <code>&lt;app-badge&gt;</code> — variant, size.
+      <code>&lt;app-badge&gt;</code> — variant, appearance, size, dot, label.
+      <code>variant</code> dice <em>qué</em> comunica; <code>appearance</code>,
+      <em>cuánto grita</em>. <strong>Hay tres apariencias conviviendo a la
+      espera de que elijas una</strong>; cuando decidas, el sistema se unifica a
+      ésa y las otras se retiran.
     </p>
 
-    <div class="sg__inline">
-      @for (variant of badgeVariants; track variant) {
-        <app-badge [variant]="variant">{{ variant }}</app-badge>
+    <h3 class="sg__subtitle">Comparativa: las tres apariencias</h3>
+    <div class="sg__compare">
+      @for (appearance of badgeAppearances; track appearance.name) {
+        <div class="sg__compare-col">
+          <p class="sg__compare-head selectable">
+            <code>{{ appearance.name }}</code> · {{ appearance.peso }}
+          </p>
+          <div class="sg__inline">
+            @for (variant of badgeVariants; track variant) {
+              <app-badge [variant]="variant" [appearance]="appearance.name">
+                {{ variant }}
+              </app-badge>
+            }
+          </div>
+          <p class="sg__note selectable">{{ appearance.nota }}</p>
+        </div>
       }
     </div>
 
-    <div class="sg__inline">
-      @for (variant of badgeVariants; track variant) {
-        <app-badge [variant]="variant" size="sm">{{ variant }}</app-badge>
+    <h3 class="sg__subtitle">Sobre una superficie elevada</h3>
+    <p class="sg__note selectable">
+      <code>outline</code> no tiene relleno propio, así que es el que más cambia
+      al moverlo de fondo. Aquí van los tres sobre una card.
+    </p>
+    <app-card variant="elevated">
+      @for (appearance of badgeAppearances; track appearance.name) {
+        <div class="sg__inline">
+          @for (variant of badgeVariants; track variant) {
+            <app-badge [variant]="variant" [appearance]="appearance.name">
+              {{ variant }}
+            </app-badge>
+          }
+        </div>
       }
+    </app-card>
+
+    <h3 class="sg__subtitle">Tamaños</h3>
+    <p class="sg__note selectable">
+      20 / 24 / 28 px. <code>lg</code> empareja exacto con un
+      <code>btn--sm</code>, para que un badge y un botón en la misma fila
+      compartan altura.
+    </p>
+    <div class="sg__inline">
+      <app-badge variant="info" size="sm">sm · 20 px</app-badge>
+      <app-badge variant="info">md · 24 px</app-badge>
+      <app-badge variant="info" size="lg">lg · 28 px</app-badge>
+      <app-button variant="secondary" size="sm">btn sm · 28 px</app-button>
+    </div>
+
+    <h3 class="sg__subtitle">Punto de estado</h3>
+    <p class="sg__note selectable">
+      <code>dot</code> añade un indicador del color del texto. Sirve para que el
+      estado no dependa sólo del color, que es lo que pide la WCAG 1.4.1.
+    </p>
+    <div class="sg__inline">
+      <app-badge variant="success" [dot]="true">En línea</app-badge>
+      <app-badge variant="warning" [dot]="true">Degradado</app-badge>
+      <app-badge variant="danger" [dot]="true">Caído</app-badge>
+      <app-badge variant="neutral" [dot]="true" appearance="outline">
+        Sin datos
+      </app-badge>
+    </div>
+
+    <h3 class="sg__subtitle">Texto largo</h3>
+    <p class="sg__note selectable">
+      El badge nunca desborda a su contenedor: recorta con elipsis. Con
+      <code>label</code> se le da al lector de pantalla el texto completo.
+    </p>
+    <div class="sg__badge-narrow">
+      <app-badge variant="primary" label="Integración continua con Windows">
+        Integración continua con Windows
+      </app-badge>
     </div>
   </section>
 

@@ -333,3 +333,9 @@ code {
   font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
 }
+
+/* Ancho corto a propósito: enseña el recorte del badge con texto largo. */
+.sg__badge-narrow {
+  display: flex;
+  max-width: 220px;
+}

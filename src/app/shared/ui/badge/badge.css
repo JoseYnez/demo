@@ -1,60 +1,137 @@
 :host {
   display: inline-flex;
+  max-width: 100%;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  max-width: 100%;
   border: 1px solid transparent;
   border-radius: var(--radius-full);
   font-weight: var(--font-weight-medium);
-  line-height: 1;
-  white-space: nowrap;
 }
 
+/* El elipsis no funciona sobre el contenedor flex: necesita su propia caja de
+   bloque con `min-width: 0`, o el texto largo empuja el badge fuera de la
+   tarjeta en vez de recortarse.
+
+   El `line-height` NO es cosmético: con 1 la caja mide exactamente el
+   font-size, que se queda 4 px por debajo de lo que ocupan los glifos, y el
+   `overflow: hidden` de la línea de arriba le corta los descendentes a la `g`
+   y a la `y`. La altura del badge la fija `height`, así que subirlo aquí no
+   mueve nada. */
+.badge__text {
+  min-width: 0;
+  overflow: hidden;
+  line-height: var(--line-height-normal);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.badge__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background-color: currentcolor;
+  border-radius: var(--radius-full);
+}
+
+/* Tamaños — misma rejilla que Button: `lg` empareja exacto con `btn--sm`. */
+
 .badge--sm {
-  padding: 2px var(--space-2);
+  height: 20px;
+  padding: 0 var(--space-2);
   font-size: var(--font-size-xs);
 }
 
+.badge--sm .badge__dot {
+  width: 5px;
+  height: 5px;
+}
+
 .badge--md {
-  padding: var(--space-1) var(--space-3);
+  height: 24px;
+  padding: 0 var(--space-3);
   font-size: var(--font-size-sm);
 }
 
+.badge--lg {
+  height: 28px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-base);
+}
+
+/* Variantes — sólo declaran los tres colores de su familia; la apariencia
+   decide cuál se usa dónde. Sin esto habría 18 reglas en vez de 6 + 3. */
+
 .badge--neutral {
-  background-color: var(--bg-surface-alt);
-  border-color: var(--border-default);
-  color: var(--text-secondary);
+  --badge-fg: var(--text-secondary);
+  --badge-bg: var(--bg-surface-alt);
+  --badge-border: var(--border-default);
+  --badge-solid-bg: var(--color-neutral-solid);
+  --badge-solid-fg: var(--color-neutral-on-solid);
 }
 
 .badge--primary {
-  background-color: var(--accent-subtle);
-  border-color: var(--accent);
-  color: var(--accent);
+  --badge-fg: var(--accent);
+  --badge-bg: var(--accent-subtle);
+  --badge-border: var(--accent-border);
+  --badge-solid-bg: var(--accent);
+  --badge-solid-fg: var(--text-on-accent);
 }
 
 .badge--success {
-  background-color: var(--color-success-bg);
-  border-color: var(--color-success-border);
-  color: var(--color-success-fg);
+  --badge-fg: var(--color-success-fg);
+  --badge-bg: var(--color-success-bg);
+  --badge-border: var(--color-success-border);
+  --badge-solid-bg: var(--color-success-solid);
+  --badge-solid-fg: var(--color-success-on-solid);
 }
 
 .badge--warning {
-  background-color: var(--color-warning-bg);
-  border-color: var(--color-warning-border);
-  color: var(--color-warning-fg);
+  --badge-fg: var(--color-warning-fg);
+  --badge-bg: var(--color-warning-bg);
+  --badge-border: var(--color-warning-border);
+  --badge-solid-bg: var(--color-warning-solid);
+  --badge-solid-fg: var(--color-warning-on-solid);
 }
 
 .badge--danger {
-  background-color: var(--color-danger-bg);
-  border-color: var(--color-danger-border);
-  color: var(--color-danger-fg);
+  --badge-fg: var(--color-danger-fg);
+  --badge-bg: var(--color-danger-bg);
+  --badge-border: var(--color-danger-border);
+  --badge-solid-bg: var(--color-danger-solid);
+  --badge-solid-fg: var(--color-danger-on-solid);
 }
 
 .badge--info {
-  background-color: var(--color-info-bg);
-  border-color: var(--color-info-border);
-  color: var(--color-info-fg);
+  --badge-fg: var(--color-info-fg);
+  --badge-bg: var(--color-info-bg);
+  --badge-border: var(--color-info-border);
+  --badge-solid-bg: var(--color-info-solid);
+  --badge-solid-fg: var(--color-info-on-solid);
+}
+
+/* Apariencias */
+
+.badge--soft {
+  background-color: var(--badge-bg);
+  border-color: var(--badge-border);
+  color: var(--badge-fg);
+}
+
+/* Sin relleno, el borde tenue de la familia desaparece contra la página: el
+   trazo lo lleva el propio color del texto, que ya cumple 4.5:1 contra las
+   cuatro superficies. */
+.badge--outline {
+  background-color: transparent;
+  border-color: currentcolor;
+  color: var(--badge-fg);
+}
+
+.badge--solid {
+  background-color: var(--badge-solid-bg);
+  color: var(--badge-solid-fg);
 }

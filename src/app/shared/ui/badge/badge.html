@@ -1,1 +1,6 @@
-<span [class]="classes()"><ng-content /></span>
+<span [class]="classes()" [attr.aria-label]="label() || null">
+  @if (dot()) {
+    <span class="badge__dot" aria-hidden="true"></span>
+  }
+  <span class="badge__text"><ng-content /></span>
+</span>

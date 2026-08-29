@@ -1,5 +1,5 @@
 export { Badge } from "./badge/badge";
-export type { BadgeSize, BadgeVariant } from "./badge/badge";
+export type { BadgeAppearance, BadgeSize, BadgeVariant } from "./badge/badge";
 
 export { Button } from "./button/button";
 export type { ButtonSize, ButtonType, ButtonVariant } from "./button/button";

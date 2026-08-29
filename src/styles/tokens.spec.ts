@@ -106,23 +106,28 @@ interface Par {
 }
 
 /** Pares del acento: giran con el tono, así que el barrido los verifica
-    en los 72 tonos, hover y active incluidos. */
+    en los 72 tonos, hover y active incluidos. `--accent` va contra TODAS las
+    superficies, no sólo la principal: el badge `outline` no tiene relleno y su
+    texto cae directamente sobre la superficie que lo aloje. */
 const PARES_ACENTO: readonly Par[] = [
-  { fg: "--accent", bg: "--bg-surface", min: 4.5 },
+  ...SURFACES.map((bg) => ({ fg: "--accent", bg, min: 4.5 })),
   { fg: "--accent", bg: "--accent-subtle", min: 4.5 },
   { fg: "--text-on-accent", bg: "--accent", min: 4.5 },
   { fg: "--text-on-accent", bg: "--accent-hover", min: 4.5 },
   { fg: "--text-on-accent", bg: "--accent-active", min: 4.5 },
+  { fg: "--color-neutral-on-solid", bg: "--color-neutral-solid", min: 4.5 },
 ];
 
-/** Pares semánticos: no giran, se comprueban sólo sobre los bloques hex. */
-const PARES_SEMANTICOS: readonly Par[] = [
-  { fg: "--color-danger-on-solid", bg: "--color-danger-solid", min: 4.5 },
-  { fg: "--color-success-fg", bg: "--color-success-bg", min: 4.5 },
-  { fg: "--color-warning-fg", bg: "--color-warning-bg", min: 4.5 },
-  { fg: "--color-danger-fg", bg: "--color-danger-bg", min: 4.5 },
-  { fg: "--color-info-fg", bg: "--color-info-bg", min: 4.5 },
-];
+const FAMILIAS_SEMANTICAS = ["success", "warning", "danger", "info"] as const;
+
+/** Pares semánticos: no giran, se comprueban sólo sobre los bloques hex.
+    `fg` sobre `bg` es el badge tenue; `on-solid` sobre `solid`, el relleno;
+    y `fg` sobre cada superficie, el `outline`, que se queda sin fondo propio. */
+const PARES_SEMANTICOS: readonly Par[] = FAMILIAS_SEMANTICAS.flatMap((f) => [
+  { fg: `--color-${f}-fg`, bg: `--color-${f}-bg`, min: 4.5 },
+  { fg: `--color-${f}-on-solid`, bg: `--color-${f}-solid`, min: 4.5 },
+  ...SURFACES.map((bg) => ({ fg: `--color-${f}-fg`, bg, min: 4.5 })),
+]);
 
 /* Los controles son outlined: el borde es su único indicador, así que debe
    cumplir el 3:1 de WCAG 1.4.11 contra CUALQUIER superficie sobre la que
