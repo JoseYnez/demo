@@ -44,6 +44,8 @@ export class Styleguide {
     "--bg-app",
     "--bg-surface",
     "--bg-surface-alt",
+    "--bg-surface-hover",
+    "--bg-surface-active",
     "--border-default",
     "--border-strong",
   ];

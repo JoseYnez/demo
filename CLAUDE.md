@@ -632,6 +632,7 @@ Roles que los tokens cubren:
 - **Superficies**: `--bg-app`, `--bg-surface`, `--bg-surface-alt`, `--bg-surface-raised`, `--field-bg` (el color que hay *detrás* de un campo; lo redefine cada superficie).
 - **Texto**: `--text-primary`, `--text-secondary`, `--text-muted`, `--text-on-accent`.
 - **Bordes y foco**: `--border-default`, `--border-strong`, `--border-focus`, `--ring-focus`.
+- **Estados de interacción**: `--bg-surface-hover` / `--bg-surface-active` para un control con relleno propio; `--overlay-hover` / `--overlay-active` para uno transparente.
 - **Acento**: `--accent`, `--accent-hover`, `--accent-active`, `--accent-subtle`, `--accent-border`.
 - **Estados tenues**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
 - **Rellenos sólidos**: `--color-{neutral,success,warning,danger,info}-solid` + su `-on-solid`, más `--color-danger-solid-hover`. Son el *fondo* de un botón o un badge, con su propio color de texto encima.
@@ -646,6 +647,7 @@ Tres distinciones que hay que respetar, porque confundirlas ya causó un bug:
 | `--border-default` vs `--border-strong` | `default` es **decorativo** (divisores de card): sin requisito de contraste. `strong` delimita **controles** y cumple el 3:1 de WCAG 1.4.11. El borde de un `input` usa `strong`. |
 | `--color-*-fg` vs `--color-*-solid` | `fg` es texto **sobre** `--color-*-bg` (aviso tenue). `solid` es el **relleno**, y su texto es `--color-*-on-solid`. En claro los dos valen lo mismo, en oscuro no: usar `fg` como fondo daba 2.52:1. Que coincidan en un tema no los hace un alias. |
 | `--bg-surface` vs `--bg-surface-raised` | `raised` es para superficies elevadas. En claro son el mismo blanco (eleva la sombra); en oscuro `raised` es **más clara**. |
+| `--bg-surface-alt` vs `--bg-surface-hover` | `alt` es una **superficie**: se apilan cosas encima. `hover` es un **estado**, sólo lleva la etiqueta del propio control. Usar `alt` de hover dejaba el salto en 0.039 de L\*, y en el `ghost` sobre `--bg-app` en 0.016 — invisible. |
 
 ### 11.2 Tema claro/oscuro
 
@@ -675,6 +677,26 @@ Criterios que cumple la paleta, y que verifica [tokens.spec.ts](src/styles/token
 Al tocar un color hay que revalidar; el test falla si el contraste baja o si los dos bloques oscuros divergen.
 
 **Los controles son outlined, no rellenos.** Sin fondo: el borde los define. Viene impuesto por la etiqueta flotante (§11.3) —cruza la línea del borde, y un relleno le partiría el fondo en dos colores a mitad del texto— y se extiende a todos los controles para no tener medio sistema relleno y medio no. Consecuencia: `--border-strong` es el único indicador del control, así que cumple **3:1 contra las cuatro superficies**, no sólo contra la principal. [tokens.spec.ts](src/styles/tokens.spec.ts) lo verifica par a par.
+
+**Los estados de interacción se miden, no se ajustan a ojo.** La referencia es
+la misma rampa de ChatGPT: su hover salta **0.057 de L\***, y todo hover del
+sistema se calibra contra ese número. `--bg-surface-alt` hacía de hover y se
+quedaba corto en las cuatro variantes de botón.
+
+Hay dos mecanismos porque hay dos clases de control, y confundirlos es el bug
+original:
+
+- **Con relleno propio** (`secondary`): color opaco, `--bg-surface-hover` y
+  `--bg-surface-active`. Su salto no depende de lo que haya detrás, porque el
+  control tapa el fondo.
+- **Sin relleno** (`ghost`, los enlaces de la barra): `--overlay-hover` y
+  `--overlay-active`, **translúcidos**. Un color fijo no puede servir aquí: el
+  control cae sobre superficies distintas y el mismo valor da 0.039 sobre una y
+  0.016 sobre otra. Compuesto, el salto sale igual sobre las cuatro.
+
+Como el overlay es translúcido, el texto no cae sobre la superficie sino sobre
+la mezcla — la misma trampa del anillo de foco. [tokens.spec.ts](src/styles/tokens.spec.ts)
+compone y verifica ese contraste en las cuatro superficies y los 72 tonos.
 
 **Elevación en oscuro**: una sombra negra sobre un fondo casi negro no se ve. La elevación la lleva la **superficie**, que se aclara (`--bg-surface-raised`), más un filo superior (`--edge-raised`). En claro la sombra hace ese trabajo y ambos tokens son neutros. Un componente elevado usa los tres a la vez y funciona en los dos temas sin CSS condicional.
 

@@ -138,6 +138,16 @@ const PARES_BORDE: readonly Par[] = SURFACES.map((bg) => ({
   min: 3.0,
 }));
 
+/* Rellenos de estado del botón `secondary`. No entran en SURFACES: no son
+   superficies, no se apila nada encima salvo la etiqueta del propio botón y su
+   borde, que en hover y active pasa a ser el acento. */
+const RELLENOS_ESTADO = ["--bg-surface-hover", "--bg-surface-active"];
+
+const PARES_ESTADO: readonly Par[] = RELLENOS_ESTADO.flatMap((bg) => [
+  { fg: "--text-primary", bg, min: 7.0 },
+  { fg: "--accent", bg, min: 3.0 },
+]);
+
 function paresDeBarrido(): readonly Par[] {
   return [
     ...SURFACES.flatMap((bg) =>
@@ -145,6 +155,7 @@ function paresDeBarrido(): readonly Par[] {
     ),
     ...PARES_BORDE,
     ...PARES_ACENTO,
+    ...PARES_ESTADO,
   ];
 }
 
@@ -161,6 +172,23 @@ function ringOver(scopes: readonly Scope[], bgToken: string, hue: number): strin
   }
   const m = /rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)\s*\/\s*(\d+)%\s*\)/.exec(raw);
   if (!m) throw new Error(`No se pudo leer --ring-focus: ${raw}`);
+  const hex =
+    "#" + [1, 2, 3].map((i) => Number(m[i]).toString(16).padStart(2, "0")).join("");
+  return compositeHex(hex, Number(m[4]) / 100, hexAt(scopes, bgToken, hue));
+}
+
+/** Los overlays de hover del `ghost` son translúcidos: el texto no cae sobre la
+    superficie sino sobre la mezcla. Es el mismo fallo que se coló con el anillo
+    de foco, así que se comprueba igual. */
+function overlayOver(
+  scopes: readonly Scope[],
+  overlayToken: string,
+  bgToken: string,
+  hue: number,
+): string {
+  const raw = rawOf(scopes, overlayToken);
+  const m = /rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)\s*\/\s*(\d+)%\s*\)/.exec(raw);
+  if (!m) throw new Error(`No se pudo leer ${overlayToken}: ${raw}`);
   const hex =
     "#" + [1, 2, 3].map((i) => Number(m[i]).toString(16).padStart(2, "0")).join("");
   return compositeHex(hex, Number(m[4]) / 100, hexAt(scopes, bgToken, hue));
@@ -263,6 +291,24 @@ describe("tokens.css", () => {
           );
           expect(peor).toBeGreaterThanOrEqual(par.min);
         });
+      }
+
+      for (const overlay of ["--overlay-hover", "--overlay-active"]) {
+        for (const texto of ["--text-primary", "--text-secondary"]) {
+          it(`${texto} se lee sobre ${overlay} en toda superficie y tono`, () => {
+            const peor = Math.min(
+              ...HUES.flatMap((hue) =>
+                SURFACES.map((surface) =>
+                  contrastRatio(
+                    lumAt(scopes, texto, hue),
+                    luminanceOfHex(overlayOver(scopes, overlay, surface, hue)),
+                  ),
+                ),
+              ),
+            );
+            expect(peor).toBeGreaterThanOrEqual(4.5);
+          });
+        }
       }
 
       for (const surface of ["--bg-app", "--bg-surface"]) {

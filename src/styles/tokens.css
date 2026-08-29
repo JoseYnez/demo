@@ -82,6 +82,20 @@
   --bg-surface-alt: #eff3f1;
   --bg-surface-raised: #ffffff;
 
+  /* Estados de un control neutro con relleno propio (el botón `secondary`).
+     NO son superficies: nada se apila encima salvo su propia etiqueta.
+     `--bg-surface-alt` hacía este papel y se quedaba en un salto de 0.039 de
+     L*, por debajo del 0.057 de la referencia; ahora el salto es 0.058. */
+  --bg-surface-hover: #e9edea;
+  --bg-surface-active: #dbdfdc;
+
+  /* Estados de un control SIN relleno (el `ghost`, los enlaces de la barra).
+     Translúcidos a propósito: compuestos sobre cualquier superficie dan el
+     mismo salto perceptual, que es justo lo que un color fijo no puede hacer
+     — sobre `--bg-app` se quedaba en 0.016 e invisible. */
+  --overlay-hover: rgb(0 0 0 / 8%);
+  --overlay-active: rgb(0 0 0 / 14%);
+
   /* Texto */
   --text-primary: #1a201c;
   --text-secondary: #4e5852;
@@ -96,8 +110,8 @@
 
   /* Acento — sage por defecto; la familia entera rota con --accent-hue. */
   --accent: #4c755d;
-  --accent-hover: #416852;
-  --accent-active: #365b46;
+  --accent-hover: #3d644e;
+  --accent-active: #325642;
   --accent-subtle: #ecf6f0;
   --accent-border: #bedbc9;
 
@@ -181,6 +195,12 @@
   --bg-surface-alt: #2a2d2b;
   --bg-surface-raised: #2e312f;
 
+  --bg-surface-hover: #2f3230;
+  --bg-surface-active: #373a38;
+
+  --overlay-hover: rgb(255 255 255 / 7%);
+  --overlay-active: rgb(255 255 255 / 13%);
+
   --text-primary: #e8eeea;
   --text-secondary: #cfd3d0;
   --text-muted: #b7bbb9;
@@ -251,6 +271,12 @@
     --bg-surface: #212422;
     --bg-surface-alt: #2a2d2b;
     --bg-surface-raised: #2e312f;
+
+    --bg-surface-hover: #2f3230;
+    --bg-surface-active: #373a38;
+
+    --overlay-hover: rgb(255 255 255 / 7%);
+    --overlay-active: rgb(255 255 255 / 13%);
 
     --text-primary: #e8eeea;
     --text-secondary: #cfd3d0;
@@ -332,8 +358,8 @@
 @supports (color: oklch(0.5 0.1 180)) {
   :root {
     --accent: oklch(0.525 0.06 var(--accent-hue));
-    --accent-hover: oklch(0.482 0.058 var(--accent-hue));
-    --accent-active: oklch(0.437 0.055 var(--accent-hue));
+    --accent-hover: oklch(0.468 0.058 var(--accent-hue));
+    --accent-active: oklch(0.42 0.055 var(--accent-hue));
     --accent-subtle: oklch(0.965 0.014 var(--accent-hue));
     --accent-border: oklch(0.865 0.04 var(--accent-hue));
     --ring-focus: 0 0 0 3px oklch(0.525 0.06 var(--accent-hue) / 25%);
@@ -344,6 +370,8 @@
 
     --bg-app: oklch(0.977 0.0025 var(--accent-hue));
     --bg-surface-alt: oklch(0.961 0.005 var(--accent-hue));
+    --bg-surface-hover: oklch(0.942 0.005 var(--accent-hue));
+    --bg-surface-active: oklch(0.9 0.006 var(--accent-hue));
 
     --text-primary: oklch(0.236 0.011 var(--accent-hue));
     --text-secondary: oklch(0.449 0.016 var(--accent-hue));
@@ -369,6 +397,8 @@
     --bg-surface: oklch(0.257 0.006 var(--accent-hue));
     --bg-surface-alt: oklch(0.293 0.006 var(--accent-hue));
     --bg-surface-raised: oklch(0.31 0.006 var(--accent-hue));
+    --bg-surface-hover: oklch(0.315 0.006 var(--accent-hue));
+    --bg-surface-active: oklch(0.345 0.006 var(--accent-hue));
 
     --text-primary: oklch(0.944 0.008 var(--accent-hue));
     --text-secondary: oklch(0.863 0.006 var(--accent-hue));
@@ -395,6 +425,8 @@
       --bg-surface: oklch(0.257 0.006 var(--accent-hue));
       --bg-surface-alt: oklch(0.293 0.006 var(--accent-hue));
       --bg-surface-raised: oklch(0.31 0.006 var(--accent-hue));
+      --bg-surface-hover: oklch(0.315 0.006 var(--accent-hue));
+      --bg-surface-active: oklch(0.345 0.006 var(--accent-hue));
 
       --text-primary: oklch(0.944 0.008 var(--accent-hue));
       --text-secondary: oklch(0.863 0.006 var(--accent-hue));

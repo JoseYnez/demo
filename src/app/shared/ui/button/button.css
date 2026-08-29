@@ -73,7 +73,12 @@
 }
 
 .btn--secondary:hover:not(:disabled) {
-  background-color: var(--bg-surface-alt);
+  background-color: var(--bg-surface-hover);
+  border-color: var(--accent);
+}
+
+.btn--secondary:active:not(:disabled) {
+  background-color: var(--bg-surface-active);
   border-color: var(--accent);
 }
 
@@ -82,8 +87,16 @@
   color: var(--text-secondary);
 }
 
+/* Relleno translúcido, no un color fijo: el ghost es transparente y puede
+   caer sobre cualquier superficie. Con `--bg-surface-alt` el salto sobre
+   `--bg-app` era de 0.016 de L* — prácticamente invisible. */
 .btn--ghost:hover:not(:disabled) {
-  background-color: var(--bg-surface-alt);
+  background-color: var(--overlay-hover);
+  color: var(--text-primary);
+}
+
+.btn--ghost:active:not(:disabled) {
+  background-color: var(--overlay-active);
   color: var(--text-primary);
 }
 
