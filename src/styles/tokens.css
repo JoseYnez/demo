@@ -6,7 +6,10 @@
    sobre fondos oscuros: daba por bueno un modo oscuro que APCA medía muy por
    debajo del claro. Los dos temas pasan WCAG 2.1 AA además de sus umbrales APCA.
 
-   Al retocar un color, revalidar antes de commitear. */
+   El TONO es del usuario; L y C son del sistema. Los hex de abajo son el
+   render exacto de las expresiones oklch() del bloque @supports final a tono
+   158 (sage) — un test los ancla canal a canal. Al retocar una constante L/C,
+   cambiarla en el bloque @supports y regenerar aquí su hex. */
 
 :root {
   /* Le dice al navegador de qué color pintar TODA la UI nativa que no
@@ -15,6 +18,11 @@
      sale blanco y sus opciones —que heredan --text-primary— se vuelven
      invisibles en tema oscuro. */
   color-scheme: light;
+
+  /* Tono del acento elegido por el usuario (0-359). AccentService lo escribe
+     inline en <html>; sin elección, este sage es el defecto. Todo lo que
+     depende de él vive en el bloque @supports del final. */
+  --accent-hue: 158;
 
   /* Tipografía — stack del sistema, sin webfonts */
   --font-sans:
@@ -75,24 +83,25 @@
   --bg-surface-raised: #ffffff;
 
   /* Texto */
-  --text-primary: #1a201d;
-  --text-secondary: #4d5853;
-  --text-muted: #666f6b;
+  --text-primary: #1a201c;
+  --text-secondary: #4e5852;
+  --text-muted: #676f6a;
   --text-on-accent: #ffffff;
 
   /* Bordes. `default` es decorativo (divisores); `strong` delimita controles
      y cumple el 3:1 que pide WCAG 1.4.11 para componentes de interfaz. */
   --border-default: #e0e6e2;
-  --border-strong: #808b86;
+  --border-strong: #818b84;
   --border-focus: var(--accent);
 
-  /* Acento — verde sage */
-  --accent: #4f7860;
-  --accent-hover: #446b54;
-  --accent-active: #395e49;
-  --accent-subtle: #e9f6ee;
+  /* Acento — sage por defecto; la familia entera rota con --accent-hue. */
+  --accent: #4c755d;
+  --accent-hover: #416852;
+  --accent-active: #365b46;
+  --accent-subtle: #ecf6f0;
 
-  /* Estados: `bg`/`fg`/`border` son para avisos y badges (fondo tenue). */
+  /* Estados: `bg`/`fg`/`border` son para avisos y badges (fondo tenue).
+     NO rotan con el acento: rojo=error y verde=éxito son convención. */
   --color-success-bg: #e8f3ec;
   --color-success-fg: #2c6b45;
   --color-success-border: #b8ddc6;
@@ -126,7 +135,7 @@
      sombra ya separa del fondo. */
   --edge-raised: 0 0 0 0 transparent;
 
-  --ring-focus: 0 0 0 3px rgb(79 120 96 / 25%);
+  --ring-focus: 0 0 0 3px rgb(76 117 93 / 25%);
 
   /* Color que hay DETRÁS de un campo. La etiqueta flotante lo usa para taparse
      el anillo de foco. Lo redefine cada superficie que no sea la página (ver
@@ -150,25 +159,25 @@
 
   /* Rampa calcada de la de ChatGPT (sidebar #171717, chat #212121,
      hover #2f2f2f), con un croma de 0.005 en vez de 0: se lee gris, pero
-     no del todo neutro. El verde vive en el acento, no en el mobiliario. */
-  --bg-app: #181a18;
+     no del todo neutro. El color vive en el acento, no en el mobiliario. */
+  --bg-app: #181a19;
   --bg-surface: #212422;
   --bg-surface-alt: #2a2d2b;
   --bg-surface-raised: #2e312f;
 
-  --text-primary: #e9eeea;
+  --text-primary: #e8eeea;
   --text-secondary: #cfd3d0;
   --text-muted: #b7bbb9;
   --text-on-accent: #111713;
 
   --border-default: #2d302e;
-  --border-strong: #787e7b;
+  --border-strong: #797e7a;
 
   /* Sage apagado: mismo brillo que el menta anterior con 40% menos de croma. */
-  --accent: #a8c7b1;
-  --accent-hover: #b8d9c2;
-  --accent-active: #98b5a1;
-  --accent-subtle: #232d26;
+  --accent: #a6c7b3;
+  --accent-hover: #b7d9c4;
+  --accent-active: #97b5a2;
+  --accent-subtle: #222d26;
 
   --color-success-bg: #203126;
   --color-success-fg: #a1dfb5;
@@ -199,7 +208,7 @@
 
   --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
 
-  --ring-focus: 0 0 0 3px rgb(168 199 177 / 22%);
+  --ring-focus: 0 0 0 3px rgb(166 199 179 / 22%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -208,25 +217,25 @@
 
     /* Rampa calcada de la de ChatGPT (sidebar #171717, chat #212121,
        hover #2f2f2f), con un croma de 0.005 en vez de 0: se lee gris, pero
-       no del todo neutro. El verde vive en el acento, no en el mobiliario. */
-    --bg-app: #181a18;
+       no del todo neutro. El color vive en el acento, no en el mobiliario. */
+    --bg-app: #181a19;
     --bg-surface: #212422;
     --bg-surface-alt: #2a2d2b;
     --bg-surface-raised: #2e312f;
 
-    --text-primary: #e9eeea;
+    --text-primary: #e8eeea;
     --text-secondary: #cfd3d0;
     --text-muted: #b7bbb9;
     --text-on-accent: #111713;
 
     --border-default: #2d302e;
-    --border-strong: #787e7b;
+    --border-strong: #797e7a;
 
     /* Sage apagado: mismo brillo que el menta anterior con 40% menos de croma. */
-    --accent: #a8c7b1;
-    --accent-hover: #b8d9c2;
-    --accent-active: #98b5a1;
-    --accent-subtle: #232d26;
+    --accent: #a6c7b3;
+    --accent-hover: #b7d9c4;
+    --accent-active: #97b5a2;
+    --accent-subtle: #222d26;
 
     --color-success-bg: #203126;
     --color-success-fg: #a1dfb5;
@@ -257,6 +266,87 @@
 
     --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
 
-    --ring-focus: 0 0 0 3px rgb(168 199 177 / 22%);
+    --ring-focus: 0 0 0 3px rgb(166 199 179 / 22%);
+  }
+}
+
+/* ================= ACENTO CONFIGURABLE =================
+
+   La familia del acento y el tinte del mobiliario se derivan de --accent-hue.
+   L y C son constantes del sistema y NO son configurables: es lo que hace que
+   el contraste aguante en los 360 tonos — tokens.spec.ts lo verifica barriendo
+   todos los pares WCAG con el tono girando.
+
+   El @supports no es decorativo. Una custom property acepta cualquier valor,
+   así que declararla dos veces NO da fallback: la última declaración gana
+   siempre, y en un motor sin oklch() cada var(--accent) se volvería inválido
+   a computed-value time — la app entera sin colores, el mismo desastre por el
+   que se descartó light-dark(). Con la guarda, un WebKit viejo ignora este
+   bloque y se queda en el sage estático de arriba: pierde la personalización,
+   no los colores. oklch() está en los motores desde 2022 (Chromium 111,
+   Safari 15.4, WebKitGTK ~2.36), muy por debajo del listón 2.46 de Ubuntu LTS.
+
+   Los dos bloques oscuros DEBEN ser idénticos, igual que los estáticos. */
+@supports (color: oklch(0.5 0.1 180)) {
+  :root {
+    --accent: oklch(0.525 0.06 var(--accent-hue));
+    --accent-hover: oklch(0.482 0.058 var(--accent-hue));
+    --accent-active: oklch(0.437 0.055 var(--accent-hue));
+    --accent-subtle: oklch(0.965 0.014 var(--accent-hue));
+    --ring-focus: 0 0 0 3px oklch(0.525 0.06 var(--accent-hue) / 25%);
+
+    --bg-app: oklch(0.977 0.0025 var(--accent-hue));
+    --bg-surface-alt: oklch(0.961 0.005 var(--accent-hue));
+
+    --text-primary: oklch(0.236 0.011 var(--accent-hue));
+    --text-secondary: oklch(0.449 0.016 var(--accent-hue));
+    --text-muted: oklch(0.533 0.013 var(--accent-hue));
+
+    --border-default: oklch(0.919 0.008 var(--accent-hue));
+    --border-strong: oklch(0.626 0.015 var(--accent-hue));
+  }
+
+  :root[data-theme="dark"] {
+    --accent: oklch(0.8 0.045 var(--accent-hue));
+    --accent-hover: oklch(0.855 0.047 var(--accent-hue));
+    --accent-active: oklch(0.746 0.043 var(--accent-hue));
+    --accent-subtle: oklch(0.285 0.019 var(--accent-hue));
+    --text-on-accent: oklch(0.197 0.012 var(--accent-hue));
+    --ring-focus: 0 0 0 3px oklch(0.8 0.045 var(--accent-hue) / 22%);
+
+    --bg-app: oklch(0.215 0.005 var(--accent-hue));
+    --bg-surface: oklch(0.257 0.006 var(--accent-hue));
+    --bg-surface-alt: oklch(0.293 0.006 var(--accent-hue));
+    --bg-surface-raised: oklch(0.31 0.006 var(--accent-hue));
+
+    --text-primary: oklch(0.944 0.008 var(--accent-hue));
+    --text-secondary: oklch(0.863 0.006 var(--accent-hue));
+    --text-muted: oklch(0.788 0.005 var(--accent-hue));
+
+    --border-default: oklch(0.305 0.005 var(--accent-hue));
+    --border-strong: oklch(0.587 0.008 var(--accent-hue));
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --accent: oklch(0.8 0.045 var(--accent-hue));
+      --accent-hover: oklch(0.855 0.047 var(--accent-hue));
+      --accent-active: oklch(0.746 0.043 var(--accent-hue));
+      --accent-subtle: oklch(0.285 0.019 var(--accent-hue));
+      --text-on-accent: oklch(0.197 0.012 var(--accent-hue));
+      --ring-focus: 0 0 0 3px oklch(0.8 0.045 var(--accent-hue) / 22%);
+
+      --bg-app: oklch(0.215 0.005 var(--accent-hue));
+      --bg-surface: oklch(0.257 0.006 var(--accent-hue));
+      --bg-surface-alt: oklch(0.293 0.006 var(--accent-hue));
+      --bg-surface-raised: oklch(0.31 0.006 var(--accent-hue));
+
+      --text-primary: oklch(0.944 0.008 var(--accent-hue));
+      --text-secondary: oklch(0.863 0.006 var(--accent-hue));
+      --text-muted: oklch(0.788 0.005 var(--accent-hue));
+
+      --border-default: oklch(0.305 0.005 var(--accent-hue));
+      --border-strong: oklch(0.587 0.008 var(--accent-hue));
+    }
   }
 }

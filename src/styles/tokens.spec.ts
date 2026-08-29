@@ -1,40 +1,94 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import {
+  compositeHex,
+  contrastRatio,
+  inSrgbGamut,
+  luminanceOfHex,
+  luminanceOfOklch,
+  oklchToHex,
+  parseOklchValue,
+} from "./testing/color";
+
 const css = readFileSync(join(process.cwd(), "src/styles/tokens.css"), "utf8");
 
-function block(selector: RegExp): Record<string, string> {
-  const m = selector.exec(css);
+/* ---------- parsing ---------- */
+
+// El comentario del bloque de acento menciona "@supports" a secas; la regla
+// real es la única con "(color:".
+const supportsIdx = css.indexOf("@supports (color:");
+if (supportsIdx < 0) throw new Error("No se encontró el bloque @supports del acento");
+const baseCss = css.slice(0, supportsIdx);
+const supportsCss = css.slice(supportsIdx);
+
+function extractBlock(source: string, selector: RegExp): string {
+  const m = selector.exec(source);
   if (!m) throw new Error(`No se encontró el bloque ${selector}`);
-  const body = css.slice(m.index + m[0].length).split("\n}")[0];
+  const start = source.indexOf("{", m.index) + 1;
+  let depth = 1;
+  let i = start;
+  while (depth > 0 && i < source.length) {
+    if (source[i] === "{") depth++;
+    else if (source[i] === "}") depth--;
+    i++;
+  }
+  return source.slice(start, i - 1);
+}
+
+function decls(body: string): Record<string, string> {
   return Object.fromEntries(
     [...body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((x) => [x[1], x[2].trim()]),
   );
 }
 
-const light = block(/:root \{/);
-const darkAttr = block(/:root\[data-theme="dark"\] \{/);
-const darkMedia = block(/:root:not\(\[data-theme="light"\]\) \{/);
+const ROOT = /:root \{/;
+const DARK_ATTR = /:root\[data-theme="dark"\] \{/;
+const DARK_MEDIA = /:root:not\(\[data-theme="light"\]\) \{/;
 
-function resolve(scope: Record<string, string>, token: string): string {
-  const raw = scope[token] ?? light[token];
-  if (!raw) throw new Error(`Token desconocido: ${token}`);
-  return raw.startsWith("var(") ? resolve(scope, raw.slice(4, -1).trim()) : raw;
+const light = decls(extractBlock(baseCss, ROOT));
+const darkAttr = decls(extractBlock(baseCss, DARK_ATTR));
+const darkMedia = decls(extractBlock(baseCss, DARK_MEDIA));
+const accentLight = decls(extractBlock(supportsCss, ROOT));
+const accentDarkAttr = decls(extractBlock(supportsCss, DARK_ATTR));
+const accentDarkMedia = decls(extractBlock(supportsCss, DARK_MEDIA));
+
+/* ---------- resolución por cascada ----------
+
+   Orden real del navegador: los bloques [data-theme] (0,2,0) ganan a los
+   :root (0,1,0) estén donde estén, y a igual especificidad gana el último
+   del archivo — los del @supports. */
+
+type Scope = Record<string, string>;
+const CASCADA_CLARO: readonly Scope[] = [accentLight, light];
+const CASCADA_OSCURO: readonly Scope[] = [accentDarkAttr, darkAttr, accentLight, light];
+
+function rawOf(scopes: readonly Scope[], token: string): string {
+  let current = token;
+  for (let hops = 0; hops < 5; hops++) {
+    const scope = scopes.find((s) => current in s);
+    if (!scope) throw new Error(`Token desconocido: ${current}`);
+    const value = scope[current];
+    if (!value.startsWith("var(")) return value;
+    current = value.slice(4, -1).trim();
+  }
+  throw new Error(`Cadena de var() demasiado profunda desde ${token}`);
 }
 
-function luminance(hex: string): number {
-  const to = (i: number) => {
-    const c = parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255;
-    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * to(0) + 0.7152 * to(1) + 0.0722 * to(2);
+function hexAt(scopes: readonly Scope[], token: string, hue: number): string {
+  const raw = rawOf(scopes, token);
+  const oklch = parseOklchValue(raw);
+  return oklch ? oklchToHex(oklch.l, oklch.c, hue) : raw;
 }
 
-function contrast(scope: Record<string, string>, fg: string, bg: string): number {
-  const a = luminance(resolve(scope, fg));
-  const b = luminance(resolve(scope, bg));
-  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+function lumAt(scopes: readonly Scope[], token: string, hue: number): number {
+  const raw = rawOf(scopes, token);
+  const oklch = parseOklchValue(raw);
+  return oklch ? luminanceOfOklch(oklch.l, oklch.c, hue) : luminanceOfHex(raw);
 }
+
+const DEFAULT_HUE = 158;
+const HUES = Array.from({ length: 72 }, (_, i) => i * 5);
 
 const SURFACES = ["--bg-app", "--bg-surface", "--bg-surface-alt", "--bg-surface-raised"];
 
@@ -51,84 +105,193 @@ interface Par {
   min: number;
 }
 
-const PARES: readonly Par[] = [
+/** Pares del acento: giran con el tono, así que el barrido los verifica
+    en los 72 tonos, hover y active incluidos. */
+const PARES_ACENTO: readonly Par[] = [
   { fg: "--accent", bg: "--bg-surface", min: 4.5 },
   { fg: "--accent", bg: "--accent-subtle", min: 4.5 },
   { fg: "--text-on-accent", bg: "--accent", min: 4.5 },
+  { fg: "--text-on-accent", bg: "--accent-hover", min: 4.5 },
+  { fg: "--text-on-accent", bg: "--accent-active", min: 4.5 },
+];
+
+/** Pares semánticos: no giran, se comprueban sólo sobre los bloques hex. */
+const PARES_SEMANTICOS: readonly Par[] = [
   { fg: "--color-danger-on-solid", bg: "--color-danger-solid", min: 4.5 },
   { fg: "--color-success-fg", bg: "--color-success-bg", min: 4.5 },
   { fg: "--color-warning-fg", bg: "--color-warning-bg", min: 4.5 },
   { fg: "--color-danger-fg", bg: "--color-danger-bg", min: 4.5 },
   { fg: "--color-info-fg", bg: "--color-info-bg", min: 4.5 },
-
-  // Los controles son outlined: el borde es su único indicador, así que debe
-  // cumplir el 3:1 de WCAG 1.4.11 contra CUALQUIER superficie sobre la que
-  // pueda caer, no sólo la principal.
-  { fg: "--border-strong", bg: "--bg-app", min: 3.0 },
-  { fg: "--border-strong", bg: "--bg-surface", min: 3.0 },
-  { fg: "--border-strong", bg: "--bg-surface-alt", min: 3.0 },
-  { fg: "--border-strong", bg: "--bg-surface-raised", min: 3.0 },
 ];
 
-/**
- * Compone el anillo de foco (translúcido) sobre el fondo que tenga detrás.
- * La etiqueta flotante cae justo encima del anillo, así que su contraste real
- * NO es contra la página sino contra esta mezcla — que es donde se coló el
- * fallo: texto de acento sobre halo de acento daba 3.84:1.
- */
-function ringOver(scope: Record<string, string>, bgToken: string): string {
-  const ring = resolve(scope, "--ring-focus");
-  const m = /rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)\s*\/\s*(\d+)%\s*\)/.exec(ring);
-  if (!m) throw new Error(`No se pudo leer --ring-focus: ${ring}`);
-  const alpha = Number(m[4]) / 100;
-  const bg = resolve(scope, bgToken);
-  const channel = (i: number) => {
-    const over = Number(m[i + 1]);
-    const under = parseInt(bg.slice(1 + i * 2, 3 + i * 2), 16);
-    return Math.round(alpha * over + (1 - alpha) * under);
-  };
-  return "#" + [0, 1, 2].map((i) => channel(i).toString(16).padStart(2, "0")).join("");
+/* Los controles son outlined: el borde es su único indicador, así que debe
+   cumplir el 3:1 de WCAG 1.4.11 contra CUALQUIER superficie sobre la que
+   pueda caer, no sólo la principal. */
+const PARES_BORDE: readonly Par[] = SURFACES.map((bg) => ({
+  fg: "--border-strong",
+  bg,
+  min: 3.0,
+}));
+
+function paresDeBarrido(): readonly Par[] {
+  return [
+    ...SURFACES.flatMap((bg) =>
+      SOBRE_TODA_SUPERFICIE.map(([fg, min]) => ({ fg, bg, min })),
+    ),
+    ...PARES_BORDE,
+    ...PARES_ACENTO,
+  ];
 }
 
+/** Compone el anillo de foco (translúcido) sobre el fondo que tenga detrás y
+    devuelve el hex resultante. La etiqueta flotante cae justo encima del
+    anillo, así que su contraste real NO es contra la página sino contra esta
+    mezcla — ahí se coló el fallo original: texto de acento sobre halo de
+    acento daba 3.84:1. */
+function ringOver(scopes: readonly Scope[], bgToken: string, hue: number): string {
+  const raw = rawOf(scopes, "--ring-focus");
+  const oklch = parseOklchValue(raw);
+  if (oklch) {
+    return compositeHex(oklchToHex(oklch.l, oklch.c, hue), oklch.alpha, hexAt(scopes, bgToken, hue));
+  }
+  const m = /rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)\s*\/\s*(\d+)%\s*\)/.exec(raw);
+  if (!m) throw new Error(`No se pudo leer --ring-focus: ${raw}`);
+  const hex =
+    "#" + [1, 2, 3].map((i) => Number(m[i]).toString(16).padStart(2, "0")).join("");
+  return compositeHex(hex, Number(m[4]) / 100, hexAt(scopes, bgToken, hue));
+}
+
+function maxChannelDelta(hexA: string, hexB: string): number {
+  return Math.max(
+    ...[0, 1, 2].map((i) =>
+      Math.abs(
+        parseInt(hexA.slice(1 + i * 2, 3 + i * 2), 16) -
+          parseInt(hexB.slice(1 + i * 2, 3 + i * 2), 16),
+      ),
+    ),
+  );
+}
+
+/* ---------- tests ---------- */
+
 describe("tokens.css", () => {
-  it("mantiene los dos bloques oscuros idénticos", () => {
+  it("mantiene los dos bloques oscuros estáticos idénticos", () => {
     expect(Object.keys(darkAttr).sort()).toEqual(Object.keys(darkMedia).sort());
     expect(darkAttr).toEqual(darkMedia);
   });
 
-  for (const [tema, scope] of [
-    ["claro", light],
-    ["oscuro", darkAttr],
-  ] as const) {
-    describe(`tema ${tema}`, () => {
-      for (const [texto, min] of SOBRE_TODA_SUPERFICIE) {
-        for (const surface of SURFACES) {
-          it(`${texto} sobre ${surface} cumple ${min}:1`, () => {
-            expect(contrast(scope, texto, surface)).toBeGreaterThanOrEqual(min);
-          });
-        }
-      }
+  it("mantiene los dos bloques oscuros del @supports idénticos", () => {
+    expect(Object.keys(accentDarkAttr).sort()).toEqual(Object.keys(accentDarkMedia).sort());
+    expect(accentDarkAttr).toEqual(accentDarkMedia);
+  });
 
-      for (const par of PARES) {
+  /* Ancla: los fallbacks hex son el render exacto de las expresiones oklch a
+     tono 158. Si alguien retoca un lado y no el otro, esto lo caza. */
+  for (const [nombre, accentScope, hexScope] of [
+    ["claro", accentLight, light],
+    ["oscuro", accentDarkAttr, darkAttr],
+  ] as const) {
+    describe(`ancla hex↔oklch (${nombre})`, () => {
+      for (const token of Object.keys(accentScope)) {
+        it(`${token} coincide a tono ${DEFAULT_HUE}`, () => {
+          const oklch = parseOklchValue(accentScope[token]);
+          if (!oklch) throw new Error(`${token} no es una expresión oklch`);
+          const rendered = oklchToHex(oklch.l, oklch.c, DEFAULT_HUE);
+          const fallback = hexScope[token];
+          if (token === "--ring-focus") {
+            const m = /rgb\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\/\s*(\d+)%\s*\)/.exec(fallback);
+            if (!m) throw new Error(`Fallback del anillo ilegible: ${fallback}`);
+            const fallbackHex =
+              "#" + [1, 2, 3].map((i) => Number(m[i]).toString(16).padStart(2, "0")).join("");
+            expect(maxChannelDelta(rendered, fallbackHex)).toBeLessThanOrEqual(1);
+            expect(Number(m[4]) / 100).toBe(oklch.alpha);
+          } else {
+            expect(maxChannelDelta(rendered, fallback)).toBeLessThanOrEqual(1);
+          }
+        });
+      }
+    });
+  }
+
+  /* Paleta estática (motores sin oklch): los pares completos a tono 158. */
+  for (const [tema, scopes] of [
+    ["claro", [light] as readonly Scope[]],
+    ["oscuro", [darkAttr, light] as readonly Scope[]],
+  ] as const) {
+    describe(`tema ${tema} (fallback estático)`, () => {
+      for (const par of [...paresDeBarrido(), ...PARES_SEMANTICOS]) {
         it(`${par.fg} sobre ${par.bg} cumple ${par.min}:1`, () => {
-          expect(contrast(scope, par.fg, par.bg)).toBeGreaterThanOrEqual(par.min);
+          const ratio = contrastRatio(
+            lumAt(scopes, par.fg, DEFAULT_HUE),
+            lumAt(scopes, par.bg, DEFAULT_HUE),
+          );
+          expect(ratio).toBeGreaterThanOrEqual(par.min);
         });
       }
 
-      // Margen de seguridad: el anillo no debe volverse tan opaco que el texto
-      // que caiga encima deje de leerse. Hoy la etiqueta flotante se tapa el
-      // anillo con su propio parche (`--field-bg`), pero lo cruza al animarse,
-      // y este umbral evita repetir el fallo original —etiqueta de acento
-      // sobre halo de acento, 3.84:1— si alguien sube la opacidad.
       for (const surface of ["--bg-app", "--bg-surface"]) {
         it(`el anillo de foco deja leer texto encima en ${surface}`, () => {
-          const bajoElAnillo = ringOver(scope, surface);
-          const label = resolve(scope, "--text-primary");
-          const a = luminance(label);
-          const b = luminance(bajoElAnillo);
-          const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+          const ratio = contrastRatio(
+            lumAt(scopes, "--text-primary", DEFAULT_HUE),
+            luminanceOfHex(ringOver(scopes, surface, DEFAULT_HUE)),
+          );
           expect(ratio).toBeGreaterThanOrEqual(4.5);
         });
+      }
+    });
+  }
+
+  /* Barrido: el tono es del usuario, así que cada par debe aguantar en los
+     72 tonos muestreados. Este test ES el diseño del acento configurable —
+     si pasa, no existe color elegible que rompa la app. */
+  for (const [tema, scopes] of [
+    ["claro", CASCADA_CLARO],
+    ["oscuro", CASCADA_OSCURO],
+  ] as const) {
+    describe(`tema ${tema} (barrido de tonos)`, () => {
+      for (const par of paresDeBarrido()) {
+        it(`${par.fg} sobre ${par.bg} cumple ${par.min}:1 en todo tono`, () => {
+          const peor = Math.min(
+            ...HUES.map((hue) =>
+              contrastRatio(lumAt(scopes, par.fg, hue), lumAt(scopes, par.bg, hue)),
+            ),
+          );
+          expect(peor).toBeGreaterThanOrEqual(par.min);
+        });
+      }
+
+      for (const surface of ["--bg-app", "--bg-surface"]) {
+        it(`el anillo deja leer texto encima en ${surface} en todo tono`, () => {
+          const peor = Math.min(
+            ...HUES.map((hue) =>
+              contrastRatio(
+                lumAt(scopes, "--text-primary", hue),
+                luminanceOfHex(ringOver(scopes, surface, hue)),
+              ),
+            ),
+          );
+          expect(peor).toBeGreaterThanOrEqual(4.5);
+        });
+      }
+    });
+  }
+
+  /* Gamut: ninguna expresión puede salirse de sRGB en ningún tono — un color
+     recortado por el motor invalidaría el contraste calculado aquí. */
+  for (const [nombre, scope] of [
+    ["claro", accentLight],
+    ["oscuro", accentDarkAttr],
+  ] as const) {
+    it(`las expresiones oklch del bloque ${nombre} caben en sRGB en todo tono`, () => {
+      for (const [token, value] of Object.entries(scope)) {
+        const oklch = parseOklchValue(value);
+        if (!oklch) throw new Error(`${token} no es una expresión oklch`);
+        for (const hue of HUES) {
+          expect(
+            inSrgbGamut(oklch.l, oklch.c, hue),
+            `${token} fuera de gamut en H=${hue}`,
+          ).toBe(true);
+        }
       }
     });
   }
