@@ -7,7 +7,7 @@ export type BadgeVariant =
   | "warning"
   | "danger"
   | "info";
-export type BadgeAppearance = "soft" | "outline" | "tonal" | "solid";
+export type BadgeAppearance = "outline" | "tonal";
 export type BadgeSize = "sm" | "md" | "lg";
 
 @Component({
@@ -18,7 +18,7 @@ export type BadgeSize = "sm" | "md" | "lg";
 })
 export class Badge {
   readonly variant = input<BadgeVariant>("neutral");
-  readonly appearance = input<BadgeAppearance>("soft");
+  readonly appearance = input<BadgeAppearance>("outline");
   readonly size = input<BadgeSize>("md");
   readonly dot = input(false);
   readonly label = input("");

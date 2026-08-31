@@ -121,24 +121,14 @@ export class Styleguide {
     nota: string;
   }[] = [
     {
-      name: "soft",
-      peso: "relleno tenue",
-      nota: "Fondo de la familia y borde a juego. Es el actual y el más discreto: se lee como una etiqueta, no como un aviso.",
-    },
-    {
       name: "outline",
-      peso: "sólo trazo",
-      nota: "Sin relleno; el trazo lo lleva el color del texto. Es el que menos ruido mete en una lista larga y el único que no compite con el fondo de la fila.",
+      peso: "por defecto · sólo trazo",
+      nota: "Sin relleno: el trazo lo lleva el color del texto. Es la de uso general porque no compite con el fondo de la fila — deja pasar el hover en vez de quedarse congelada encima. Su trazo va a 4.5:1 contra las cuatro superficies, el doble de lo que pide WCAG para un gráfico.",
     },
     {
       name: "tonal",
-      peso: "relleno medio",
-      nota: "Relleno en el punto medio exacto de luminosidad entre soft y solid, con texto profundo de la misma familia. Pesa sin gritar: aguanta una columna entera de una tabla.",
-    },
-    {
-      name: "solid",
-      peso: "relleno pleno",
-      nota: "Relleno saturado con texto invertido. Es el que se ve desde lejos, así que sólo aguanta uno o dos por pantalla antes de cansar.",
+      peso: "énfasis · relleno medio",
+      nota: "Relleno en el punto medio de luminosidad de la paleta, con texto profundo de la misma familia. Para lo que debe notarse sin gritar: el estado que rompe la norma en una lista, no los veinte que la cumplen.",
     },
   ];
 

@@ -758,13 +758,21 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 |---|---|---|---|
 | `Button` | `<app-button>` | `variant` (primary/secondary/ghost/danger), `size` (sm/md/lg), `type`, `disabled`, `loading`, `fullWidth` | `loading` deshabilita y muestra spinner. |
 | `Card` | `<app-card>` | `variant` (elevated/outlined/flat), `padding` (none/sm/md/lg) | Slots opcionales `[card-header]` y `[card-footer]`; la zona sin contenido no se dibuja. |
-| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (soft/outline/tonal/solid), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla. **Las cuatro apariencias conviven a la espera de que se elija una** — comparativa en `/styleguide`. |
+| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (outline/tonal), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla. Ver abajo cuál usar. |
 | `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint` + el contrato de §6.8 | `FormValueControl<string>`. |
 | `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
 | `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |
 | `GestureButton` | `<app-gesture-button>` | `variant`, `size`, `disabled`, `fullWidth`, `gestures`, `longPressDelay`, `doubleTapDelay`, `longPressGrace` | Toque, doble toque y pulsado largo, con barra de progreso. Ver abajo. |
 | `FilePicker` | `<app-file-picker>` | `label`, `hint`, `sources` (drop/browse/paste), `accept`, `maxFiles`, `maxSize`, `preview` + el contrato de §6.8 | `FormValueControl<readonly File[]>`. Adjuntos por arrastre, explorador y portapapeles, con lista y miniatura. Ver abajo. |
 | `FieldShell` | `<app-field-shell>` | `labelMode`, `label`, `controlId`, `floated`, `required`, `disabled`, `hint`, `error` | Carcasa que comparten los tres: etiqueta, muesca y línea de ayuda/error. Sólo se usa directamente al construir un control propio. |
+
+**Badge — dos apariencias con oficios distintos.** `outline` es el defecto y la de uso general; `tonal` es la del énfasis. Ganaron a `soft` y `solid`, que se retiraron, por tres razones medidas:
+
+- **`outline` no compite con el fondo.** Es la única sin relleno propio, así que deja pasar el `--overlay-hover` de la fila en vez de quedarse congelada encima mientras todo lo demás se oscurece. Con cuatro superficies y overlays translúcidos, esa es la propiedad que más vale en una lista.
+- **Su trazo no es débil.** Es `currentcolor`, o sea `--badge-fg`, que [tokens.spec.ts](src/styles/tokens.spec.ts) ya valida a 4.5:1 contra las cuatro superficies — el doble del 3:1 que WCAG pide para un gráfico no textual.
+- **El color va donde el croma bajo se lee.** Con el acento en C 0.060 (§11.5), un relleno grande gasta el máximo peso visual en el color menos vívido del sistema; el trazo y el texto lo concentran en poca área. Por eso `solid` no pagaba su coste, y `soft` tenía relleno sin cobrar el beneficio: su tinte apenas se distinguía de unas superficies que ya son casi blancas.
+
+`tonal` queda para lo que debe notarse sin alarmar: el estado que rompe la norma en una lista, no los veinte que la cumplen. **Si algún día se fija la marca a C 0.120 (§15), esta decisión hay que repasarla** — con un acento vívido, un relleno pleno vuelve a pagar su área.
 
 **GestureButton — los gestos se declaran.** `gestures` dice cuáles implementa
 el botón, y **la apariencia sale de ahí**: la barra de progreso sólo existe si
