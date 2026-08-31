@@ -159,65 +159,6 @@
     </div>
   </section>
 
-  <section class="sg__section" id="identidad">
-    <h2 class="sg__title">Comparativa: identidad tipográfica</h2>
-    <p class="sg__note selectable">
-      Los mismos componentes con la pila del sistema y los radios de consenso a
-      la izquierda, y la dirección <em>instrumento técnico</em> a la derecha.
-      Sólo cambian dos bloques de tokens —familia y radios—; ninguna fórmula de
-      color se toca, así que las garantías de contraste siguen intactas.
-      <strong>La columna derecha es la que ya está aplicada en el resto de la
-      página.</strong>
-    </p>
-
-    <div class="sg__compare">
-      <div class="sg__compare-col sg__compare-col--legacy">
-        <p class="sg__compare-head selectable">Antes · pila del sistema · radios 4/6/8/12</p>
-
-        <div class="sg__inline">
-          @for (variant of buttonVariants; track variant) {
-            <app-button [variant]="variant">Guardar</app-button>
-          }
-        </div>
-
-        <app-input label="Nombre del proyecto" [(value)]="idAntes" />
-
-        <div class="sg__inline">
-          @for (variant of badgeVariants; track variant) {
-            <app-badge [variant]="variant" size="sm">{{ variant }}</app-badge>
-          }
-        </div>
-
-        <code class="selectable">src-tauri/tauri.conf.json</code>
-      </div>
-
-      <div class="sg__compare-col">
-        <p class="sg__compare-head selectable">Ahora · IBM Plex · radios 2/3/4/6</p>
-
-        <div class="sg__inline">
-          @for (variant of buttonVariants; track variant) {
-            <app-button [variant]="variant">Guardar</app-button>
-          }
-        </div>
-
-        <app-input label="Nombre del proyecto" [(value)]="idAhora" />
-
-        <div class="sg__inline">
-          @for (variant of badgeVariants; track variant) {
-            <app-badge [variant]="variant" size="sm">{{ variant }}</app-badge>
-          }
-        </div>
-
-        <code class="selectable">src-tauri/tauri.conf.json</code>
-      </div>
-    </div>
-
-    <p class="sg__note selectable">
-      La decisión que queda es el croma del acento, y está medida en la sección
-      siguiente.
-    </p>
-  </section>
-
   <section class="sg__section" id="croma">
     <h2 class="sg__title">Comparativa: croma del acento</h2>
     <p class="sg__note selectable">

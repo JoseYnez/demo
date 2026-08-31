@@ -148,9 +148,6 @@ export class Styleguide {
   protected readonly cromaTecho = signal("");
   protected readonly cromaMarca = signal("");
 
-  protected readonly idAntes = signal("");
-  protected readonly idAhora = signal("");
-
   protected readonly sueltoTexto = signal("");
   protected readonly sueltoArea = signal("");
   protected readonly sueltoNotas = signal("");

@@ -314,21 +314,6 @@ code {
   border-radius: var(--radius-lg);
 }
 
-.sg__compare-col--legacy {
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  --font-mono:
-    ui-monospace, SFMono-Regular, "Cascadia Code", Consolas,
-    "Liberation Mono", monospace;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-
-  font-family: var(--font-sans);
-}
-
 .sg__croma {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
