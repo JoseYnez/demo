@@ -101,18 +101,20 @@ const PARES_ACENTO: readonly Par[] = [
   { fg: "--text-on-accent", bg: "--accent-hover", min: 4.5 },
   { fg: "--text-on-accent", bg: "--accent-active", min: 4.5 },
   { fg: "--accent-on-tonal", bg: "--accent-tonal", min: 4.5 },
-  { fg: "--color-neutral-on-solid", bg: "--color-neutral-solid", min: 4.5 },
   { fg: "--color-neutral-on-tonal", bg: "--color-neutral-tonal", min: 4.5 },
 ];
 
 const FAMILIAS_SEMANTICAS = ["success", "warning", "danger", "info"] as const;
 
-const PARES_SEMANTICOS: readonly Par[] = FAMILIAS_SEMANTICAS.flatMap((f) => [
-  { fg: `--color-${f}-fg`, bg: `--color-${f}-bg`, min: 4.5 },
-  { fg: `--color-${f}-on-solid`, bg: `--color-${f}-solid`, min: 4.5 },
-  { fg: `--color-${f}-on-tonal`, bg: `--color-${f}-tonal`, min: 4.5 },
-  ...SURFACES.map((bg) => ({ fg: `--color-${f}-fg`, bg, min: 4.5 })),
-]);
+const PARES_SEMANTICOS: readonly Par[] = [
+  ...FAMILIAS_SEMANTICAS.flatMap((f) => [
+    { fg: `--color-${f}-fg`, bg: `--color-${f}-bg`, min: 4.5 },
+    { fg: `--color-${f}-on-tonal`, bg: `--color-${f}-tonal`, min: 4.5 },
+    ...SURFACES.map((bg) => ({ fg: `--color-${f}-fg`, bg, min: 4.5 })),
+  ]),
+  { fg: "--color-danger-on-solid", bg: "--color-danger-solid", min: 4.5 },
+  { fg: "--color-danger-on-solid", bg: "--color-danger-solid-hover", min: 4.5 },
+];
 
 const PARES_BORDE: readonly Par[] = SURFACES.map((bg) => ({
   fg: "--border-strong",
