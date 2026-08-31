@@ -9,7 +9,7 @@
   gap: var(--space-1);
   max-width: 100%;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   font-weight: var(--font-weight-medium);
 }
 

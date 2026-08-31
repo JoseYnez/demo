@@ -783,7 +783,7 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 
 `tonal` queda para lo que debe notarse sin alarmar: el estado que rompe la norma en una lista, no los veinte que la cumplen. **Si algún día se fija la marca a C 0.120 (§15), esta decisión hay que repasarla** — con un acento vívido, un relleno pleno vuelve a pagar su área.
 
-El badge usa `--radius-sm`, no `--radius-full`. La píldora era la única forma del sistema que contradecía la escala corta de radios; `--radius-full` queda para lo genuinamente circular —el punto de estado, el spinner del botón, el pulgar del slider—.
+El badge usa `--radius-lg`, no `--radius-full`. La píldora era la única forma del sistema que contradecía la escala corta de radios; `--radius-full` queda para lo genuinamente circular —el punto de estado, el spinner del botón, el pulgar del slider—.
 
 **GestureButton — los gestos se declaran.** `gestures` dice cuáles implementa
 el botón, y **la apariencia sale de ahí**: la barra de progreso sólo existe si
