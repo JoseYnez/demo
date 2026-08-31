@@ -10,7 +10,15 @@ import {
 } from "@angular/forms/signals";
 
 import { ACCENT_PRESETS, AccentService } from "../../core/services/accent";
-import { Badge, Button, Card, Input, Select, Textarea } from "../../shared/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  GestureButton,
+  Input,
+  Select,
+  Textarea,
+} from "../../shared/ui";
 import type {
   BadgeAppearance,
   BadgeVariant,
@@ -27,7 +35,17 @@ interface Alta {
 
 @Component({
   selector: "app-styleguide",
-  imports: [Badge, Button, Card, Input, Select, Textarea, FormField, FormRoot],
+  imports: [
+    Badge,
+    Button,
+    Card,
+    GestureButton,
+    Input,
+    Select,
+    Textarea,
+    FormField,
+    FormRoot,
+  ],
   templateUrl: "./styleguide.html",
   styleUrl: "./styleguide.css",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,6 +94,12 @@ export class Styleguide {
     "danger",
     "info",
   ];
+
+  protected readonly gestos = signal<readonly string[]>([]);
+
+  protected registrarGesto(nombre: string): void {
+    this.gestos.update((previos) => [nombre, ...previos].slice(0, 6));
+  }
 
   protected readonly badgeAppearances: readonly {
     name: BadgeAppearance;

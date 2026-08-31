@@ -5,6 +5,12 @@
       "name": "demo",
       "url": "http://localhost:1420",
       "port": 1420
+    },
+    {
+      "name": "demo-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["start"],
+      "port": 1420
     }
   ]
 }

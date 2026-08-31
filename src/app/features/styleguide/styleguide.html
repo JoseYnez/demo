@@ -185,6 +185,113 @@
     <app-button variant="secondary" [fullWidth]="true">Ocupa la fila</app-button>
   </section>
 
+  <!-- ---------- GestureButton ---------- -->
+  <section class="sg__section" id="gesture-button">
+    <h2 class="sg__title">GestureButton</h2>
+    <p class="sg__note selectable">
+      <code>&lt;app-gesture-button&gt;</code> — toque, doble toque y pulsado
+      largo. <code>gestures</code> declara cuáles implementa el botón, y de ahí
+      sale la apariencia: <strong>la barra de progreso sólo aparece si se
+      declaró <code>longPress</code></strong>, y no antes de
+      <code>longPressGrace</code> (150 ms), para que un toque normal no deje un
+      destello. Los tres son lecturas
+      excluyentes de la misma secuencia, así que declarar
+      <code>doubleTap</code> retrasa el <code>tap</code>; sin declararlo, sale
+      al instante.
+    </p>
+
+    <div class="sg__inline">
+      <app-gesture-button
+        [gestures]="['tap']"
+        (tap)="registrarGesto('tap · sin espera')"
+      >
+        Sólo toque
+      </app-gesture-button>
+
+      <app-gesture-button
+        variant="secondary"
+        [gestures]="['tap', 'doubleTap']"
+        (tap)="registrarGesto('tap · tras 280 ms')"
+        (doubleTap)="registrarGesto('doubleTap')"
+      >
+        Toque y doble
+      </app-gesture-button>
+
+      <app-gesture-button
+        variant="secondary"
+        [gestures]="['tap', 'longPress']"
+        (tap)="registrarGesto('tap')"
+        (longPress)="registrarGesto('longPress · 500 ms')"
+      >
+        Toque y largo
+      </app-gesture-button>
+
+      <app-gesture-button
+        variant="danger"
+        [gestures]="['longPress']"
+        [longPressDelay]="1500"
+        (longPress)="registrarGesto('longPress · 1500 ms')"
+      >
+        Mantén para borrar
+      </app-gesture-button>
+    </div>
+
+    <p class="sg__note selectable">
+      Los dos primeros no dibujan barra porque no declaran
+      <code>longPress</code>. El último no hace nada al tocarlo: sólo declara
+      el largo, que es lo que se quiere en una acción destructiva.
+    </p>
+
+    <h3 class="sg__subtitle">Pulsado largo en todas las variantes</h3>
+    <p class="sg__note selectable">
+      La barra se pinta con <code>currentcolor</code>, no con un token fijo: el
+      color del texto ya contrasta con el relleno de su variante, así que se ve
+      en las cuatro sin una regla por color. Mantén pulsado cualquiera.
+    </p>
+    <p class="sg__note selectable">
+      Y va <strong>al pie, no de fondo</strong>. Como relleno bajo la etiqueta
+      no era viable: los rellenos de botón cumplen AA justo, así que cualquier
+      tinte encima hunde el texto — <code>danger</code> caía a 3.45:1, y ni
+      bajando la opacidad al 10% se salvaba <code>primary</code>.
+    </p>
+    <div class="sg__inline">
+      @for (variant of buttonVariants; track variant) {
+        <app-gesture-button
+          [variant]="variant"
+          [gestures]="['tap', 'longPress']"
+          (tap)="registrarGesto('tap · ' + variant)"
+          (longPress)="registrarGesto('longPress · ' + variant)"
+        >
+          {{ variant }}
+        </app-gesture-button>
+      }
+    </div>
+
+    <p class="sg__note selectable">
+      Sobre <code>ghost</code> es donde menos pesa: al no tener relleno, la
+      barra cae directamente sobre la página.
+    </p>
+
+    <h3 class="sg__subtitle">Qué se ha emitido</h3>
+    <div class="sg__inline">
+      @for (gesto of gestos(); track $index) {
+        <app-badge [variant]="$first ? 'primary' : 'neutral'" size="sm">
+          {{ gesto }}
+        </app-badge>
+      } @empty {
+        <p class="sg__note">Pulsa alguno de los botones de arriba.</p>
+      }
+    </div>
+
+    <p class="sg__note selectable">
+      Todo funciona también con el teclado: <kbd>Enter</kbd> o
+      <kbd>Espacio</kbd> mantenidos para el pulsado largo, y una doble
+      pulsación rápida para el doble toque. <strong>Aun así, el doble toque es
+      poco descubrible</strong>: nunca debería ser la única forma de llegar a
+      una acción.
+    </p>
+  </section>
+
   <!-- ---------- Badge ---------- -->
   <section class="sg__section" id="badge">
     <h2 class="sg__title">Badge</h2>

@@ -131,7 +131,7 @@ demo/
 │   │   ├── app.config.ts
 │   │   └── app.routes.ts
 │   ├── assets/
-│   ├── styles/                 # tokens.css, reset.css, forms.css, testing/ (utilidades de specs)
+│   ├── styles/                 # tokens.css, reset.css, forms.css, buttons.css, testing/
 │   ├── styles.css              # Entrada global (importa styles/)
 │   ├── index.html
 │   └── main.ts
@@ -625,6 +625,7 @@ La capa global son tres hojas, importadas por `src/styles.css` en este orden:
 |---|---|
 | `styles/tokens.css` | Las variables. Único sitio donde se escribe un color o una medida literal. |
 | `styles/reset.css` | Normalización y estilos base de `body`, títulos, enlaces y foco. |
+| `styles/buttons.css` | Base compartida de los botones: `.btn`, sus tamaños y sus variantes. Está en la capa global por la misma razón que `forms.css`: la comparten `Button` y `GestureButton`, y la encapsulación no deja compartirla desde un componente. Cada uno añade sólo lo suyo — el `:host` y, en el gestual, la capa de progreso. |
 | `styles/forms.css` | Base compartida de los controles: `.ui-field`, `.ui-label`, `.ui-control`, `.ui-msg`. Vive en la capa global porque la encapsulación de Angular impide compartir estos estilos entre `input`, `textarea` y `select` sin duplicarlos tres veces. Los componentes consumen esas clases y añaden sólo lo suyo (alto, `resize`, la flecha del select). Todos los controles son **outlined**: fondo transparente, el borde los define. |
 
 Roles que los tokens cubren:
@@ -724,7 +725,54 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 | `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint` + el contrato de §6.8 | `FormValueControl<string>`. |
 | `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
 | `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |
+| `GestureButton` | `<app-gesture-button>` | `variant`, `size`, `disabled`, `fullWidth`, `gestures`, `longPressDelay`, `doubleTapDelay`, `longPressGrace` | Toque, doble toque y pulsado largo, con barra de progreso. Ver abajo. |
 | `FieldShell` | `<app-field-shell>` | `labelMode`, `label`, `controlId`, `floated`, `required`, `disabled`, `hint`, `error` | Carcasa que comparten los tres: etiqueta, muesca y línea de ayuda/error. Sólo se usa directamente al construir un control propio. |
+
+**GestureButton — los gestos se declaran.** `gestures` dice cuáles implementa
+el botón, y **la apariencia sale de ahí**: la barra de progreso sólo existe si
+se declaró `longPress`. Hay que declararlos porque Angular no expone los
+suscriptores de un `output()` — `listeners` es privado, y leerlo ataría el
+componente a una interna del framework que se rompe en cualquier actualización.
+
+Los tres gestos son **lecturas excluyentes de la misma secuencia**, y de ahí
+salen las reglas que no se pueden negociar:
+
+- Un `tap` no se puede emitir hasta descartar que sea el primero de dos. Por eso
+  declarar `doubleTap` lo retrasa `doubleTapDelay`; sin declararlo, sale al
+  instante. Es el precio del doble toque, no un defecto.
+- El `longPress` se emite **al cumplirse el umbral**, no al soltar, y entonces
+  soltar ya no emite `tap`.
+- La barra no aparece hasta pasado `longPressGrace` (150 ms), y sólo cuando el
+  botón implementa además un gesto corto: si no, un toque de 80 ms dejaría un
+  destello de barra por algo que nunca iba a ser un pulsado largo. El umbral se
+  sigue contando **desde el `pointerdown`**, así que `longPressDelay` es el
+  tiempo total que hay que mantener; lo que se acorta es la animación, que se
+  reparte el tiempo restante para llegar llena justo al cumplirse.
+- Un movimiento de más de 10 px cancela el gesto: por debajo es pulso, por
+  encima el usuario está haciendo scroll.
+
+**La barra de progreso va al pie del botón, no de fondo, y no es una elección
+estética.** Los rellenos de botón están calibrados para cumplir AA *justo* con
+su texto, así que no queda margen para un tinte encima de la etiqueta: medido,
+`danger` con la barra llena caía a 3.45:1, y ni al 10% de opacidad se salvaba
+`primary` claro (4.22:1). Al pie no toca el texto y el contraste queda intacto.
+Por lo mismo, el destello de "cumplido" es un **aro**, no un relleno.
+
+La barra y el destello viven además en **capas separadas**. Compartirlas dejaba
+`scaleX(1)` fijado al terminar el destello, así que la barra se quedaba llena en
+reposo y el segundo pulsado largo no animaba —iba de 1 a 1—. La barra sólo mide
+progreso y siempre descansa en 0.
+
+**Accesibilidad**: el pulsado largo funciona con <kbd>Enter</kbd> o
+<kbd>Espacio</kbd> mantenidos (con guarda de `event.repeat`, o el autorrepetir
+reiniciaría el pulsado y no cumpliría nunca), y el doble toque con una doble
+pulsación rápida. **Aun así el doble toque es poco descubrible**: nunca debería
+ser la única forma de llegar a una acción. Un click sintético (dictado,
+lectores de pantalla) llega sin eventos de puntero ni de teclado: se reconoce
+por `detail` 0 y pasa por el mismo arbitraje que un toque. El `contextmenu` se
+suprime sólo mientras hay un pulsado activo — en Windows y Android el
+long-press táctil lo dispara con el dedo aún abajo y el menú del webview
+partiría el gesto; el click derecho en reposo conserva su menú.
 
 Los tres controles de formulario gatean el mensaje de error tras `touched`: enseñar "requerido" en un formulario recién abierto es hostil.
 

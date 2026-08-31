@@ -1,0 +1,25 @@
+<button
+  type="button"
+  [class]="classes()"
+  [class.is-holding]="holding()"
+  [class.is-completed]="completed()"
+  [disabled]="disabled()"
+  (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerUp($event)"
+  (pointercancel)="onPointerCancel($event)"
+  (contextmenu)="onContextMenu($event)"
+  (click)="onClick($event)"
+  (keydown)="onKeyDown($event)"
+  (keyup)="onKeyUp($event)"
+  (blur)="onBlur()"
+>
+  @if (hasLongPress()) {
+    <span
+      class="gbtn__progress"
+      aria-hidden="true"
+      [style.transition-duration.ms]="holding() ? fillMs() : 0"
+    ></span>
+  }
+  <span class="gbtn__label"><ng-content /></span>
+</button>
