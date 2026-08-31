@@ -314,6 +314,21 @@ code {
   border-radius: var(--radius-lg);
 }
 
+.sg__compare-col--legacy {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "Cascadia Code", Consolas,
+    "Liberation Mono", monospace;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  font-family: var(--font-sans);
+}
+
 .sg__compare-head {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);

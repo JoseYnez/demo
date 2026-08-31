@@ -136,6 +136,9 @@ export class Styleguide {
     { value: "qa", label: "QA (sin cupo)", disabled: true },
   ];
 
+  protected readonly idAntes = signal("");
+  protected readonly idAhora = signal("");
+
   protected readonly sueltoTexto = signal("");
   protected readonly sueltoArea = signal("");
   protected readonly sueltoNotas = signal("");

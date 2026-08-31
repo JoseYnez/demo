@@ -4,10 +4,10 @@
   --accent-hue: 158;
 
   --font-sans:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono:
-    ui-monospace, SFMono-Regular, "Cascadia Code", Consolas,
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code", Consolas,
     "Liberation Mono", monospace;
 
   --font-size-xs: 0.75rem;
@@ -38,10 +38,10 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
   --radius-full: 9999px;
 
   --transition-fast: 120ms ease;

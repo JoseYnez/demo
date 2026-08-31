@@ -143,6 +143,7 @@ demo/
 │   │   ├── app.config.ts
 │   │   └── app.routes.ts
 │   ├── assets/
+│   │   └── fonts/              # .woff2 de IBM Plex (ver §11.2)
 │   ├── styles/                 # tokens.css, reset.css, forms.css, buttons.css, testing/
 │   ├── styles.css              # Entrada global (importa styles/)
 │   ├── index.html
@@ -643,6 +644,7 @@ La capa global son tres hojas, importadas por `src/styles.css` en este orden:
 
 | Hoja | Qué contiene |
 |---|---|
+| `styles/fonts.css` | Los tres `@font-face` de IBM Plex. Sólo declara familias; ni un color ni una medida. |
 | `styles/tokens.css` | Las variables. Único sitio donde se escribe un color o una medida literal. |
 | `styles/reset.css` | Normalización y estilos base de `body`, títulos, enlaces y foco. |
 | `styles/buttons.css` | Base compartida de los botones: `.btn`, sus tamaños y sus variantes. Está en la capa global por la misma razón que `forms.css`: la comparten `Button` y `GestureButton`, y la encapsulación no deja compartirla desde un componente. Cada uno añade sólo lo suyo — el `:host` y, en el gestual, la capa de progreso. |
@@ -660,6 +662,15 @@ Roles que los tokens cubren:
 - **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
 
 > **Regla dura**: prohibido hardcodear colores, espaciados, radios o sombras en el CSS de un componente. Siempre variables. Es lo único que hace que el tema oscuro funcione solo.
+
+**La tipografía es la identidad, y va empotrada.** La pila del sistema es gratis y no dice nada: es la misma en todas las apps de escritorio. El sistema usa **IBM Plex Sans** (variable, eje 100–700) y **IBM Plex Mono** (400 y 500), desde `src/assets/fonts/`.
+
+- **No van en `public/`.** `angular.json` declara `assets` explícitamente apuntando a `src/assets`, lo que **anula** el `public/` implícito de `@angular/build`. Un `.woff2` en `public/` no llega a `dist/` y la app cae al fallback sin avisar.
+- **Ni CDN ni dependencia npm.** La app arranca sin red; los tres `.woff2` (75 KB, subconjunto latino) se commitean. `@fontsource-variable/ibm-plex-mono` además no existe — Plex Mono no tiene versión variable.
+- **`font-display: block`, no `swap`.** El archivo es local y el bloqueo es imperceptible; `swap` daría un parpadeo real de la pila del sistema a Plex en cada arranque.
+- La pila del sistema se queda **detrás** de Plex en `--font-sans` y `--font-mono`: si falta el archivo, la app se ve fea, no rota.
+
+**Los radios son 2/3/4/6.** El 4/6/8/12 de partida era el defecto de shadcn/Radix/Tailwind: el valor que sale cuando no se elige. La escala corta lee como instrumento y no toca ningún cálculo de contraste. Ningún componente escribe un radio literal —el único `border-radius` sin `var()` en `src/` es un `inherit`—, así que la escala se cambia en un sitio.
 
 Tres distinciones que hay que respetar, porque confundirlas ya causó un bug:
 
@@ -1034,6 +1045,7 @@ Deliberadamente **fuera** de esta base. Cada proyecto derivado decide y lo docum
 
 | Tema | Estado |
 |---|---|
+| Croma del acento: 0.06 configurable vs 0.12–0.14 fijo | Sin decidir. Subirlo da color propio, pero recorta los 360 tonos elegibles a una lista corta validada: marca fija y acento libre no caben juntos. Comparativa en `/styleguide`. |
 | Persistencia (SQLite / `tauri-plugin-store` / `localStorage`) | Sin decidir. No hay BD ni store en la base. |
 | Logging (`tauri-plugin-log`) | Sin decidir. Hoy no hay plugin de log: `println!` sólo vale para depuración local, nunca en un commit. |
 | Barra de título custom vs. nativa | Nativa (`decorations` por defecto). |
