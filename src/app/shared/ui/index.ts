@@ -13,6 +13,13 @@ export type { Gesture } from "./gesture-button/gesture-button";
 export { FieldShell } from "./field-shell/field-shell";
 export type { LabelMode } from "./field-shell/field-shell";
 
+export { FilePicker } from "./file-picker/file-picker";
+export type {
+  FileSource,
+  RejectedFile,
+  RejectionReason,
+} from "./file-picker/file-picker";
+
 export { Input } from "./input/input";
 export type { InputType } from "./input/input";
 

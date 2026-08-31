@@ -442,6 +442,74 @@
     <pre class="sg__output selectable">{{ sueltoTexto() }} | {{ sueltoArea() }} | {{ sueltoNotas() }}</pre>
   </section>
 
+  <section class="sg__section">
+    <h2 class="sg__title">FilePicker</h2>
+    <p class="sg__note selectable">
+      <code>&lt;app-file-picker&gt;</code> — <code>sources</code> declara qué vías
+      admite: <code>drop</code>, <code>browse</code> y <code>paste</code>. Igual
+      que en <code>GestureButton</code>, la apariencia sale de ahí: lo que no se
+      declara, ni se anuncia ni responde. Entrega objetos <code>File</code>, así
+      que el mismo componente vale en el navegador y en la app.
+    </p>
+
+    <div class="sg__grid">
+      <app-file-picker
+        label="Adjuntos"
+        hint="Las tres vías a la vez."
+        [(value)]="adjuntos"
+        (rejected)="anotarRechazos($event)"
+      />
+      <app-file-picker label="Sólo arrastrar" [sources]="['drop']" [(value)]="soloSoltar" />
+      <app-file-picker label="Sólo explorador" [sources]="['browse']" [(value)]="soloExplorar" />
+      <app-file-picker
+        label="Sólo pegar"
+        [sources]="['paste']"
+        hint="Apunta con el ratón o enfoca, y pulsa Ctrl+V."
+        [(value)]="soloPegar"
+      />
+    </div>
+
+    <h3 class="sg__subtitle">Límites y estados</h3>
+    <div class="sg__grid">
+      <app-file-picker
+        label="Una imagen"
+        accept="image/*"
+        [maxFiles]="1"
+        [(value)]="unaImagen"
+        (rejected)="anotarRechazos($event)"
+      />
+      <app-file-picker
+        label="Hasta 3, de 64 kB"
+        [maxFiles]="3"
+        [maxSize]="65536"
+        [(value)]="hastaTres"
+        (rejected)="anotarRechazos($event)"
+      />
+      <app-file-picker label="Sin miniaturas" [preview]="false" [(value)]="sinMiniatura" />
+      <app-file-picker label="Deshabilitado" [disabled]="true" [(value)]="adjuntosInertes" />
+    </div>
+
+    <p class="sg__note selectable">
+      Lo rechazado no entra al modelo: se avisa en la línea de mensaje y se emite
+      por <code>rejected</code> con su motivo.
+    </p>
+
+    <h3 class="sg__subtitle">Dónde cae lo que pegas</h3>
+    <p class="sg__note selectable">
+      Con un solo adjuntador en pantalla, <kbd>Ctrl+V</kbd> basta: no hay a quién
+      confundir. Con varios —como en esta página— recibe el que está
+      <strong>armado</strong>, y se ve: borde de acento y la pista cambiando a
+      «Pega aquí con Ctrl+V». Se arma apuntándolo con el ratón o enfocándolo con
+      <kbd>Tab</kbd>. Pegar dentro de un campo de texto nunca se lo queda un
+      adjuntador.
+    </p>
+
+    @if (rechazos().length > 0) {
+      <pre class="sg__output selectable">{{ rechazos().join("
+") }}</pre>
+    }
+  </section>
+
   <section class="sg__section" id="comparativa">
     <h2 class="sg__title">Comparativa: dónde va la etiqueta</h2>
     <p class="sg__note selectable">
@@ -576,6 +644,12 @@
         [rows]="3"
         hint="Opcional."
         [formField]="alta.notas"
+      />
+
+      <app-file-picker
+        label="Adjuntos"
+        hint="Obligatorio: al menos uno."
+        [formField]="alta.adjuntos"
       />
 
       <div class="sg__form-actions">

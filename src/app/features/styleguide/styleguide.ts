@@ -6,7 +6,9 @@ import {
   FormRoot,
   minLength,
   required,
+  requiredError,
   submit,
+  validate,
 } from "@angular/forms/signals";
 
 import { ACCENT_PRESETS, AccentService } from "../../core/services/accent";
@@ -14,6 +16,7 @@ import {
   Badge,
   Button,
   Card,
+  FilePicker,
   GestureButton,
   Input,
   Select,
@@ -23,6 +26,7 @@ import type {
   BadgeAppearance,
   BadgeVariant,
   ButtonVariant,
+  RejectedFile,
   SelectOption,
 } from "../../shared/ui";
 
@@ -31,6 +35,7 @@ interface Alta {
   correo: string;
   area: string;
   notas: string;
+  adjuntos: readonly File[];
 }
 
 @Component({
@@ -39,6 +44,7 @@ interface Alta {
     Badge,
     Button,
     Card,
+    FilePicker,
     GestureButton,
     Input,
     Select,
@@ -146,11 +152,22 @@ export class Styleguide {
   protected readonly floatArea = signal("");
   protected readonly floatNotas = signal("");
 
+  protected readonly adjuntos = signal<readonly File[]>([]);
+  protected readonly soloSoltar = signal<readonly File[]>([]);
+  protected readonly soloExplorar = signal<readonly File[]>([]);
+  protected readonly soloPegar = signal<readonly File[]>([]);
+  protected readonly unaImagen = signal<readonly File[]>([]);
+  protected readonly hastaTres = signal<readonly File[]>([]);
+  protected readonly sinMiniatura = signal<readonly File[]>([]);
+  protected readonly adjuntosInertes = signal<readonly File[]>([]);
+  protected readonly rechazos = signal<readonly string[]>([]);
+
   protected readonly modelo = signal<Alta>({
     nombre: "",
     correo: "",
     area: "",
     notas: "",
+    adjuntos: [],
   });
 
   protected readonly alta = form(this.modelo, (path) => {
@@ -159,20 +176,31 @@ export class Styleguide {
     required(path.correo, { message: "El correo es obligatorio." });
     email(path.correo, { message: "Ese correo no tiene buena pinta." });
     required(path.area, { message: "Elige un área." });
+    validate(path.adjuntos, ({ value }) =>
+      value().length === 0
+        ? requiredError({ message: "Adjunta al menos un archivo." })
+        : undefined,
+    );
   });
 
   protected readonly enviado = signal("");
 
+  protected anotarRechazos(lote: readonly RejectedFile[]): void {
+    this.rechazos.set(lote.map((r) => `${r.file.name} → ${r.reason}`));
+  }
+
   protected async enviar(): Promise<void> {
     this.enviado.set("");
     await submit(this.alta, async () => {
-      this.enviado.set(JSON.stringify(this.modelo(), null, 2));
+      const { adjuntos, ...resto } = this.modelo();
+      const legible = { ...resto, adjuntos: adjuntos.map((file) => file.name) };
+      this.enviado.set(JSON.stringify(legible, null, 2));
       return undefined;
     });
   }
 
   protected reiniciar(): void {
-    this.modelo.set({ nombre: "", correo: "", area: "", notas: "" });
+    this.modelo.set({ nombre: "", correo: "", area: "", notas: "", adjuntos: [] });
     this.enviado.set("");
   }
 }

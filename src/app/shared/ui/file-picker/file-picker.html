@@ -1,0 +1,115 @@
+<app-field-shell
+  [label]="label()"
+  [controlId]="id"
+  [required]="required()"
+  [disabled]="disabled()"
+  [hint]="hint()"
+  [error]="error()"
+>
+  <div class="fp">
+    <div
+      class="fp__zone"
+      [class.is-over]="encima()"
+      [class.is-armado]="armado()"
+      [class.is-pulsable]="admiteExplorar() && !disabled()"
+      [class.is-invalid]="!!error()"
+      [class.is-disabled]="disabled()"
+      [attr.role]="admiteExplorar() ? 'button' : 'group'"
+      [attr.tabindex]="disabled() ? null : 0"
+      [attr.aria-label]="etiquetaAccesible()"
+      [attr.aria-disabled]="disabled() ? true : null"
+      (click)="abrir()"
+      (keydown)="onKeyDown($event)"
+      (dragenter)="onDragEnter($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      (drop)="onDrop($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      (pointerenter)="onPointerEnter()"
+      (pointerleave)="onPointerLeave()"
+    >
+      <svg class="fp__icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path
+          d="M12 16V4m0 0L8 8m4-4 4 4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
+
+      <p class="fp__text">{{ texto() }}</p>
+
+      @if (textoPegar() || limites()) {
+        <p class="fp__pista">
+          @if (textoPegar()) {
+            <span class="fp__pegar" [class.is-armado]="armado()">{{ textoPegar() }}</span>
+          }
+          @if (textoPegar() && limites()) {
+            <span aria-hidden="true">·</span>
+          }
+          @if (limites()) {
+            <span>{{ limites() }}</span>
+          }
+        </p>
+      }
+    </div>
+
+    <input
+      #campo
+      class="fp__campo"
+      type="file"
+      tabindex="-1"
+      aria-hidden="true"
+      [id]="id"
+      [attr.name]="name() || null"
+      [accept]="accept()"
+      [multiple]="multiple()"
+      [disabled]="disabled() || !admiteExplorar()"
+      (change)="onSelect($event)"
+    />
+
+    @if (adjuntos().length > 0) {
+      <ul class="fp__list">
+        @for (adjunto of adjuntos(); track adjunto.file) {
+          <li class="fp__item">
+            @if (adjunto.url) {
+              <img class="fp__thumb" [src]="adjunto.url" alt="" />
+            } @else {
+              <span class="fp__ext" aria-hidden="true">{{ adjunto.extension }}</span>
+            }
+
+            <span class="fp__name">{{ adjunto.file.name }}</span>
+            <span class="fp__size">{{ adjunto.tamano }}</span>
+
+            <button
+              class="fp__remove"
+              type="button"
+              [disabled]="disabled()"
+              [attr.aria-label]="'Quitar ' + adjunto.file.name"
+              (click)="quitar(adjunto.file)"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                <path
+                  d="M6 6l12 12M18 6 6 18"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</app-field-shell>

@@ -109,6 +109,18 @@ greet(name: string) {
 
 En tests esto se traduce en `await fixture.whenStable()` en vez de `fixture.detectChanges()` — ver §12.
 
+### 3.5 Drag & drop: `dragDropEnabled`
+
+`app.windows[0].dragDropEnabled` vale **`false`** en [tauri.conf.json](src-tauri/tauri.conf.json), y no es cosmético.
+
+Por defecto vale `true`: Tauri intercepta el drop del SO y emite `tauri://drag-drop` con **rutas**, a cambio de que los eventos `dragover`/`drop` de HTML5 **no lleguen nunca al webview**. Lo dice el propio campo en `tauri-utils`: _"Disabling it is required to use HTML5 drag and drop on the frontend on Windows"_. Con él activo, un componente que use la API web funciona en `pnpm start` y está **muerto dentro de la app** — el fallo más caro de descubrir tarde.
+
+Lo que se sigue de tenerlo en `false`:
+
+- `FilePicker` (§11.3) recibe objetos `File` con contenido, iguales en las tres fuentes.
+- **No hay rutas nativas.** Si un proyecto derivado necesita la ruta absoluta —copiar un archivo enorme sin pasarlo por IPC—, hay que devolverlo a `true` y leer el drop con `onDragDropEvent()`; entonces el explorador pasa a necesitar `@tauri-apps/plugin-dialog` y su fila en §10.
+- Soltar un archivo **fuera** de una zona de adjuntos haría que el webview navegase al archivo y se llevase la app por delante, sin barra de direcciones para volver. Lo impide `bloquearNavegacionAlSoltarArchivos()` en [app.ts](src/app/app.ts), que es un `preventDefault()` de `dragover`/`drop` en `document`. **No quitarlo.**
+
 ---
 
 ## 4. Estructura de carpetas
@@ -734,6 +746,7 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 | `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
 | `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |
 | `GestureButton` | `<app-gesture-button>` | `variant`, `size`, `disabled`, `fullWidth`, `gestures`, `longPressDelay`, `doubleTapDelay`, `longPressGrace` | Toque, doble toque y pulsado largo, con barra de progreso. Ver abajo. |
+| `FilePicker` | `<app-file-picker>` | `label`, `hint`, `sources` (drop/browse/paste), `accept`, `maxFiles`, `maxSize`, `preview` + el contrato de §6.8 | `FormValueControl<readonly File[]>`. Adjuntos por arrastre, explorador y portapapeles, con lista y miniatura. Ver abajo. |
 | `FieldShell` | `<app-field-shell>` | `labelMode`, `label`, `controlId`, `floated`, `required`, `disabled`, `hint`, `error` | Carcasa que comparten los tres: etiqueta, muesca y línea de ayuda/error. Sólo se usa directamente al construir un control propio. |
 
 **GestureButton — los gestos se declaran.** `gestures` dice cuáles implementa
@@ -781,6 +794,44 @@ por `detail` 0 y pasa por el mismo arbitraje que un toque. El `contextmenu` se
 suprime sólo mientras hay un pulsado activo — en Windows y Android el
 long-press táctil lo dispara con el dedo aún abajo y el menú del webview
 partiría el gesto; el click derecho en reposo conserva su menú.
+
+**FilePicker — las fuentes se declaran, como los gestos.** `sources` dice qué
+vías admite (`drop`, `browse`, `paste`) y **la apariencia sale de ahí**: lo que
+no se declara ni se anuncia en el texto de la zona ni responde.
+
+- Entrega **objetos `File`, no rutas**. Es lo que hace que las tres fuentes
+  devuelvan lo mismo y que el componente no importe nada de `@tauri-apps`, como
+  exige esta sección. Depende de `dragDropEnabled: false` (§3.5). Si algún día
+  hace falta la ruta nativa, eso vive en un wrapper de `tauri/`, no aquí.
+- **El pegado se reparte solo.** Un único listener de `paste` en `document`
+  —compartido por todas las instancias, montado con la primera y retirado con la
+  última— decide de lo más específico a lo más general: si el evento nace dentro
+  de un adjuntador es suyo; si nace en un campo de texto **no se toca**, que el
+  usuario estaba escribiendo; si no, gana el **armado** (el enfocado, y si
+  ninguno lo está, el que tenga el cursor encima); y si no hay armado pero sólo
+  hay **uno** que admita pegar en la pantalla, es suyo sin ceremonia. Con varios
+  y ninguno armado no pasa nada, que es mejor que acertar al azar. El estado
+  armado se ve: borde de acento y la pista cambiando a "Pega aquí con Ctrl+V".
+  Esto existe porque **pulsar la zona abre el explorador**, así que sin arbitraje
+  el ratón no tenía forma de elegir destino sin abrir un diálogo.
+- **`multiple` no es un input**: se deriva de `maxFiles`. Dos perillas que
+  pueden contradecirse son un bug esperando; con una, `maxFiles: 1` significa
+  "un archivo" en las tres fuentes a la vez, y el nuevo reemplaza al anterior.
+- **`accept` se aplica a mano** además de en el atributo: el nativo sólo filtra
+  el diálogo del explorador, no lo soltado ni lo pegado.
+- El resaltado del arrastre lleva un **contador de profundidad**:
+  `dragenter`/`dragleave` disparan por cada hijo, y sin contarlos el resaltado
+  se apaga al pasar el puntero sobre el texto de la propia zona.
+- El `<input type="file">` va **fuera** de la zona pulsable. Dentro, el
+  `click()` con el que se abre volvería a burbujear hasta ella y se
+  realimentaría. Y se le limpia el `value` tras cada selección, o elegir el
+  mismo archivo dos veces no vuelve a emitir `change`.
+- Lo rechazado —tipo, tamaño, cupo, duplicado— **no entra al modelo**: se emite
+  por `rejected` y se avisa en la línea de mensaje, con prioridad **error del
+  formulario > aviso de rechazo > hint**.
+- Las miniaturas son `createObjectURL`, así que se sincronizan en un `effect()`
+  y se revocan al quitar el archivo y al destruirse (§6.6). Crearlas en un
+  `computed()` sería una fuga: cada recálculo fabricaría URLs que nadie revoca.
 
 Los tres controles de formulario gatean el mensaje de error tras `touched`: enseñar "requerido" en un formulario recién abierto es hostil.
 
@@ -907,6 +958,10 @@ it("renderiza el título", async () => {
 ```
 
 Los tests que ejerciten un wrapper de `tauri/` deben mockear `@tauri-apps/api/core`: fuera de la ventana de Tauri, `invoke()` falla porque no existe `window.__TAURI_INTERNALS__`.
+
+### Lo que jsdom no trae
+
+El jsdom de este runner **no implementa** `DataTransfer`, `DragEvent`, `ClipboardEvent` ni `URL.createObjectURL`/`revokeObjectURL` (`File` y `FileList` sí). Un test de arrastre, pegado o miniaturas fabrica el evento a mano —`new Event("drop")` más `Object.defineProperty(evento, "dataTransfer", …)`— y stubea las dos funciones de `URL`. El patrón está en [file-picker.spec.ts](src/app/shared/ui/file-picker/file-picker.spec.ts).
 
 ---
 
