@@ -259,7 +259,7 @@
           <a class="sg__croma-link" href="#croma">Ver detalle</a>
         </div>
         <app-input label="Enfoca para ver el anillo" [(value)]="cromaTecho" />
-        <p class="sg__note selectable">El máximo que admiten los 72 tonos sin tocar la luminosidad. Un +25% de croma sin perder nada: no recorta la configurabilidad ni un tono.</p>
+        <p class="sg__note selectable">El máximo que admiten los 72 tonos sin tocar la luminosidad. El +25% suena a mucho y no lo es: son ΔE 0.015, la cuarta parte de un paso de hover. Y gasta el margen de gamut entero.</p>
       </div>
 
       <div class="sg__croma-col sg__croma-col--marca">
@@ -284,6 +284,12 @@
         <p class="sg__note selectable">El doble de croma y la luminosidad ajustada a este tono. Aquí sí hay color propio, y a cambio el selector deja de funcionar.</p>
       </div>
     </div>
+
+    <p class="sg__note selectable">
+      La columna del medio es un espejismo: por el mismo listón con el que se
+      descartó <code>--bg-surface-alt</code> como hover (0.039 de L*,
+      invisible), un ΔE de 0.015 no se ve. La decisión es binaria.
+    </p>
 
     <p class="sg__note selectable">
       Lo que ata el techo <strong>no es el contraste, es el gamut de sRGB</strong>:

@@ -1047,7 +1047,7 @@ Deliberadamente **fuera** de esta base. Cada proyecto derivado decide y lo docum
 
 | Tema | Estado |
 |---|---|
-| Croma del acento | Sin decidir, pero **medido** — comparativa en `/styleguide#croma`. Con la luminosidad constante que hace configurable el acento, el techo de los 72 tonos es **C 0.075** (+25%, gratis); lo ata el **gamut de sRGB**, no el contraste. Para pasar de ahí hay que fijar el tono y ajustarle la luminosidad: a sage 158 eso da **C 0.120**, el doble. C 0.12 sólo admite 13 de 72 tonos con L constante, y 0.14 sólo 6. |
+| Croma del acento | Sin decidir, pero **medido** — comparativa en `/styleguide#croma`. Con la luminosidad constante que hace configurable el acento, el techo de los 72 tonos es **C 0.075**; lo ata el **gamut de sRGB**, no el contraste. Ese +25% **no vale la pena**: son ΔE 0.015 —un cuarto de un paso de hover, por debajo del listón con el que ya se descartó `--bg-surface-alt` como hover— y deja el sistema al 96% del punto de ruptura, sin margen. La decisión real es binaria. Para pasar de ahí hay que fijar el tono y ajustarle la luminosidad: a sage 158 eso da **C 0.120**, el doble. C 0.12 sólo admite 13 de 72 tonos con L constante, y 0.14 sólo 6. |
 | Persistencia (SQLite / `tauri-plugin-store` / `localStorage`) | Sin decidir. No hay BD ni store en la base. |
 | Logging (`tauri-plugin-log`) | Sin decidir. Hoy no hay plugin de log: `println!` sólo vale para depuración local, nunca en un commit. |
 | Barra de título custom vs. nativa | Nativa (`decorations` por defecto). |
