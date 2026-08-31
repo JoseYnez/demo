@@ -10,13 +10,6 @@
   width: 100%;
 }
 
-/* La capa de progreso se recorta contra el botón, así que necesita contexto
-   propio. `touch-action: manipulation` desactiva el zoom por doble toque (que
-   se comería el doubleTap) y `user-select` evita que un dedo apoyado arranque
-   la selección de texto. El scroll NO se bloquea aquí: si el dedo se mueve, el
-   slop y el `pointercancel` cancelan el gesto, que es lo correcto. Y el menú
-   contextual del long-press táctil no lo alcanza el CSS: lo suprime el
-   manejador de `contextmenu` del componente. */
 .gbtn {
   position: relative;
   overflow: hidden;
@@ -30,16 +23,6 @@
   z-index: 1;
 }
 
-/* La barra va en el BORDE INFERIOR, no de fondo. Un relleno bajo la etiqueta es
-   incompatible con esta paleta: los rellenos de botón están calibrados para
-   cumplir AA justo, así que cualquier tinte encima hunde el texto por debajo de
-   4.5:1 — medido, ni al 10% de opacidad se salva (`primary` claro se queda en
-   4.22:1, y `danger` al 22% en 3.45:1). Al pie no toca el texto y el contraste
-   queda intacto.
-
-   `currentcolor` y no un token: el color del texto ya contrasta con el relleno
-   de su variante, así que la barra cumple el 3:1 que pide WCAG 1.4.11 para un
-   indicador no textual en las cuatro, sin una regla por variante. */
 .gbtn__progress {
   position: absolute;
   right: 0;
@@ -58,11 +41,6 @@
   transform: scaleX(1);
 }
 
-/* El destello de "cumplido" va en su propia capa y NO toca el transform de la
-   barra. Compartirlo dejaba `scaleX(1)` fijado al terminar, así que la barra se
-   quedaba llena en reposo y el siguiente pulsado largo no animaba: iba de 1 a 1.
-   Es un aro, no un relleno, por lo mismo que la barra vive al pie: un relleno
-   sobre la etiqueta le bajaría el contraste. */
 .gbtn::after {
   content: "";
   position: absolute;
@@ -74,9 +52,7 @@
   pointer-events: none;
 }
 
-/* Duración literal: `--transition-normal` empaqueta "200ms ease", que vale en
-   `transition` pero no aquí — en el shorthand `animation` la segunda función
-   de easing invalida la declaración entera y el destello no se ejecutaba. */
+/* Duración literal: `--transition-normal` trae su propio easing y en el shorthand de `animation` invalida la declaración entera. */
 .gbtn.is-completed::after {
   animation: gbtn-flash 200ms ease-out;
 }
@@ -91,9 +67,6 @@
   }
 }
 
-/* La barra NO es decorativa: es la única pista de cuánto falta para que el
-   gesto cumpla, así que se mantiene. Lo que se quita es el destello, que sí
-   lo es. */
 @media (prefers-reduced-motion: reduce) {
   .gbtn.is-completed::after {
     animation: none;

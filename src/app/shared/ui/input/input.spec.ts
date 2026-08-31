@@ -39,8 +39,6 @@ describe("Input", () => {
 
       const el = fixture.nativeElement as HTMLElement;
       expect(el.querySelector(".is-floated")).toBeNull();
-      // La etiqueta hace de placeholder mientras está abajo: los dos a la vez
-      // se solaparían.
       expect(el.querySelector("input")?.getAttribute("placeholder")).toBe("");
     });
 
@@ -83,8 +81,6 @@ describe("Input", () => {
       await fixture.whenStable();
 
       const el = fixture.nativeElement as HTMLElement;
-      // El legend es decorativo: sólo reserva el hueco, y por eso debe medir
-      // lo mismo que la etiqueta visible.
       expect(el.querySelector(".fs__legend")?.textContent?.trim()).toBe("Nombre *");
       expect(el.querySelector(".fs__outline")?.getAttribute("aria-hidden")).toBe("true");
     });

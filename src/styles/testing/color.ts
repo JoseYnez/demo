@@ -1,11 +1,6 @@
-/* Conversión OKLCH → sRGB y contraste WCAG 2 para los specs de tokens.
-   Sólo lo consumen los tests: la app no deriva colores en runtime — la
-   derivación vive en tokens.css como expresiones oklch(). */
-
 export interface OklchValue {
   readonly l: number;
   readonly c: number;
-  /** Alfa en [0,1]; 1 si la expresión no lo declara. */
   readonly alpha: number;
 }
 
@@ -27,7 +22,6 @@ export function oklchToLinearRgb(
   ];
 }
 
-/** ¿Cabe en sRGB sin recorte? Tolerancia de 0.002 por el redondeo a 8 bits. */
 export function inSrgbGamut(l: number, c: number, hueDeg: number): boolean {
   return oklchToLinearRgb(l, c, hueDeg).every((v) => v >= -0.002 && v <= 1.002);
 }
@@ -65,8 +59,6 @@ export function contrastRatio(lumA: number, lumB: number): number {
   return (Math.max(lumA, lumB) + 0.05) / (Math.min(lumA, lumB) + 0.05);
 }
 
-/** Mezcla `over` con opacidad `alpha` sobre `under`, por canal y en espacio
-    gamma — igual que compone el navegador un color translúcido. */
 export function compositeHex(overHex: string, alpha: number, underHex: string): string {
   const channel = (i: number) => {
     const over = parseInt(overHex.slice(1 + i * 2, 3 + i * 2), 16);
@@ -79,9 +71,6 @@ export function compositeHex(overHex: string, alpha: number, underHex: string): 
 const OKLCH_EXPR =
   /oklch\(\s*([\d.]+)\s+([\d.]+)\s+var\(--accent-hue(?:,\s*[\d.]+)?\)\s*(?:\/\s*([\d.]+)%)?\s*\)/;
 
-/** Extrae la primera expresión `oklch(L C var(--accent-hue[, def])[ / A%])`
-    de un valor CSS (vale también para valores compuestos como --ring-focus).
-    El tono no se devuelve: siempre lo sustituye el test. */
 export function parseOklchValue(value: string): OklchValue | null {
   const m = OKLCH_EXPR.exec(value);
   if (!m) return null;

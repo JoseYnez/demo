@@ -9,8 +9,6 @@
   min-height: 60px;
 }
 
-/* La etiqueta flotada se apoya en el borde superior: el texto necesita
-   despejarle esa franja. */
 .ui-control.is-floating {
   padding-block-start: var(--space-3);
 }

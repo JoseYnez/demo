@@ -19,7 +19,6 @@
     <ng-content />
 
     @if (labelMode() === "float") {
-      <!-- Decorativo: sólo dibuja el borde y abre la muesca. -->
       <fieldset class="fs__outline" aria-hidden="true">
         <legend class="fs__legend">{{ label() }}{{ required() ? " *" : "" }}</legend>
       </fieldset>

@@ -83,8 +83,6 @@ a:hover {
   outline-offset: 2px;
 }
 
-/* La app corre en una webview, no en un navegador: la selección de texto
-   accidental al arrastrar la interfaz es ruido. Se rehabilita donde importa. */
 body {
   user-select: none;
 }

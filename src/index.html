@@ -5,10 +5,6 @@
     <title>Tauri + Angular</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Aplica tema y acento guardados ANTES del bootstrap de Angular: sin
-         esto, el primer frame sale con el tema claro y el sage por defecto.
-         Si algún día se activa un CSP en tauri.conf.json, este script inline
-         necesitará su hash. -->
     <script>
       try {
         var theme = localStorage.getItem("theme");

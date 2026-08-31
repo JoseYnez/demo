@@ -44,8 +44,6 @@ export class Select implements FormValueControl<string> {
 
   protected readonly id = `app-select-${nextId++}`;
 
-  /* Un select siempre muestra algo —el placeholder o la opción elegida—, así
-     que en float la etiqueta vive arriba desde el principio. */
   protected readonly floated = computed(() => this.labelMode() === "float");
 
   protected readonly error = computed(() =>

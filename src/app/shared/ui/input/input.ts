@@ -31,8 +31,6 @@ export class Input implements FormValueControl<string> {
   readonly type = input<InputType>("text");
   readonly hint = input("");
 
-  /* Los sincroniza la directiva `formField` cuando el control se liga a un
-     campo; también se pueden pasar a mano en uso suelto. */
   readonly errors = input<readonly ValidationError.WithOptionalFieldTree[]>([]);
   readonly disabled = input(false);
   readonly readonly = input(false);
@@ -47,14 +45,10 @@ export class Input implements FormValueControl<string> {
 
   protected readonly floated = computed(() => this.focused() || this.value() !== "");
 
-  /* En float la etiqueta hace de placeholder mientras está abajo: mostrar los
-     dos a la vez los solapa. */
   protected readonly visiblePlaceholder = computed(() =>
     this.labelMode() === "float" && !this.floated() ? "" : this.placeholder(),
   );
 
-  /* El error sólo se muestra tras interactuar: enseñar "requerido" en un
-     formulario recién abierto es hostil. */
   protected readonly error = computed(() =>
     this.touched() ? this.errors()[0]?.message : undefined,
   );

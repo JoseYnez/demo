@@ -9,7 +9,6 @@ import {
 } from "./color";
 
 describe("oklchToHex", () => {
-  // Valores cruzados con el render del motor (Chromium) durante el diseño.
   it("reproduce la receta del acento en tonos conocidos", () => {
     expect(oklchToHex(0.525, 0.06, 158)).toBe("#4c755d");
     expect(oklchToHex(0.525, 0.06, 245)).toBe("#4c6e8b");
@@ -23,8 +22,6 @@ describe("oklchToHex", () => {
 });
 
 describe("inSrgbGamut", () => {
-  // La regresión que fijó el croma del subtle claro en .014: a L .965 el
-  // azul (H 258) no admite .017.
   it("detecta el azul claro fuera de gamut que motivó el croma .014", () => {
     expect(inSrgbGamut(0.965, 0.017, 258)).toBe(false);
     expect(inSrgbGamut(0.965, 0.014, 258)).toBe(true);

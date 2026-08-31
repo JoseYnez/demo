@@ -13,15 +13,6 @@
   font-weight: var(--font-weight-medium);
 }
 
-/* El elipsis no funciona sobre el contenedor flex: necesita su propia caja de
-   bloque con `min-width: 0`, o el texto largo empuja el badge fuera de la
-   tarjeta en vez de recortarse.
-
-   El `line-height` NO es cosmético: con 1 la caja mide exactamente el
-   font-size, que se queda 4 px por debajo de lo que ocupan los glifos, y el
-   `overflow: hidden` de la línea de arriba le corta los descendentes a la `g`
-   y a la `y`. La altura del badge la fija `height`, así que subirlo aquí no
-   mueve nada. */
 .badge__text {
   min-width: 0;
   overflow: hidden;
@@ -37,8 +28,6 @@
   background-color: currentcolor;
   border-radius: var(--radius-full);
 }
-
-/* Tamaños — misma rejilla que Button: `lg` empareja exacto con `btn--sm`. */
 
 .badge--sm {
   height: 20px;
@@ -62,9 +51,6 @@
   padding: 0 var(--space-3);
   font-size: var(--font-size-base);
 }
-
-/* Variantes — sólo declaran los tres colores de su familia; la apariencia
-   decide cuál se usa dónde. Sin esto habría 18 reglas en vez de 6 + 3. */
 
 .badge--neutral {
   --badge-fg: var(--text-secondary);
@@ -114,17 +100,12 @@
   --badge-solid-fg: var(--color-info-on-solid);
 }
 
-/* Apariencias */
-
 .badge--soft {
   background-color: var(--badge-bg);
   border-color: var(--badge-border);
   color: var(--badge-fg);
 }
 
-/* Sin relleno, el borde tenue de la familia desaparece contra la página: el
-   trazo lo lleva el propio color del texto, que ya cumple 4.5:1 contra las
-   cuatro superficies. */
 .badge--outline {
   background-color: transparent;
   border-color: currentcolor;

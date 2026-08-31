@@ -1,9 +1,3 @@
-/* Base compartida de los controles de formulario.
-   Vive en la capa global (y no en cada componente) porque la encapsulación de
-   Angular impide compartir estilos entre input, textarea y select sin
-   duplicarlos. Los componentes de shared/ui/ consumen estas clases y añaden
-   sólo lo suyo. */
-
 .ui-field {
   display: flex;
   flex-direction: column;
@@ -21,12 +15,6 @@
   color: var(--color-danger-fg);
 }
 
-/* Todos los controles son OUTLINED: sin relleno, el borde los define.
-   El modo float obliga a ello —la etiqueta cruza la línea del borde y un
-   relleno le partiría el fondo en dos colores— y tener la mitad de los
-   controles rellenos y la otra mitad no sería incoherente. Como el borde pasa
-   a ser el único indicador, `--border-strong` cumple 3:1 (WCAG 1.4.11) contra
-   la superficie más clara sobre la que puede caer. */
 .ui-control {
   width: 100%;
   padding: 0 var(--space-3);
@@ -53,8 +41,6 @@
   box-shadow: var(--ring-focus);
 }
 
-/* Inertes: borde discontinuo y apagado. Rellenarlos los haría más visibles
-   que un control activo, justo al revés de lo que deben comunicar. */
 .ui-control:disabled {
   border-color: var(--border-default);
   border-style: dashed;
@@ -76,8 +62,6 @@
   box-shadow: 0 0 0 3px var(--color-danger-bg);
 }
 
-/* Modo float: el borde lo dibuja el fieldset del shell, que va detrás. El
-   control renuncia al suyo y se coloca por encima. */
 .ui-control.is-floating,
 .ui-control.is-floating:hover:not(:disabled):not(:focus),
 .ui-control.is-floating:disabled,
@@ -93,8 +77,6 @@
   box-shadow: none;
 }
 
-/* Modo inset: la etiqueta vive dentro y no cruza el borde, así que aquí el
-   relleno no parte ningún fondo — es el único modo que admite el "pozo". */
 .ui-control.is-inset {
   padding-top: var(--space-5);
   background-color: var(--bg-surface-alt);

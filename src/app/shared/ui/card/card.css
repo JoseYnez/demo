@@ -11,12 +11,6 @@
   overflow: hidden;
 }
 
-/* Variantes */
-
-/* En oscuro una sombra negra sobre fondo casi negro no se ve, así que la
-   elevación la lleva la superficie: `--bg-surface-raised` es más clara que
-   `--bg-surface`, y `--edge-raised` añade un filo superior. En claro ambos
-   son neutros y el trabajo lo hace la sombra. */
 .card--elevated {
   background-color: var(--bg-surface-raised);
   box-shadow: var(--shadow-md), var(--edge-raised);
@@ -29,9 +23,6 @@
 .card--flat {
   background-color: var(--bg-surface-alt);
 }
-
-/* Padding — se aplica por zona para que header y footer conserven sus
-   separadores de ancho completo. */
 
 .card--pad-none .card__header,
 .card--pad-none .card__body,
@@ -56,9 +47,6 @@
 .card--pad-lg .card__footer {
   padding: var(--space-6);
 }
-
-/* Zonas. Las vacías desaparecen: `select` sin contenido proyectado deja el
-   contenedor sin hijos, y Angular ya elimina los nodos de sólo espacios. */
 
 .card__header:empty,
 .card__footer:empty {
@@ -88,8 +76,6 @@
   background-color: var(--bg-surface-alt);
 }
 
-/* Los campos que caigan dentro necesitan saber qué color tienen detrás para
-   que su etiqueta flotante se recorte bien contra él. */
 .card--elevated {
   --field-bg: var(--bg-surface-raised);
 }

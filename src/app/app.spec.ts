@@ -19,7 +19,6 @@ describe("App", () => {
 
   it("renderiza la navegación", async () => {
     const fixture = TestBed.createComponent(App);
-    // Zoneless: esperar la estabilidad del fixture, no `detectChanges()`.
     await fixture.whenStable();
 
     const links = (fixture.nativeElement as HTMLElement).querySelectorAll(

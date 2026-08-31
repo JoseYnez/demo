@@ -27,8 +27,6 @@ export class AccentService {
   readonly #hue = signal(this.#stored ?? DEFAULT_ACCENT_HUE);
   readonly hue = this.#hue.asReadonly();
 
-  /* Sin oklch() el bloque @supports de tokens.css no aplica y elegir tono no
-     tendría ningún efecto; la UI de selección se oculta con esto. */
   readonly supported =
     typeof CSS !== "undefined" &&
     typeof CSS.supports === "function" &&
@@ -47,7 +45,6 @@ export class AccentService {
     localStorage.setItem(STORAGE_KEY, String(normalized));
   }
 
-  /* Quitar la propiedad inline basta: el defecto lo recupera el CSS. */
   reset(): void {
     this.#hue.set(DEFAULT_ACCENT_HUE);
     document.documentElement.style.removeProperty(HUE_PROPERTY);

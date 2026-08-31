@@ -1,30 +1,8 @@
-/* Tokens del design system. Ningún componente define colores, espaciados,
-   radios ni sombras propios: todo sale de aquí.
-
-   La paleta se generó igualando el contraste PERCEPTUAL (APCA, polarity-aware)
-   entre los dos temas, no la ratio de WCAG 2. WCAG 2 subestima el contraste
-   sobre fondos oscuros: daba por bueno un modo oscuro que APCA medía muy por
-   debajo del claro. Los dos temas pasan WCAG 2.1 AA además de sus umbrales APCA.
-
-   El TONO es del usuario; L y C son del sistema. Los hex de abajo son el
-   render exacto de las expresiones oklch() del bloque @supports final a tono
-   158 (sage) — un test los ancla canal a canal. Al retocar una constante L/C,
-   cambiarla en el bloque @supports y regenerar aquí su hex. */
-
 :root {
-  /* Le dice al navegador de qué color pintar TODA la UI nativa que no
-     controlamos por CSS: la lista desplegable del <select>, las barras de
-     scroll, los calendarios de <input type=date>. Sin esto el popup del select
-     sale blanco y sus opciones —que heredan --text-primary— se vuelven
-     invisibles en tema oscuro. */
   color-scheme: light;
 
-  /* Tono del acento elegido por el usuario (0-359). AccentService lo escribe
-     inline en <html>; sin elección, este sage es el defecto. Todo lo que
-     depende de él vive en el bloque @supports del final. */
   --accent-hue: 158;
 
-  /* Tipografía — stack del sistema, sin webfonts */
   --font-sans:
     -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -48,7 +26,6 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.7;
 
-  /* Espaciado — escala de 4px */
   --space-0: 0;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -61,62 +38,42 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
-  /* Radios */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
   --radius-full: 9999px;
 
-  /* Transiciones */
   --transition-fast: 120ms ease;
   --transition-normal: 200ms ease;
   --transition-slow: 320ms ease;
 
-  /* ================= TEMA CLARO ================= */
-
-  /* Superficies. La elevación se comunica con sombra: `raised` es igual que
-     `surface` porque no hay nada más claro que el blanco. */
   --bg-app: #f6f8f7;
   --bg-surface: #ffffff;
   --bg-surface-alt: #eff3f1;
   --bg-surface-raised: #ffffff;
 
-  /* Estados de un control neutro con relleno propio (el botón `secondary`).
-     NO son superficies: nada se apila encima salvo su propia etiqueta.
-     `--bg-surface-alt` hacía este papel y se quedaba en un salto de 0.039 de
-     L*, por debajo del 0.057 de la referencia; ahora el salto es 0.058. */
   --bg-surface-hover: #e9edea;
   --bg-surface-active: #dbdfdc;
 
-  /* Estados de un control SIN relleno (el `ghost`, los enlaces de la barra).
-     Translúcidos a propósito: compuestos sobre cualquier superficie dan el
-     mismo salto perceptual, que es justo lo que un color fijo no puede hacer
-     — sobre `--bg-app` se quedaba en 0.016 e invisible. */
   --overlay-hover: rgb(0 0 0 / 8%);
   --overlay-active: rgb(0 0 0 / 14%);
 
-  /* Texto */
   --text-primary: #1a201c;
   --text-secondary: #4e5852;
   --text-muted: #676f6a;
   --text-on-accent: #ffffff;
 
-  /* Bordes. `default` es decorativo (divisores); `strong` delimita controles
-     y cumple el 3:1 que pide WCAG 1.4.11 para componentes de interfaz. */
   --border-default: #e0e6e2;
   --border-strong: #818b84;
   --border-focus: var(--accent);
 
-  /* Acento — sage por defecto; la familia entera rota con --accent-hue. */
   --accent: #4c755d;
   --accent-hover: #3d644e;
   --accent-active: #325642;
   --accent-subtle: #ecf6f0;
   --accent-border: #bedbc9;
 
-  /* Estados: `bg`/`fg`/`border` son para avisos y badges (fondo tenue).
-     NO rotan con el acento: rojo=error y verde=éxito son convención. */
   --color-success-bg: #e8f3ec;
   --color-success-fg: #2c6b45;
   --color-success-border: #b8ddc6;
@@ -133,12 +90,6 @@
   --color-info-fg: #2d5a8a;
   --color-info-border: #c2d7ea;
 
-  /* Rellenos sólidos: son el FONDO de un botón o un badge y llevan su propio
-     color de texto. NO reutilizar `--color-*-fg` como fondo — está calculado
-     para ir SOBRE `--color-*-bg`, no debajo de texto.
-     En claro coinciden con su `-fg`: el mismo color que se lee sobre un fondo
-     tenue admite blanco encima. En oscuro divergen, y por eso son tokens
-     aparte y no un alias. */
   --color-neutral-solid: #4e5852;
   --color-neutral-on-solid: #ffffff;
 
@@ -155,41 +106,21 @@
   --color-info-solid: #2d5a8a;
   --color-info-on-solid: #ffffff;
 
-  /* Sombras */
   --shadow-sm: 0 1px 2px rgb(20 34 28 / 6%);
   --shadow-md: 0 2px 6px rgb(20 34 28 / 8%), 0 1px 2px rgb(20 34 28 / 4%);
   --shadow-lg: 0 8px 20px rgb(20 34 28 / 10%), 0 2px 6px rgb(20 34 28 / 5%);
   --shadow-xl: 0 16px 40px rgb(20 34 28 / 14%), 0 4px 10px rgb(20 34 28 / 6%);
 
-  /* Filo superior de las superficies elevadas. En claro no hace falta: la
-     sombra ya separa del fondo. */
   --edge-raised: 0 0 0 0 transparent;
 
   --ring-focus: 0 0 0 3px rgb(76 117 93 / 25%);
 
-  /* Color que hay DETRÁS de un campo. La etiqueta flotante lo usa para taparse
-     el anillo de foco. Lo redefine cada superficie que no sea la página (ver
-     card.css), así que cascadea solo; sólo hay que declararlo a mano en un
-     contenedor con fondo propio. */
   --field-bg: var(--bg-app);
 }
-
-/* ================= TEMA OSCURO =================
-
-   Se aplica por elección explícita (data-theme="dark") o por preferencia del
-   SO mientras el usuario no haya elegido "light".
-
-   Los dos bloques de abajo DEBEN ser idénticos. No se pueden fundir en uno
-   solo porque uno vive dentro de una media query, y `light-dark()` se descartó:
-   WebKitGTK < 2.46 (Ubuntu 24.04 LTS) no lo soporta y dejaría la app entera
-   sin colores. Hay un test que falla si los dos bloques divergen. */
 
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  /* Rampa calcada de la de ChatGPT (sidebar #171717, chat #212121,
-     hover #2f2f2f), con un croma de 0.005 en vez de 0: se lee gris, pero
-     no del todo neutro. El color vive en el acento, no en el mobiliario. */
   --bg-app: #181a19;
   --bg-surface: #212422;
   --bg-surface-alt: #2a2d2b;
@@ -209,7 +140,6 @@
   --border-default: #2d302e;
   --border-strong: #797e7a;
 
-  /* Sage apagado: mismo brillo que el menta anterior con 40% menos de croma. */
   --accent: #a6c7b3;
   --accent-hover: #b7d9c4;
   --accent-active: #97b5a2;
@@ -248,8 +178,6 @@
   --color-info-solid: #256bb1;
   --color-info-on-solid: #ffffff;
 
-  /* Plano, como la referencia: la elevacion la lleva el tono de la superficie
-     y las sombras casi no participan. */
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
   --shadow-md: 0 2px 6px rgb(0 0 0 / 24%);
   --shadow-lg: 0 8px 20px rgb(0 0 0 / 32%);
@@ -264,9 +192,6 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    /* Rampa calcada de la de ChatGPT (sidebar #171717, chat #212121,
-       hover #2f2f2f), con un croma de 0.005 en vez de 0: se lee gris, pero
-       no del todo neutro. El color vive en el acento, no en el mobiliario. */
     --bg-app: #181a19;
     --bg-surface: #212422;
     --bg-surface-alt: #2a2d2b;
@@ -286,7 +211,6 @@
     --border-default: #2d302e;
     --border-strong: #797e7a;
 
-    /* Sage apagado: mismo brillo que el menta anterior con 40% menos de croma. */
     --accent: #a6c7b3;
     --accent-hover: #b7d9c4;
     --accent-active: #97b5a2;
@@ -325,8 +249,6 @@
     --color-info-solid: #256bb1;
     --color-info-on-solid: #ffffff;
 
-    /* Plano, como la referencia: la elevacion la lleva el tono de la superficie
-       y las sombras casi no participan. */
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
     --shadow-md: 0 2px 6px rgb(0 0 0 / 24%);
     --shadow-lg: 0 8px 20px rgb(0 0 0 / 32%);
@@ -338,23 +260,6 @@
   }
 }
 
-/* ================= ACENTO CONFIGURABLE =================
-
-   La familia del acento y el tinte del mobiliario se derivan de --accent-hue.
-   L y C son constantes del sistema y NO son configurables: es lo que hace que
-   el contraste aguante en los 360 tonos — tokens.spec.ts lo verifica barriendo
-   todos los pares WCAG con el tono girando.
-
-   El @supports no es decorativo. Una custom property acepta cualquier valor,
-   así que declararla dos veces NO da fallback: la última declaración gana
-   siempre, y en un motor sin oklch() cada var(--accent) se volvería inválido
-   a computed-value time — la app entera sin colores, el mismo desastre por el
-   que se descartó light-dark(). Con la guarda, un WebKit viejo ignora este
-   bloque y se queda en el sage estático de arriba: pierde la personalización,
-   no los colores. oklch() está en los motores desde 2022 (Chromium 111,
-   Safari 15.4, WebKitGTK ~2.36), muy por debajo del listón 2.46 de Ubuntu LTS.
-
-   Los dos bloques oscuros DEBEN ser idénticos, igual que los estáticos. */
 @supports (color: oklch(0.5 0.1 180)) {
   :root {
     --accent: oklch(0.525 0.06 var(--accent-hue));
@@ -364,8 +269,6 @@
     --accent-border: oklch(0.865 0.04 var(--accent-hue));
     --ring-focus: 0 0 0 3px oklch(0.525 0.06 var(--accent-hue) / 25%);
 
-    /* Neutro sólido: es mobiliario, no semántica, así que rota con el tono.
-       Su texto en claro es el blanco estático de arriba. */
     --color-neutral-solid: oklch(0.449 0.016 var(--accent-hue));
 
     --bg-app: oklch(0.977 0.0025 var(--accent-hue));

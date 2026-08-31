@@ -452,12 +452,20 @@ const created = new Date(`${dto.createdAt}Z`);
 - `TODO` / `FIXME` sin issue asociado. Con issue, el formato es `// TODO(#123): …`.
 - JSDoc y `///` que sólo repiten la firma (`@param name El nombre`).
 
-**Se justifica un comentario cuando**:
+**Se justifica un comentario sólo si, sin él, un cambio futuro rompe algo en silencio** — y ni un nombre mejor, ni un tipo, ni un test, ni este archivo pueden decirlo en su lugar. Cuatro casos, y ninguno más:
 
-- Documenta una decisión no obvia o descartada (_por qué así y no de la otra forma_).
-- Marca un workaround, con enlace al issue upstream.
-- Enuncia una invariante que el sistema de tipos no puede expresar.
 - Advierte de algo destructivo: el `// Prevents additional console window on Windows in release, DO NOT REMOVE!!` de [main.rs](src-tauri/src/main.rs) es el ejemplo canónico — borrarlo rompe el release.
+- Marca una trampa del motor o del lenguaje que el código no delata: usar `--transition-normal` en el shorthand `animation` invalida la declaración entera, y la regla se queda muerta sin avisar.
+- Enuncia una invariante que el sistema de tipos no puede expresar y ningún test cubre.
+- Marca un workaround, con enlace al issue upstream.
+
+Tres reglas que lo acotan:
+
+1. **Un comentario, una línea** (dos si no cabe). Un bloque de cinco líneas no es un comentario: es documentación fuera de sitio.
+2. **El porqué de una decisión de diseño va en CLAUDE.md, no en el código, y nunca en los dos.** Duplicarlo garantiza que un día digan cosas distintas y no se sepa cuál manda. La paleta, el acento configurable, los modos de etiqueta o el arbitraje de gestos se explican en §11; los archivos que los implementan no repiten nada de eso.
+3. **Si un test puede enunciarlo, se escribe el test.** Un `it("no deja temporizadores huérfanos si llega un segundo pointerdown")` documenta y además falla cuando alguien lo rompe; el comentario equivalente sólo envejece.
+
+Estado actual del repo: **tres comentarios en todo `src/` y `src-tauri/`** — los dos primeros ejemplos de la lista de arriba y el orden de congelado de temporizadores en [gesture-button.spec.ts](src/app/shared/ui/gesture-button/gesture-button.spec.ts). Añadir un cuarto es la excepción y hay que justificarla en el PR.
 
 En Rust, `///` se reserva para la API pública de un módulo compartido. Dentro de una función, mismo criterio que en TypeScript.
 
@@ -988,7 +996,7 @@ Al activar cualquiera de estos: instalar, documentar su sección aquí y actuali
 Al trabajar en este proyecto:
 
 1. **Español** en comentarios, commits y documentación.
-2. **Comentarios al mínimo (§6.9).** No narrar el código. No dejar los comentarios de andamiaje de las plantillas ni de `ng generate`. No añadir un comentario "por si acaso": si el código necesita explicación, primero intentar renombrar o extraer. Al tocar un archivo, borrar los comentarios muertos que se crucen.
+2. **Comentarios al mínimo, salvo que sean necesarios (§6.9).** El defecto es no comentar. Un comentario nuevo sólo se escribe si, sin él, un cambio futuro rompe algo en silencio, y ninguna de las alternativas —renombrar, extraer, tipar, escribir el test, documentarlo en §11— sirve; entonces cabe en una línea. No narrar el código, no dejar el andamiaje de las plantillas ni de `ng generate`, no comentar "por si acaso". Al tocar un archivo, borrar los comentarios que se crucen y no pasen ese listón.
 3. **Zoneless primero**: ante cualquier estado que se renderice, verificar que sea un `signal`. Es el error más fácil de introducir aquí y el más difícil de ver en review.
 4. **pnpm siempre.** Nunca sugerir `npm install` ni `npx`; usar `pnpm` y `pnpm dlx`.
 5. No introducir dependencias sin justificarlas. Preferir lo nativo de Angular/Tauri antes que una librería.

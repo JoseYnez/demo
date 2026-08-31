@@ -81,8 +81,6 @@ code {
   gap: var(--space-8);
 }
 
-/* Swatches */
-
 .sg__swatches {
   display: flex;
   flex-wrap: wrap;
@@ -115,8 +113,6 @@ code {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
-
-/* Escalas */
 
 .sg__type-row {
   display: flex;
@@ -163,8 +159,6 @@ code {
   border-radius: var(--radius-md);
 }
 
-/* Formularios */
-
 .sg__form {
   display: flex;
   flex-direction: column;
@@ -193,12 +187,6 @@ code {
   white-space: pre-wrap;
   overflow-x: auto;
 }
-
-/* Selector de acento.
-   Los chips y la pista duplican la receta L/C de --accent en tokens.css a
-   propósito: son una previsualización de "qué pasaría si", así que no pueden
-   leer var(--accent) — mostrarían todos el tono ya elegido. Si se retocan las
-   constantes allí, retocarlas aquí. */
 
 .sg-preset {
   display: inline-flex;
@@ -311,8 +299,6 @@ code {
   box-shadow: var(--ring-focus);
 }
 
-/* Comparativa de modos de etiqueta */
-
 .sg__compare {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -334,7 +320,6 @@ code {
   color: var(--text-secondary);
 }
 
-/* Ancho corto a propósito: enseña el recorte del badge con texto largo. */
 .sg__badge-narrow {
   display: flex;
   max-width: 220px;

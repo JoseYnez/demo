@@ -36,7 +36,6 @@ function readInitialTheme(): Theme {
   return prefersDark() ? "dark" : "light";
 }
 
-// jsdom no implementa matchMedia, y la webview podría no exponerlo.
 function prefersDark(): boolean {
   return (
     typeof matchMedia === "function" &&

@@ -10,7 +10,6 @@
 
 .ui-control {
   height: 34px;
-  /* Hueco para el separador y el chevron. */
   padding-right: var(--space-10);
   appearance: none;
   cursor: pointer;
@@ -18,7 +17,6 @@
 
 .ui-control.is-floating {
   height: 40px;
-  /* Deja respirar la etiqueta apoyada en el borde. */
   padding-top: var(--space-2);
 }
 
@@ -30,13 +28,6 @@
   cursor: not-allowed;
 }
 
-/* La lista desplegable la pinta el motor. Confiar en él no funcionó:
-   con `color-scheme: dark` toma el color de TEXTO del esquema (claro) pero
-   deja la superficie del popup en blanco, así que las opciones desaparecían
-   sobre fondo blanco. Tampoco valía `CanvasText`: resuelve contra el esquema
-   de la página, no contra lo que el popup pinta de verdad.
-   La única forma de garantizar el par es pintar las filas nosotros: fondo y
-   texto juntos, para que no puedan descasarse. */
 option {
   background-color: var(--bg-surface-raised);
   color: var(--text-primary);
@@ -51,11 +42,6 @@ option:checked {
   color: var(--accent);
 }
 
-/* Afordance de desplegable.
-   Con los controles en outlined, un select y un input son la misma caja: la
-   única pista de que esto abre una lista es lo que hay aquí. Un chevron de
-   7px ocupaba el 0,77% del control y no se leía. Ahora hay separador + un
-   chevron el doble de grueso. */
 .select__divider {
   position: absolute;
   top: var(--space-2);

@@ -17,9 +17,7 @@ describe("GestureButton", () => {
     await fixture.whenStable();
   }
 
-  /* Los temporizadores se congelan DESPUÉS de montar: `whenStable()` se apoya
-     en el planificador de Angular, que también usa setTimeout, y con el tiempo
-     detenido de antemano no resuelve nunca. */
+  /* Los temporizadores se congelan DESPUÉS de montar: `whenStable()` también usa setTimeout y con el tiempo detenido de antemano no resuelve. */
   function congelarTiempo(): void {
     vi.useFakeTimers();
   }
@@ -135,8 +133,6 @@ describe("GestureButton", () => {
     expect(boton().querySelector(".gbtn__progress")).not.toBeNull();
   });
 
-  /* Con tiempo real y un umbral corto: este test necesita `whenStable()` para
-     leer las clases del DOM, y con los temporizadores congelados no resuelve. */
   it("deja la barra en reposo tras cumplirse, para que el siguiente largo anime", async () => {
     await montar(["longPress"]);
     fixture.componentRef.setInput("longPressDelay", 20);
@@ -147,8 +143,6 @@ describe("GestureButton", () => {
     soltar();
     await fixture.whenStable();
 
-    // `is-holding` es lo único que llena la barra: si sobreviviera al gesto, el
-    // siguiente pulsado iría de lleno a lleno y no se vería animar.
     expect(emitidos).toEqual(["longPress"]);
     expect(boton().classList.contains("is-holding")).toBe(false);
     expect(boton().classList.contains("is-completed")).toBe(true);
@@ -167,8 +161,6 @@ describe("GestureButton", () => {
     pulsar();
     vi.advanceTimersByTime(3000);
 
-    // Sin cerrar el pulsado anterior, su temporizador sobrevivía a `begin()` y
-    // acababa emitiendo un longPress fantasma.
     expect(emitidos).toEqual(["longPress"]);
   });
 
@@ -200,16 +192,12 @@ describe("GestureButton", () => {
     pulsar();
     soltar();
 
-    // Sin liberarla, el navegador deja el :hover clavado en el elemento que
-    // capturó y el botón se queda como si siguieras pulsándolo.
     expect({ capturados, liberados }).toEqual({ capturados: [1], liberados: [1] });
   });
 
   it("no pierde el gesto si la captura del puntero falla", async () => {
     await montar(["tap"]);
     congelarTiempo();
-    // Con el hilo ocupado, el pointerdown puede procesarse con el puntero ya
-    // levantado y `setPointerCapture` lanza NotFoundError.
     boton().setPointerCapture = () => {
       throw new DOMException("No active pointer", "NotFoundError");
     };
@@ -244,15 +232,12 @@ describe("GestureButton", () => {
 
     pulsar();
     await fixture.whenStable();
-    // Un toque normal dura menos que el margen, así que no llega a ver barra.
     expect(boton().classList.contains("is-holding")).toBe(false);
 
     await new Promise((r) => setTimeout(r, 90));
     await fixture.whenStable();
     expect(boton().classList.contains("is-holding")).toBe(true);
 
-    // La animación se reparte lo que queda (200 − 40), no el umbral entero:
-    // así llega llena justo cuando se emite el gesto, no antes.
     const barra = boton().querySelector<HTMLElement>(".gbtn__progress")!;
     expect(barra.style.transitionDuration).toBe("160ms");
   });
@@ -262,7 +247,6 @@ describe("GestureButton", () => {
     pulsar();
     await fixture.whenStable();
 
-    // Sin gesto corto no hay nada que distinguir: el aviso conviene ya.
     expect(boton().classList.contains("is-holding")).toBe(true);
   });
 
@@ -313,8 +297,6 @@ describe("GestureButton", () => {
     b.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     vi.advanceTimersByTime(1200);
 
-    // Sin la guarda, `begin()` sobrescribía el temporizador vivo y el huérfano
-    // acababa emitiendo un segundo longPress.
     expect(emitidos).toEqual(["longPress"]);
   });
 
@@ -351,8 +333,6 @@ describe("GestureButton", () => {
       return evento.defaultPrevented;
     };
 
-    // En Windows y Android el long-press táctil dispara contextmenu con el
-    // dedo aún abajo; el menú del webview partiría el gesto.
     expect(contextmenu()).toBe(false);
     pulsar();
     expect(contextmenu()).toBe(true);
@@ -363,8 +343,6 @@ describe("GestureButton", () => {
   it("una activación sintética (click sin puntero) emite tap", async () => {
     await montar(["tap"]);
     congelarTiempo();
-    // Dictado y lectores de pantalla activan con un click de `detail` 0, sin
-    // eventos de puntero ni de teclado.
     boton().dispatchEvent(new MouseEvent("click", { detail: 0, bubbles: true }));
     expect(emitidos).toEqual(["tap"]);
   });

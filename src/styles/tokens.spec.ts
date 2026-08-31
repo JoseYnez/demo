@@ -13,10 +13,6 @@ import {
 
 const css = readFileSync(join(process.cwd(), "src/styles/tokens.css"), "utf8");
 
-/* ---------- parsing ---------- */
-
-// El comentario del bloque de acento menciona "@supports" a secas; la regla
-// real es la única con "(color:".
 const supportsIdx = css.indexOf("@supports (color:");
 if (supportsIdx < 0) throw new Error("No se encontró el bloque @supports del acento");
 const baseCss = css.slice(0, supportsIdx);
@@ -53,12 +49,6 @@ const accentLight = decls(extractBlock(supportsCss, ROOT));
 const accentDarkAttr = decls(extractBlock(supportsCss, DARK_ATTR));
 const accentDarkMedia = decls(extractBlock(supportsCss, DARK_MEDIA));
 
-/* ---------- resolución por cascada ----------
-
-   Orden real del navegador: los bloques [data-theme] (0,2,0) ganan a los
-   :root (0,1,0) estén donde estén, y a igual especificidad gana el último
-   del archivo — los del @supports. */
-
 type Scope = Record<string, string>;
 const CASCADA_CLARO: readonly Scope[] = [accentLight, light];
 const CASCADA_OSCURO: readonly Scope[] = [accentDarkAttr, darkAttr, accentLight, light];
@@ -92,7 +82,6 @@ const HUES = Array.from({ length: 72 }, (_, i) => i * 5);
 
 const SURFACES = ["--bg-app", "--bg-surface", "--bg-surface-alt", "--bg-surface-raised"];
 
-/** [texto, mínimo WCAG]. 4.5 = AA texto normal, 3.0 = AA componentes de interfaz. */
 const SOBRE_TODA_SUPERFICIE: readonly [string, number][] = [
   ["--text-primary", 7.0],
   ["--text-secondary", 4.5],
@@ -105,10 +94,6 @@ interface Par {
   min: number;
 }
 
-/** Pares del acento: giran con el tono, así que el barrido los verifica
-    en los 72 tonos, hover y active incluidos. `--accent` va contra TODAS las
-    superficies, no sólo la principal: el badge `outline` no tiene relleno y su
-    texto cae directamente sobre la superficie que lo aloje. */
 const PARES_ACENTO: readonly Par[] = [
   ...SURFACES.map((bg) => ({ fg: "--accent", bg, min: 4.5 })),
   { fg: "--accent", bg: "--accent-subtle", min: 4.5 },
@@ -120,27 +105,18 @@ const PARES_ACENTO: readonly Par[] = [
 
 const FAMILIAS_SEMANTICAS = ["success", "warning", "danger", "info"] as const;
 
-/** Pares semánticos: no giran, se comprueban sólo sobre los bloques hex.
-    `fg` sobre `bg` es el badge tenue; `on-solid` sobre `solid`, el relleno;
-    y `fg` sobre cada superficie, el `outline`, que se queda sin fondo propio. */
 const PARES_SEMANTICOS: readonly Par[] = FAMILIAS_SEMANTICAS.flatMap((f) => [
   { fg: `--color-${f}-fg`, bg: `--color-${f}-bg`, min: 4.5 },
   { fg: `--color-${f}-on-solid`, bg: `--color-${f}-solid`, min: 4.5 },
   ...SURFACES.map((bg) => ({ fg: `--color-${f}-fg`, bg, min: 4.5 })),
 ]);
 
-/* Los controles son outlined: el borde es su único indicador, así que debe
-   cumplir el 3:1 de WCAG 1.4.11 contra CUALQUIER superficie sobre la que
-   pueda caer, no sólo la principal. */
 const PARES_BORDE: readonly Par[] = SURFACES.map((bg) => ({
   fg: "--border-strong",
   bg,
   min: 3.0,
 }));
 
-/* Rellenos de estado del botón `secondary`. No entran en SURFACES: no son
-   superficies, no se apila nada encima salvo la etiqueta del propio botón y su
-   borde, que en hover y active pasa a ser el acento. */
 const RELLENOS_ESTADO = ["--bg-surface-hover", "--bg-surface-active"];
 
 const PARES_ESTADO: readonly Par[] = RELLENOS_ESTADO.flatMap((bg) => [
@@ -159,11 +135,6 @@ function paresDeBarrido(): readonly Par[] {
   ];
 }
 
-/** Compone el anillo de foco (translúcido) sobre el fondo que tenga detrás y
-    devuelve el hex resultante. La etiqueta flotante cae justo encima del
-    anillo, así que su contraste real NO es contra la página sino contra esta
-    mezcla — ahí se coló el fallo original: texto de acento sobre halo de
-    acento daba 3.84:1. */
 function ringOver(scopes: readonly Scope[], bgToken: string, hue: number): string {
   const raw = rawOf(scopes, "--ring-focus");
   const oklch = parseOklchValue(raw);
@@ -177,9 +148,6 @@ function ringOver(scopes: readonly Scope[], bgToken: string, hue: number): strin
   return compositeHex(hex, Number(m[4]) / 100, hexAt(scopes, bgToken, hue));
 }
 
-/** Los overlays de hover del `ghost` son translúcidos: el texto no cae sobre la
-    superficie sino sobre la mezcla. Es el mismo fallo que se coló con el anillo
-    de foco, así que se comprueba igual. */
 function overlayOver(
   scopes: readonly Scope[],
   overlayToken: string,
@@ -205,8 +173,6 @@ function maxChannelDelta(hexA: string, hexB: string): number {
   );
 }
 
-/* ---------- tests ---------- */
-
 describe("tokens.css", () => {
   it("mantiene los dos bloques oscuros estáticos idénticos", () => {
     expect(Object.keys(darkAttr).sort()).toEqual(Object.keys(darkMedia).sort());
@@ -218,8 +184,6 @@ describe("tokens.css", () => {
     expect(accentDarkAttr).toEqual(accentDarkMedia);
   });
 
-  /* Ancla: los fallbacks hex son el render exacto de las expresiones oklch a
-     tono 158. Si alguien retoca un lado y no el otro, esto lo caza. */
   for (const [nombre, accentScope, hexScope] of [
     ["claro", accentLight, light],
     ["oscuro", accentDarkAttr, darkAttr],
@@ -246,7 +210,6 @@ describe("tokens.css", () => {
     });
   }
 
-  /* Paleta estática (motores sin oklch): los pares completos a tono 158. */
   for (const [tema, scopes] of [
     ["claro", [light] as readonly Scope[]],
     ["oscuro", [darkAttr, light] as readonly Scope[]],
@@ -274,9 +237,6 @@ describe("tokens.css", () => {
     });
   }
 
-  /* Barrido: el tono es del usuario, así que cada par debe aguantar en los
-     72 tonos muestreados. Este test ES el diseño del acento configurable —
-     si pasa, no existe color elegible que rompa la app. */
   for (const [tema, scopes] of [
     ["claro", CASCADA_CLARO],
     ["oscuro", CASCADA_OSCURO],
@@ -327,8 +287,6 @@ describe("tokens.css", () => {
     });
   }
 
-  /* Gamut: ninguna expresión puede salirse de sRGB en ningún tono — un color
-     recortado por el motor invalidaría el contraste calculado aquí. */
   for (const [nombre, scope] of [
     ["claro", accentLight],
     ["oscuro", accentDarkAttr],
