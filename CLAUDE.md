@@ -659,6 +659,7 @@ Roles que los tokens cubren:
 - **Acento**: `--accent`, `--accent-hover`, `--accent-active`, `--accent-subtle`, `--accent-border`.
 - **Estados tenues**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
 - **Rellenos sólidos**: `--color-{neutral,success,warning,danger,info}-solid` + su `-on-solid`, más `--color-danger-solid-hover`. Son el *fondo* de un botón o un badge, con su propio color de texto encima.
+- **Rellenos tonales**: `--color-*-tonal` + su `-on-tonal`, y `--accent-tonal` / `--accent-on-tonal`. El peldaño intermedio entre el fondo tenue y el relleno sólido — ver abajo.
 - **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
 
 > **Regla dura**: prohibido hardcodear colores, espaciados, radios o sombras en el CSS de un componente. Siempre variables. Es lo único que hace que el tema oscuro funcione solo.
@@ -678,6 +679,7 @@ Tres distinciones que hay que respetar, porque confundirlas ya causó un bug:
 |---|---|
 | `--border-default` vs `--border-strong` | `default` es **decorativo** (divisores de card): sin requisito de contraste. `strong` delimita **controles** y cumple el 3:1 de WCAG 1.4.11. El borde de un `input` usa `strong`. |
 | `--color-*-fg` vs `--color-*-solid` | `fg` es texto **sobre** `--color-*-bg` (aviso tenue). `solid` es el **relleno**, y su texto es `--color-*-on-solid`. En claro los dos valen lo mismo, en oscuro no: usar `fg` como fondo daba 2.52:1. Que coincidan en un tema no los hace un alias. |
+| `--color-*-tonal` vs `--color-*-solid` | Los dos son **rellenos**, y cada uno trae su texto (`-on-tonal`, `-on-solid`). `tonal` es el peldaño intermedio: en claro el texto es **más oscuro** que el `-fg` del aviso tenue; en oscuro, **más claro**. No es un `solid` aclarado — con el texto de `solid` encima no llega a AA. |
 | `--bg-surface` vs `--bg-surface-raised` | `raised` es para superficies elevadas. En claro son el mismo blanco (eleva la sombra); en oscuro `raised` es **más clara**. |
 | `--bg-surface-alt` vs `--bg-surface-hover` | `alt` es una **superficie**: se apilan cosas encima. `hover` es un **estado**, sólo lleva la etiqueta del propio control. Usar `alt` de hover dejaba el salto en 0.039 de L\*, y en el `ghost` sobre `--bg-app` en 0.016 — invisible. |
 
@@ -707,6 +709,8 @@ Criterios que cumple la paleta, y que verifica [tokens.spec.ts](src/styles/token
 - Los pares dependientes del acento, además, en 72 tonos: el acento es configurable (§11.5) y ningún tono elegible puede romper AA.
 
 Al tocar un color hay que revalidar; el test falla si el contraste baja o si los dos bloques oscuros divergen.
+
+**El relleno tonal se sitúa en el punto medio de L\*, y por eso necesita texto propio.** Es el peldaño que faltaba entre el fondo tenue y el relleno sólido: en claro va de L .95 a L .72 con el sólido en L .48; en oscuro, de L .29 a L .41 con el sólido en L .52. Ese punto medio es exactamente donde **ningún texto existente sirve**: con el `-fg` del aviso tenue el relleno sólo podría bajar a L .90 —un peldaño invisible— y con el `-on-solid` (blanco) se queda en 2:1. De ahí el par nuevo `-tonal` / `-on-tonal`, con el texto en L .30 (claro) y L .92 (oscuro). El peor par de los 72 tonos da **5.46:1**, así que sobra margen sobre el 4.5 de AA. Los cuatro semánticos son hex estático —no rotan, §11.5 regla 1—; el acento y el neutro sí rotan y van en el `@supports`.
 
 **Los controles son outlined, no rellenos.** Sin fondo: el borde los define. Viene impuesto por la etiqueta flotante (§11.3) —cruza la línea del borde, y un relleno le partiría el fondo en dos colores a mitad del texto— y se extiende a todos los controles para no tener medio sistema relleno y medio no. Consecuencia: `--border-strong` es el único indicador del control, así que cumple **3:1 contra las cuatro superficies**, no sólo contra la principal. [tokens.spec.ts](src/styles/tokens.spec.ts) lo verifica par a par.
 
@@ -754,7 +758,7 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 |---|---|---|---|
 | `Button` | `<app-button>` | `variant` (primary/secondary/ghost/danger), `size` (sm/md/lg), `type`, `disabled`, `loading`, `fullWidth` | `loading` deshabilita y muestra spinner. |
 | `Card` | `<app-card>` | `variant` (elevated/outlined/flat), `padding` (none/sm/md/lg) | Slots opcionales `[card-header]` y `[card-footer]`; la zona sin contenido no se dibuja. |
-| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (soft/outline/solid), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla. **Las tres apariencias conviven a la espera de que se elija una** — comparativa en `/styleguide`. |
+| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (soft/outline/tonal/solid), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla. **Las cuatro apariencias conviven a la espera de que se elija una** — comparativa en `/styleguide`. |
 | `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint` + el contrato de §6.8 | `FormValueControl<string>`. |
 | `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
 | `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |

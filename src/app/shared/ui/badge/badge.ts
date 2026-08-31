@@ -7,7 +7,7 @@ export type BadgeVariant =
   | "warning"
   | "danger"
   | "info";
-export type BadgeAppearance = "soft" | "outline" | "solid";
+export type BadgeAppearance = "soft" | "outline" | "tonal" | "solid";
 export type BadgeSize = "sm" | "md" | "lg";
 
 @Component({

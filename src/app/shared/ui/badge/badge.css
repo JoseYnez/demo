@@ -56,6 +56,8 @@
   --badge-fg: var(--text-secondary);
   --badge-bg: var(--bg-surface-alt);
   --badge-border: var(--border-default);
+  --badge-tonal-bg: var(--color-neutral-tonal);
+  --badge-tonal-fg: var(--color-neutral-on-tonal);
   --badge-solid-bg: var(--color-neutral-solid);
   --badge-solid-fg: var(--color-neutral-on-solid);
 }
@@ -64,6 +66,8 @@
   --badge-fg: var(--accent);
   --badge-bg: var(--accent-subtle);
   --badge-border: var(--accent-border);
+  --badge-tonal-bg: var(--accent-tonal);
+  --badge-tonal-fg: var(--accent-on-tonal);
   --badge-solid-bg: var(--accent);
   --badge-solid-fg: var(--text-on-accent);
 }
@@ -72,6 +76,8 @@
   --badge-fg: var(--color-success-fg);
   --badge-bg: var(--color-success-bg);
   --badge-border: var(--color-success-border);
+  --badge-tonal-bg: var(--color-success-tonal);
+  --badge-tonal-fg: var(--color-success-on-tonal);
   --badge-solid-bg: var(--color-success-solid);
   --badge-solid-fg: var(--color-success-on-solid);
 }
@@ -80,6 +86,8 @@
   --badge-fg: var(--color-warning-fg);
   --badge-bg: var(--color-warning-bg);
   --badge-border: var(--color-warning-border);
+  --badge-tonal-bg: var(--color-warning-tonal);
+  --badge-tonal-fg: var(--color-warning-on-tonal);
   --badge-solid-bg: var(--color-warning-solid);
   --badge-solid-fg: var(--color-warning-on-solid);
 }
@@ -88,6 +96,8 @@
   --badge-fg: var(--color-danger-fg);
   --badge-bg: var(--color-danger-bg);
   --badge-border: var(--color-danger-border);
+  --badge-tonal-bg: var(--color-danger-tonal);
+  --badge-tonal-fg: var(--color-danger-on-tonal);
   --badge-solid-bg: var(--color-danger-solid);
   --badge-solid-fg: var(--color-danger-on-solid);
 }
@@ -96,6 +106,8 @@
   --badge-fg: var(--color-info-fg);
   --badge-bg: var(--color-info-bg);
   --badge-border: var(--color-info-border);
+  --badge-tonal-bg: var(--color-info-tonal);
+  --badge-tonal-fg: var(--color-info-on-tonal);
   --badge-solid-bg: var(--color-info-solid);
   --badge-solid-fg: var(--color-info-on-solid);
 }
@@ -110,6 +122,11 @@
   background-color: transparent;
   border-color: currentcolor;
   color: var(--badge-fg);
+}
+
+.badge--tonal {
+  background-color: var(--badge-tonal-bg);
+  color: var(--badge-tonal-fg);
 }
 
 .badge--solid {

@@ -73,6 +73,8 @@
   --accent-active: #325642;
   --accent-subtle: #ecf6f0;
   --accent-border: #bedbc9;
+  --accent-tonal: #85b096;
+  --accent-on-tonal: #153524;
 
   --color-success-bg: #e8f3ec;
   --color-success-fg: #2c6b45;
@@ -105,6 +107,21 @@
 
   --color-info-solid: #2d5a8a;
   --color-info-on-solid: #ffffff;
+
+  --color-neutral-tonal: #a1a6a3;
+  --color-neutral-on-tonal: #2b2f2c;
+
+  --color-success-tonal: #86b193;
+  --color-success-on-tonal: #01381b;
+
+  --color-warning-tonal: #c09e72;
+  --color-warning-on-tonal: #412800;
+
+  --color-danger-tonal: #dd8b82;
+  --color-danger-on-tonal: #5c0206;
+
+  --color-info-tonal: #87a8cd;
+  --color-info-on-tonal: #002e59;
 
   --shadow-sm: 0 1px 2px rgb(20 34 28 / 6%);
   --shadow-md: 0 2px 6px rgb(20 34 28 / 8%), 0 1px 2px rgb(20 34 28 / 4%);
@@ -145,6 +162,8 @@
   --accent-active: #97b5a2;
   --accent-subtle: #222d26;
   --accent-border: #394d41;
+  --accent-tonal: #2c543e;
+  --accent-on-tonal: #d2ecdc;
 
   --color-success-bg: #203126;
   --color-success-fg: #a1dfb5;
@@ -177,6 +196,21 @@
 
   --color-info-solid: #256bb1;
   --color-info-on-solid: #ffffff;
+
+  --color-neutral-tonal: #474c49;
+  --color-neutral-on-tonal: #e0e6e2;
+
+  --color-success-tonal: #1f5737;
+  --color-success-on-tonal: #b7f6cc;
+
+  --color-warning-tonal: #61441a;
+  --color-warning-on-tonal: #fddfb9;
+
+  --color-danger-tonal: #78302b;
+  --color-danger-on-tonal: #fddcd7;
+
+  --color-info-tonal: #214c7a;
+  --color-info-on-tonal: #d4e7fd;
 
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
   --shadow-md: 0 2px 6px rgb(0 0 0 / 24%);
@@ -216,6 +250,8 @@
     --accent-active: #97b5a2;
     --accent-subtle: #222d26;
     --accent-border: #394d41;
+    --accent-tonal: #2c543e;
+    --accent-on-tonal: #d2ecdc;
 
     --color-success-bg: #203126;
     --color-success-fg: #a1dfb5;
@@ -249,6 +285,21 @@
     --color-info-solid: #256bb1;
     --color-info-on-solid: #ffffff;
 
+    --color-neutral-tonal: #474c49;
+    --color-neutral-on-tonal: #e0e6e2;
+
+    --color-success-tonal: #1f5737;
+    --color-success-on-tonal: #b7f6cc;
+
+    --color-warning-tonal: #61441a;
+    --color-warning-on-tonal: #fddfb9;
+
+    --color-danger-tonal: #78302b;
+    --color-danger-on-tonal: #fddcd7;
+
+    --color-info-tonal: #214c7a;
+    --color-info-on-tonal: #d4e7fd;
+
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
     --shadow-md: 0 2px 6px rgb(0 0 0 / 24%);
     --shadow-lg: 0 8px 20px rgb(0 0 0 / 32%);
@@ -267,9 +318,13 @@
     --accent-active: oklch(0.42 0.055 var(--accent-hue));
     --accent-subtle: oklch(0.965 0.014 var(--accent-hue));
     --accent-border: oklch(0.865 0.04 var(--accent-hue));
+    --accent-tonal: oklch(0.72 0.06 var(--accent-hue));
+    --accent-on-tonal: oklch(0.3 0.05 var(--accent-hue));
     --ring-focus: 0 0 0 3px oklch(0.525 0.06 var(--accent-hue) / 25%);
 
     --color-neutral-solid: oklch(0.449 0.016 var(--accent-hue));
+    --color-neutral-tonal: oklch(0.72 0.008 var(--accent-hue));
+    --color-neutral-on-tonal: oklch(0.3 0.008 var(--accent-hue));
 
     --bg-app: oklch(0.977 0.0025 var(--accent-hue));
     --bg-surface-alt: oklch(0.961 0.005 var(--accent-hue));
@@ -290,11 +345,15 @@
     --accent-active: oklch(0.746 0.043 var(--accent-hue));
     --accent-subtle: oklch(0.285 0.019 var(--accent-hue));
     --accent-border: oklch(0.4 0.032 var(--accent-hue));
+    --accent-tonal: oklch(0.41 0.06 var(--accent-hue));
+    --accent-on-tonal: oklch(0.92 0.035 var(--accent-hue));
     --text-on-accent: oklch(0.197 0.012 var(--accent-hue));
     --ring-focus: 0 0 0 3px oklch(0.8 0.045 var(--accent-hue) / 22%);
 
     --color-neutral-solid: oklch(0.788 0.005 var(--accent-hue));
     --color-neutral-on-solid: oklch(0.197 0.012 var(--accent-hue));
+    --color-neutral-tonal: oklch(0.41 0.008 var(--accent-hue));
+    --color-neutral-on-tonal: oklch(0.92 0.008 var(--accent-hue));
 
     --bg-app: oklch(0.215 0.005 var(--accent-hue));
     --bg-surface: oklch(0.257 0.006 var(--accent-hue));
@@ -318,11 +377,15 @@
       --accent-active: oklch(0.746 0.043 var(--accent-hue));
       --accent-subtle: oklch(0.285 0.019 var(--accent-hue));
       --accent-border: oklch(0.4 0.032 var(--accent-hue));
+      --accent-tonal: oklch(0.41 0.06 var(--accent-hue));
+      --accent-on-tonal: oklch(0.92 0.035 var(--accent-hue));
       --text-on-accent: oklch(0.197 0.012 var(--accent-hue));
       --ring-focus: 0 0 0 3px oklch(0.8 0.045 var(--accent-hue) / 22%);
 
       --color-neutral-solid: oklch(0.788 0.005 var(--accent-hue));
       --color-neutral-on-solid: oklch(0.197 0.012 var(--accent-hue));
+      --color-neutral-tonal: oklch(0.41 0.008 var(--accent-hue));
+      --color-neutral-on-tonal: oklch(0.92 0.008 var(--accent-hue));
 
       --bg-app: oklch(0.215 0.005 var(--accent-hue));
       --bg-surface: oklch(0.257 0.006 var(--accent-hue));

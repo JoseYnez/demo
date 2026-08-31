@@ -131,6 +131,11 @@ export class Styleguide {
       nota: "Sin relleno; el trazo lo lleva el color del texto. Es el que menos ruido mete en una lista larga y el único que no compite con el fondo de la fila.",
     },
     {
+      name: "tonal",
+      peso: "relleno medio",
+      nota: "Relleno en el punto medio exacto de luminosidad entre soft y solid, con texto profundo de la misma familia. Pesa sin gritar: aguanta una columna entera de una tabla.",
+    },
+    {
       name: "solid",
       peso: "relleno pleno",
       nota: "Relleno saturado con texto invertido. Es el que se ve desde lejos, así que sólo aguanta uno o dos por pantalla antes de cansar.",
