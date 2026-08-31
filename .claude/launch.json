@@ -11,12 +11,6 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["start"],
       "port": 1420
-    },
-    {
-      "name": "demo-dev-1421",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["start", "--port", "1421"],
-      "port": 1421
     }
   ]
 }

@@ -658,8 +658,8 @@ Roles que los tokens cubren:
 - **Estados de interacción**: `--bg-surface-hover` / `--bg-surface-active` para un control con relleno propio; `--overlay-hover` / `--overlay-active` para uno transparente.
 - **Acento**: `--accent`, `--accent-hover`, `--accent-active`, `--accent-subtle`, `--accent-border`.
 - **Estados tenues**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
-- **Rellenos sólidos**: `--color-{neutral,success,warning,danger,info}-solid` + su `-on-solid`, más `--color-danger-solid-hover`. Son el *fondo* de un botón o un badge, con su propio color de texto encima.
-- **Rellenos tonales**: `--color-*-tonal` + su `-on-tonal`, y `--accent-tonal` / `--accent-on-tonal`. El peldaño intermedio entre el fondo tenue y el relleno sólido — ver abajo.
+- **Relleno sólido**: `--color-danger-solid` + su `-on-solid` y `-solid-hover`. Es el *fondo* del botón destructivo, con su propio color de texto encima. **Sólo existe para `danger`**: es la única familia que necesita un relleno pleno hoy. Si un proyecto derivado necesita otro, se añade con su `-on-*` y su fila en el spec, no se improvisa.
+- **Rellenos tonales**: `--color-{neutral,success,warning,danger,info}-tonal` + su `-on-tonal`, y `--accent-tonal` / `--accent-on-tonal`. El peldaño intermedio entre el fondo tenue y el relleno pleno — ver abajo.
 - **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
 
 > **Regla dura**: prohibido hardcodear colores, espaciados, radios o sombras en el CSS de un componente. Siempre variables. Es lo único que hace que el tema oscuro funcione solo.
@@ -734,6 +734,15 @@ Como el overlay es translúcido, el texto no cae sobre la superficie sino sobre
 la mezcla — la misma trampa del anillo de foco. [tokens.spec.ts](src/styles/tokens.spec.ts)
 compone y verifica ese contraste en las cuatro superficies y los 72 tonos.
 
+**El hover del botón destructivo oscurece en los dos temas, y en oscuro eso es
+obligatorio.** Aclararlo es el reflejo natural en un tema oscuro, y es
+justamente lo que rompe: su texto es blanco, así que subir la luminosidad del
+relleno hunde el contraste — el valor anterior daba **4.05:1**. El techo para
+aclarar está en un salto de 0.030 de L\*, la mitad del escalón calibrado del
+sistema y por debajo del umbral que ya se descartó por invisible. Oscurecer
+0.055 —el mismo salto y la misma dirección que en claro— da 6.50:1. La regla
+vale para cualquier relleno pleno con texto invertido, no sólo para `danger`.
+
 **Elevación en oscuro**: una sombra negra sobre un fondo casi negro no se ve. La elevación la lleva la **superficie**, que se aclara (`--bg-surface-raised`), más un filo superior (`--edge-raised`). En claro la sombra hace ese trabajo y ambos tokens son neutros. Un componente elevado usa los tres a la vez y funciona en los dos temas sin CSS condicional.
 
 **Duplicación de los bloques oscuros**: `:root[data-theme="dark"]` y el `@media (prefers-color-scheme: dark)` son idénticos y no se pueden fundir, porque uno vive dentro de una media query. `light-dark()` lo resolvería en una línea por token, pero **no se usa**: WebKitGTK < 2.46 (Ubuntu 24.04 LTS) no lo soporta y la declaración inválida dejaría los tokens sin valor — la app entera sin colores, no sólo sin tema oscuro. El test garantiza que los dos bloques no se separen — y lo mismo con el par de bloques oscuros del `@supports` del acento (§11.5).
@@ -773,6 +782,8 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 - **El color va donde el croma bajo se lee.** Con el acento en C 0.060 (§11.5), un relleno grande gasta el máximo peso visual en el color menos vívido del sistema; el trazo y el texto lo concentran en poca área. Por eso `solid` no pagaba su coste, y `soft` tenía relleno sin cobrar el beneficio: su tinte apenas se distinguía de unas superficies que ya son casi blancas.
 
 `tonal` queda para lo que debe notarse sin alarmar: el estado que rompe la norma en una lista, no los veinte que la cumplen. **Si algún día se fija la marca a C 0.120 (§15), esta decisión hay que repasarla** — con un acento vívido, un relleno pleno vuelve a pagar su área.
+
+El badge usa `--radius-sm`, no `--radius-full`. La píldora era la única forma del sistema que contradecía la escala corta de radios; `--radius-full` queda para lo genuinamente circular —el punto de estado, el spinner del botón, el pulgar del slider—.
 
 **GestureButton — los gestos se declaran.** `gestures` dice cuáles implementa
 el botón, y **la apariencia sale de ahí**: la barra de progreso sólo existe si
@@ -933,9 +944,9 @@ Los dos atributos son opcionales: sin ellos, la app se comporta como la base (de
 
 Reglas:
 
-1. **No rotan** los semánticos (`success/warning/danger/info`), sus rellenos
-   sólidos ni las sombras: rojo=error es convención, no estética. El neutro
-   sólido sí rota: es mobiliario, no semántica.
+1. **No rotan** los semánticos (`success/warning/danger/info`), ni sus rellenos
+   —sólido y tonal— ni las sombras: rojo=error es convención, no estética. El
+   neutro sí rota: es mobiliario, no semántica.
 2. **El `@supports` es obligatorio, no cosmético.** Una custom property acepta
    cualquier valor, así que declararla dos veces NO da fallback: la última gana
    siempre, y en un motor sin `oklch()` cada `var(--accent)` se volvería
@@ -1009,9 +1020,10 @@ El jsdom de este runner **no implementa** `DataTransfer`, `DragEvent`, `Clipboar
 
 ### Branches
 
-- `main` — producción; sólo recibe merges de `develop` o `fix/*` urgentes.
-- `develop` — integración; base de las features.
-- `feature/*`, `fix/*`, `refactor/*`, `chore/*`.
+- `master` — única rama de larga vida: producción **e** integración. Es la base de toda rama de trabajo y la que reciben los PR.
+- `feature/*`, `fix/*`, `refactor/*`, `chore/*` — se abren desde `master` y mueren al fusionarse.
+
+No hay `develop`: con un solo mantenedor, una rama de integración añade una fusión por cambio y no aporta nada que el PR no dé ya. Si algún día hay varias personas publicando a la vez, ése es el momento de introducirla, no antes.
 
 ### Commits
 
@@ -1028,7 +1040,7 @@ test: agregar tests a ticket-store
 
 ### Pull Requests
 
-- PR obligatorio para `develop` y `main`.
+- PR obligatorio para `master`.
 - **Squash and merge** — historia lineal, un commit por feature.
 - Título en Conventional Commits. Descripción: qué cambia, por qué y cómo probarlo.
 
