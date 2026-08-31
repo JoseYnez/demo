@@ -904,6 +904,21 @@ Piezas:
   `tauri.conf.json`, necesitará su hash.
 - **Selector en `/styleguide`**: presets, tono libre y restaurar.
 
+**El tono inicial y el candado se declaran en `<html>`, no en `environment.ts`.**
+
+```html
+<html lang="es" data-accent-hue="245" data-accent-locked>
+```
+
+Los dos atributos son opcionales: sin ellos, la app se comporta como la base (defecto de fábrica 158, usuario libre). `data-accent-locked` fija el acento y oculta el selector.
+
+- **Por qué no `environment.ts`**: el script anti-destello escribe `--accent-hue` como estilo inline en `<html>` **antes** del bootstrap, y un estilo inline gana a cualquier hoja. Si el tono viviera sólo en `environment.ts`, una instalación nueva arrancaría en 158 y Angular lo corregiría después —destello—, y una app bloqueada aplicaría el tono guardado del usuario durante un frame. El script y `AccentService` tienen que leer **la misma fuente**, y la única que existe antes del bootstrap es el propio HTML. Si algún día hace falta por configuración, `angular.json` admite un `index` distinto por configuración.
+- **Precedencia**: bloqueado → el del entorno; libre → el guardado, y si no hay, el del entorno; y si tampoco, el defecto de `tokens.css`. Un atributo ilegible cae al defecto en vez de romper.
+- **`reset()` vuelve a `baseHue`, no a 158.** Con un tono de entorno, hacer sólo `removeProperty` caería al defecto de `tokens.css` y devolvería el tono equivocado.
+- **El candado ignora lo guardado, no lo borra.** Si algún día se abre, vuelve la preferencia del usuario. Borrarlo es irreversible.
+- **La styleguide es la única exenta**: usa `previewHue()`, que aplica sin persistir, o dejaría de servir para lo que sirve. `setHue()` sí respeta el candado.
+- **El candado no cambia la receta de color todavía**: bloquear da consistencia (todos ven el mismo tono), no identidad — el acento sigue en C 0.060. Subirlo a la paleta afinada del tono elegido es la decisión pendiente de §15, y cuando se tome, `locked` es el interruptor que ya está puesto.
+
 Reglas:
 
 1. **No rotan** los semánticos (`success/warning/danger/info`), sus rellenos

@@ -20,11 +20,19 @@ export const ACCENT_PRESETS: readonly AccentPreset[] = [
 
 const STORAGE_KEY = "accent-hue";
 const HUE_PROPERTY = "--accent-hue";
+const HUE_ATTRIBUTE = "data-accent-hue";
+const LOCK_ATTRIBUTE = "data-accent-locked";
 
 @Service()
 export class AccentService {
+  readonly #envHue = readEnvHue();
   readonly #stored = readStoredHue();
-  readonly #hue = signal(this.#stored ?? DEFAULT_ACCENT_HUE);
+
+  readonly locked = document.documentElement.hasAttribute(LOCK_ATTRIBUTE);
+  readonly baseHue = this.#envHue ?? DEFAULT_ACCENT_HUE;
+
+  readonly #inicial = this.locked ? this.#envHue : (this.#stored ?? this.#envHue);
+  readonly #hue = signal(this.#inicial ?? DEFAULT_ACCENT_HUE);
   readonly hue = this.#hue.asReadonly();
 
   readonly supported =
@@ -33,22 +41,33 @@ export class AccentService {
     CSS.supports("color", "oklch(0.5 0.1 180)");
 
   constructor() {
-    if (this.#stored !== null) {
-      this.apply(this.#stored);
+    if (this.#inicial !== null) {
+      this.apply(this.#inicial);
     }
   }
 
   setHue(hue: number): void {
+    if (this.locked) return;
     const normalized = normalizeHue(hue);
     this.#hue.set(normalized);
     this.apply(normalized);
     localStorage.setItem(STORAGE_KEY, String(normalized));
   }
 
+  previewHue(hue: number): void {
+    const normalized = normalizeHue(hue);
+    this.#hue.set(normalized);
+    this.apply(normalized);
+  }
+
   reset(): void {
-    this.#hue.set(DEFAULT_ACCENT_HUE);
-    document.documentElement.style.removeProperty(HUE_PROPERTY);
+    this.#hue.set(this.baseHue);
     localStorage.removeItem(STORAGE_KEY);
+    if (this.#envHue === null) {
+      document.documentElement.style.removeProperty(HUE_PROPERTY);
+    } else {
+      this.apply(this.#envHue);
+    }
   }
 
   private apply(hue: number): void {
@@ -60,10 +79,17 @@ function normalizeHue(hue: number): number {
   return ((Math.round(hue) % 360) + 360) % 360;
 }
 
+function readEnvHue(): number | null {
+  return parseHue(document.documentElement.getAttribute(HUE_ATTRIBUTE));
+}
+
 function readStoredHue(): number | null {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === null || stored.trim() === "" || !Number.isFinite(Number(stored))) {
+  return parseHue(localStorage.getItem(STORAGE_KEY));
+}
+
+function parseHue(raw: string | null): number | null {
+  if (raw === null || raw.trim() === "" || !Number.isFinite(Number(raw))) {
     return null;
   }
-  return normalizeHue(Number(stored));
+  return normalizeHue(Number(raw));
 }

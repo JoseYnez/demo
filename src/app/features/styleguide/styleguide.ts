@@ -61,7 +61,15 @@ export class Styleguide {
   protected readonly presets = ACCENT_PRESETS;
 
   protected cambiarTono(event: Event): void {
-    this.accents.setHue((event.target as HTMLInputElement).valueAsNumber);
+    this.elegirTono((event.target as HTMLInputElement).valueAsNumber);
+  }
+
+  protected elegirTono(hue: number): void {
+    if (this.accents.locked) {
+      this.accents.previewHue(hue);
+    } else {
+      this.accents.setHue(hue);
+    }
   }
 
   protected readonly surfaceTokens = [

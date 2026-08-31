@@ -20,6 +20,16 @@
         en vivo.
       </p>
 
+      @if (accents.locked) {
+        <p class="sg__note selectable">
+          <app-badge variant="warning">acento bloqueado</app-badge>
+          Esta app fija el acento en <strong>{{ accents.baseHue }}°</strong> y
+          oculta el selector a los usuarios. La styleguide es la única exenta:
+          lo de aquí abajo <strong>previsualiza sin guardar</strong>, y se
+          pierde al recargar.
+        </p>
+      }
+
       <div class="sg__inline" role="group" aria-label="Presets de acento">
         @for (preset of presets; track preset.hue) {
           <button
@@ -27,7 +37,7 @@
             class="sg-preset"
             [style.--sw-hue]="preset.hue"
             [attr.aria-pressed]="accents.hue() === preset.hue"
-            (click)="accents.setHue(preset.hue)"
+            (click)="elegirTono(preset.hue)"
           >
             <span class="sg-preset__chip" aria-hidden="true"></span>
             {{ preset.nombre }}
@@ -50,7 +60,7 @@
 
       <div class="sg__inline">
         <app-button variant="ghost" size="sm" (click)="accents.reset()">
-          Restaurar el sage
+          Restaurar el tono base · {{ accents.baseHue }}°
         </app-button>
       </div>
     } @else {
