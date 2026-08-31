@@ -736,6 +736,8 @@ compone y verifica ese contraste en las cuatro superficies y los 72 tonos.
 
 **Ojo con el scoping**: el CSS de un componente está encapsulado, así que un bloque `:root { … }` dentro de un `.css` de componente **no aplica nunca**. Los estilos globales van en `src/styles.css` o en `src/styles/`, no en el componente.
 
+Y la variante traicionera del mismo problema: **un descendiente de `:root` tampoco casa**. Angular compila `:root[data-theme="dark"] .x` a `[_ngcontent-xxx]:root[data-theme="dark"] .x[_ngcontent-xxx]` — le pega el atributo de encapsulación al `:root`, y `<html>` no lo lleva. La regla no puede casar jamás y **falla en silencio**: el bloque claro sí aplica, así que parece que el tema oscuro «simplemente no cambia». Para reaccionar al tema desde un componente hay que usar **`:host-context(html[data-theme="dark"])`**, y `:host-context(html:not([data-theme="light"]))` dentro del `@media`; anclar en `html` no es opcional, porque `:host-context(:not([data-theme="light"]))` casaría con cualquier ancestro intermedio.
+
 ### 11.3 Componentes en `shared/ui/`
 
 Cada uno en su carpeta, con `.ts` + `.html` + `.css`, exportado desde el barrel `src/app/shared/ui/index.ts`:
@@ -1045,7 +1047,7 @@ Deliberadamente **fuera** de esta base. Cada proyecto derivado decide y lo docum
 
 | Tema | Estado |
 |---|---|
-| Croma del acento: 0.06 configurable vs 0.12–0.14 fijo | Sin decidir. Subirlo da color propio, pero recorta los 360 tonos elegibles a una lista corta validada: marca fija y acento libre no caben juntos. Comparativa en `/styleguide`. |
+| Croma del acento | Sin decidir, pero **medido** — comparativa en `/styleguide#croma`. Con la luminosidad constante que hace configurable el acento, el techo de los 72 tonos es **C 0.075** (+25%, gratis); lo ata el **gamut de sRGB**, no el contraste. Para pasar de ahí hay que fijar el tono y ajustarle la luminosidad: a sage 158 eso da **C 0.120**, el doble. C 0.12 sólo admite 13 de 72 tonos con L constante, y 0.14 sólo 6. |
 | Persistencia (SQLite / `tauri-plugin-store` / `localStorage`) | Sin decidir. No hay BD ni store en la base. |
 | Logging (`tauri-plugin-log`) | Sin decidir. Hoy no hay plugin de log: `println!` sólo vale para depuración local, nunca en un commit. |
 | Barra de título custom vs. nativa | Nativa (`decorations` por defecto). |

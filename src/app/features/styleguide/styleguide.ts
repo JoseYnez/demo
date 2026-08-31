@@ -136,6 +136,10 @@ export class Styleguide {
     { value: "qa", label: "QA (sin cupo)", disabled: true },
   ];
 
+  protected readonly cromaHoy = signal("");
+  protected readonly cromaTecho = signal("");
+  protected readonly cromaMarca = signal("");
+
   protected readonly idAntes = signal("");
   protected readonly idAhora = signal("");
 

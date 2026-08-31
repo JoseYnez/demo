@@ -203,10 +203,95 @@
     </div>
 
     <p class="sg__note selectable">
-      Queda pendiente la decisión cara: subir el croma del acento de
-      <code>0.06</code> a <code>0.12–0.14</code> le daría color propio al
-      sistema, pero obliga a recortar los 360 tonos elegibles a una lista corta
-      validada. Marca fija y acento libre no caben juntos.
+      La decisión que queda es el croma del acento, y está medida en la sección
+      siguiente.
+    </p>
+  </section>
+
+  <section class="sg__section" id="croma">
+    <h2 class="sg__title">Comparativa: croma del acento</h2>
+    <p class="sg__note selectable">
+      Los tres escenarios con los mismos componentes. Las dos primeras columnas
+      <strong>siguen el selector de tono</strong> de arriba; la tercera no, y
+      ése es justamente el intercambio. Los tres pasan los mismos pares de
+      contraste que verifica <code>tokens.spec.ts</code>.
+    </p>
+
+    <div class="sg__croma">
+      <div class="sg__croma-col">
+        <p class="sg__compare-head selectable">Hoy</p>
+        <div class="sg__croma-swatches">
+          <span style="background: var(--accent-subtle)"></span>
+          <span style="background: var(--accent-border)"></span>
+          <span style="background: var(--accent)"></span>
+          <span style="background: var(--accent-hover)"></span>
+          <span style="background: var(--accent-active)"></span>
+        </div>
+        <p class="sg__note selectable">
+          <code>C 0.060</code> · los 72 tonos
+        </p>
+        <app-button>Guardar</app-button>
+        <app-button variant="secondary">Cancelar</app-button>
+        <div class="sg__inline">
+          <app-badge variant="primary">activo</app-badge>
+          <a class="sg__croma-link" href="#croma">Ver detalle</a>
+        </div>
+        <app-input label="Enfoca para ver el anillo" [(value)]="cromaHoy" />
+        <p class="sg__note selectable">El acento actual. A este croma el color se lee como un gris teñido: no ofende y no dice nada.</p>
+      </div>
+
+      <div class="sg__croma-col sg__croma-col--techo">
+        <p class="sg__compare-head selectable">Techo universal</p>
+        <div class="sg__croma-swatches">
+          <span style="background: var(--accent-subtle)"></span>
+          <span style="background: var(--accent-border)"></span>
+          <span style="background: var(--accent)"></span>
+          <span style="background: var(--accent-hover)"></span>
+          <span style="background: var(--accent-active)"></span>
+        </div>
+        <p class="sg__note selectable">
+          <code>C 0.075</code> · los 72 tonos
+        </p>
+        <app-button>Guardar</app-button>
+        <app-button variant="secondary">Cancelar</app-button>
+        <div class="sg__inline">
+          <app-badge variant="primary">activo</app-badge>
+          <a class="sg__croma-link" href="#croma">Ver detalle</a>
+        </div>
+        <app-input label="Enfoca para ver el anillo" [(value)]="cromaTecho" />
+        <p class="sg__note selectable">El máximo que admiten los 72 tonos sin tocar la luminosidad. Un +25% de croma sin perder nada: no recorta la configurabilidad ni un tono.</p>
+      </div>
+
+      <div class="sg__croma-col sg__croma-col--marca">
+        <p class="sg__compare-head selectable">Marca fija · sage 158</p>
+        <div class="sg__croma-swatches">
+          <span style="background: var(--accent-subtle)"></span>
+          <span style="background: var(--accent-border)"></span>
+          <span style="background: var(--accent)"></span>
+          <span style="background: var(--accent-hover)"></span>
+          <span style="background: var(--accent-active)"></span>
+        </div>
+        <p class="sg__note selectable">
+          <code>C 0.120</code> · un solo tono
+        </p>
+        <app-button>Guardar</app-button>
+        <app-button variant="secondary">Cancelar</app-button>
+        <div class="sg__inline">
+          <app-badge variant="primary">activo</app-badge>
+          <a class="sg__croma-link" href="#croma">Ver detalle</a>
+        </div>
+        <app-input label="Enfoca para ver el anillo" [(value)]="cromaMarca" />
+        <p class="sg__note selectable">El doble de croma y la luminosidad ajustada a este tono. Aquí sí hay color propio, y a cambio el selector deja de funcionar.</p>
+      </div>
+    </div>
+
+    <p class="sg__note selectable">
+      Lo que ata el techo <strong>no es el contraste, es el gamut de sRGB</strong>:
+      quien revienta primero es <code>--accent-active</code> en claro (tono 200)
+      y <code>--accent-hover</code> en oscuro. Por eso la luminosidad constante
+      —lo que hace configurable el acento— es la que impone el techo: subir el
+      croma de verdad exige elegir la luminosidad tono a tono, y eso sólo se
+      puede hacer con un tono fijo.
     </p>
   </section>
 

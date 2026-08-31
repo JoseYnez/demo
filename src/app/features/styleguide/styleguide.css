@@ -329,6 +329,90 @@ code {
   font-family: var(--font-sans);
 }
 
+.sg__croma {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--space-5);
+}
+
+.sg__croma-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.sg__croma-swatches {
+  display: flex;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.sg__croma-swatches span {
+  flex: 1;
+}
+
+.sg__croma-link {
+  font-weight: var(--font-weight-medium);
+}
+
+@supports (color: oklch(0.5 0.1 180)) {
+  .sg__croma-col--techo {
+    --accent: oklch(0.525 0.075 var(--accent-hue));
+    --accent-hover: oklch(0.468 0.0725 var(--accent-hue));
+    --accent-active: oklch(0.42 0.0688 var(--accent-hue));
+    --ring-focus: 0 0 0 3px oklch(0.525 0.075 var(--accent-hue) / 25%);
+  }
+
+  .sg__croma-col--marca {
+    --accent: oklch(0.515 0.12 158);
+    --accent-hover: oklch(0.462 0.108 158);
+    --accent-active: oklch(0.415 0.097 158);
+    --accent-subtle: oklch(0.965 0.03 158);
+    --accent-border: oklch(0.865 0.075 158);
+    --ring-focus: 0 0 0 3px oklch(0.515 0.12 158 / 25%);
+  }
+
+  :host-context(html[data-theme="dark"]) .sg__croma-col--techo {
+    --accent: oklch(0.8 0.0562 var(--accent-hue));
+    --accent-hover: oklch(0.855 0.0587 var(--accent-hue));
+    --accent-active: oklch(0.746 0.0537 var(--accent-hue));
+    --ring-focus: 0 0 0 3px oklch(0.8 0.0562 var(--accent-hue) / 22%);
+  }
+
+  :host-context(html[data-theme="dark"]) .sg__croma-col--marca {
+    --accent: oklch(0.8 0.12 158);
+    --accent-hover: oklch(0.855 0.11 158);
+    --accent-active: oklch(0.746 0.115 158);
+    --accent-subtle: oklch(0.285 0.05 158);
+    --accent-border: oklch(0.4 0.08 158);
+    --text-on-accent: oklch(0.197 0.012 158);
+    --ring-focus: 0 0 0 3px oklch(0.8 0.12 158 / 22%);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :host-context(html:not([data-theme="light"])) .sg__croma-col--techo {
+      --accent: oklch(0.8 0.0562 var(--accent-hue));
+      --accent-hover: oklch(0.855 0.0587 var(--accent-hue));
+      --accent-active: oklch(0.746 0.0537 var(--accent-hue));
+      --ring-focus: 0 0 0 3px oklch(0.8 0.0562 var(--accent-hue) / 22%);
+    }
+
+    :host-context(html:not([data-theme="light"])) .sg__croma-col--marca {
+      --accent: oklch(0.8 0.12 158);
+      --accent-hover: oklch(0.855 0.11 158);
+      --accent-active: oklch(0.746 0.115 158);
+      --accent-subtle: oklch(0.285 0.05 158);
+      --accent-border: oklch(0.4 0.08 158);
+      --text-on-accent: oklch(0.197 0.012 158);
+      --ring-focus: 0 0 0 3px oklch(0.8 0.12 158 / 22%);
+    }
+  }
+}
+
 .sg__compare-head {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
