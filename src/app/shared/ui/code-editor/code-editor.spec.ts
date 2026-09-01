@@ -41,6 +41,16 @@ describe("CodeEditor", () => {
     expect(fixture.componentInstance.getText()).toBe("SELECT 99;");
   });
 
+  it("aplica valores externos consecutivos sin saltarse ninguno", async () => {
+    const fixture = await crear({ value: "SELECT 1;" });
+
+    for (const texto of ["SELECT 2;", "SELECT 3;", "SELECT 4;"]) {
+      fixture.componentRef.setInput("value", texto);
+      await fixture.whenStable();
+      expect(fixture.componentInstance.getText()).toBe(texto);
+    }
+  });
+
   it("con externalState no escribe en el modelo", async () => {
     const fixture = await crear({ externalState: true });
 

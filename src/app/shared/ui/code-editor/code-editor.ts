@@ -75,7 +75,6 @@ export class CodeEditor implements FormValueControl<string> {
   readonly #lenguaje = new Compartment();
   readonly #edicion = new Compartment();
   #view: EditorView | undefined;
-  #cambioInterno = false;
 
   constructor() {
     afterNextRender(() => {
@@ -102,10 +101,6 @@ export class CodeEditor implements FormValueControl<string> {
     effect(() => {
       const texto = this.value();
       if (this.externalState() || !this.#view) {
-        return;
-      }
-      if (this.#cambioInterno) {
-        this.#cambioInterno = false;
         return;
       }
       if (texto !== this.#view.state.doc.toString()) {
@@ -209,7 +204,6 @@ export class CodeEditor implements FormValueControl<string> {
         if (update.docChanged) {
           this.edited.emit();
           if (!this.externalState()) {
-            this.#cambioInterno = true;
             this.value.set(update.state.doc.toString());
           }
         }
