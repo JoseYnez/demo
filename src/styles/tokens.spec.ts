@@ -95,8 +95,8 @@ interface Par {
 }
 
 const PARES_ACENTO: readonly Par[] = [
-  ...SURFACES.map((bg) => ({ fg: "--accent", bg, min: 4.5 })),
-  { fg: "--accent", bg: "--accent-subtle", min: 4.5 },
+  ...SURFACES.map((bg) => ({ fg: "--accent-fg", bg, min: 4.5 })),
+  { fg: "--accent-fg", bg: "--accent-subtle", min: 4.5 },
   { fg: "--text-on-accent", bg: "--accent", min: 4.5 },
   { fg: "--text-on-accent", bg: "--accent-hover", min: 4.5 },
   { fg: "--text-on-accent", bg: "--accent-active", min: 4.5 },
@@ -126,7 +126,7 @@ const RELLENOS_ESTADO = ["--bg-surface-hover", "--bg-surface-active"];
 
 const PARES_ESTADO: readonly Par[] = RELLENOS_ESTADO.flatMap((bg) => [
   { fg: "--text-primary", bg, min: 7.0 },
-  { fg: "--accent", bg, min: 3.0 },
+  { fg: "--accent-fg", bg, min: 3.0 },
 ]);
 
 function paresDeBarrido(): readonly Par[] {

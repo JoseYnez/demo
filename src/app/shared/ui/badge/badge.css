@@ -59,7 +59,7 @@
 }
 
 .badge--primary {
-  --badge-fg: var(--accent);
+  --badge-fg: var(--accent-fg);
   --badge-tonal-bg: var(--accent-tonal);
   --badge-tonal-fg: var(--accent-on-tonal);
 }

@@ -150,7 +150,7 @@
         <h3 class="sg__subtitle">Sombras</h3>
         <div class="sg__inline">
           @for (shadow of shadows; track shadow) {
-            <div class="sg__shadow" [style.box-shadow]="'var(--shadow-' + shadow + ')'">
+            <div class="sg__shadow" [style.box-shadow]="'var(--shadow-' + shadow + '), var(--edge-raised)'">
               <code class="sg__token selectable">{{ shadow }}</code>
             </div>
           }

@@ -82,7 +82,7 @@
 }
 
 .fs--float:focus-within .fs__outline {
-  border-color: var(--accent);
+  border-color: var(--accent-fg);
   box-shadow: var(--ring-focus);
 }
 

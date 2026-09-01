@@ -141,6 +141,7 @@ export class Styleguide {
     "--accent",
     "--accent-hover",
     "--accent-active",
+    "--accent-fg",
     "--accent-subtle",
     "--accent-border",
   ];

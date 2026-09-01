@@ -37,7 +37,7 @@
 
 .ui-control:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--accent-fg);
   box-shadow: var(--ring-focus);
 }
 

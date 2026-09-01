@@ -31,23 +31,23 @@
 }
 
 .fp__zone:hover:where(:not(.is-disabled)) {
-  border-color: var(--accent);
+  border-color: var(--accent-fg);
   background-color: var(--overlay-hover);
 }
 
 .fp__zone:focus-visible {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--accent-fg);
   box-shadow: var(--ring-focus);
 }
 
 .fp__zone.is-armado {
-  border-color: var(--accent);
+  border-color: var(--accent-fg);
 }
 
 .fp__zone.is-over {
   border-style: solid;
-  border-color: var(--accent);
+  border-color: var(--accent-fg);
   background-color: var(--accent-subtle);
   color: var(--text-primary);
 }
@@ -67,7 +67,7 @@
 }
 
 .fp__zone.is-over .fp__icon {
-  color: var(--accent);
+  color: var(--accent-fg);
 }
 
 .fp__text {
@@ -86,7 +86,7 @@
 }
 
 .fp__pegar.is-armado {
-  color: var(--accent);
+  color: var(--accent-fg);
   font-weight: var(--font-weight-medium);
 }
 

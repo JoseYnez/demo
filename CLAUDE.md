@@ -711,7 +711,7 @@ Roles que los tokens cubren:
 - **Texto**: `--text-primary`, `--text-secondary`, `--text-muted`, `--text-on-accent`.
 - **Bordes y foco**: `--border-default`, `--border-strong`, `--border-focus`, `--ring-focus`.
 - **Estados de interacción**: `--bg-surface-hover` / `--bg-surface-active` para un control con relleno propio; `--overlay-hover` / `--overlay-active` para uno transparente.
-- **Acento**: `--accent`, `--accent-hover`, `--accent-active`, `--accent-subtle`, `--accent-border`.
+- **Acento**: `--accent` (relleno, con `--text-on-accent` encima), `--accent-hover`, `--accent-active`, `--accent-fg` (el acento **como texto o trazo**: enlaces, foco, badge outline, nav activo), `--accent-subtle`, `--accent-border`.
 - **Estados tenues**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
 - **Relleno sólido**: `--color-danger-solid` + su `-on-solid` y `-solid-hover`. Es el *fondo* del botón destructivo, con su propio color de texto encima. **Sólo existe para `danger`**: es la única familia que necesita un relleno pleno hoy. Si un proyecto derivado necesita otro, se añade con su `-on-*` y su fila en el spec, no se improvisa.
 - **Rellenos tonales**: `--color-{neutral,success,warning,danger,info}-tonal` + su `-on-tonal`, y `--accent-tonal` / `--accent-on-tonal`. El peldaño intermedio entre el fondo tenue y el relleno pleno — ver abajo.
@@ -735,6 +735,7 @@ Tres distinciones que hay que respetar, porque confundirlas ya causó un bug:
 | `--border-default` vs `--border-strong` | `default` es **decorativo** (divisores de card): sin requisito de contraste. `strong` delimita **controles** y cumple el 3:1 de WCAG 1.4.11. El borde de un `input` usa `strong`. |
 | `--color-*-fg` vs `--color-*-solid` | `fg` es texto **sobre** `--color-*-bg` (aviso tenue). `solid` es el **relleno**, y su texto es `--color-*-on-solid`. En claro los dos valen lo mismo, en oscuro no: usar `fg` como fondo daba 2.52:1. Que coincidan en un tema no los hace un alias. |
 | `--color-*-tonal` vs `--color-*-solid` | Los dos son **rellenos**, y cada uno trae su texto (`-on-tonal`, `-on-solid`). `tonal` es el peldaño intermedio: en claro el texto es **más oscuro** que el `-fg` del aviso tenue; en oscuro, **más claro**. No es un `solid` aclarado — con el texto de `solid` encima no llega a AA. |
+| `--accent` vs `--accent-fg` | `accent` es el **relleno** del botón primario y lleva `--text-on-accent` encima. `fg` es el acento **como texto o trazo** sobre las superficies: enlaces, foco, badge outline, nav activo. En claro son el mismo color; en oscuro no pueden serlo (§11.2). Todo uso nuevo del acento sobre una superficie es `fg`. |
 | `--bg-surface` vs `--bg-surface-raised` | `raised` es para superficies elevadas. En claro son el mismo blanco (eleva la sombra); en oscuro `raised` es **más clara**. |
 | `--bg-surface-alt` vs `--bg-surface-hover` | `alt` es una **superficie**: se apilan cosas encima. `hover` es un **estado**, sólo lleva la etiqueta del propio control. Usar `alt` de hover dejaba el salto en 0.039 de L\*, y en el `ghost` sobre `--bg-app` en 0.016 — invisible. |
 
@@ -755,12 +756,14 @@ La regla: **fondo y color de `option` se declaran siempre juntos**, para que no 
 
 **El modo oscuro copia la rampa de ChatGPT.** Es una referencia deliberada: grises neutros y planos, sin bordes marcados, elevación por tono. Las anclas son las suyas (sidebar `#171717`, chat `#212121`, hover `#2f2f2f`, texto `#ececec`) y la rampa de aquí queda a menos de un punto de L\* de cada una. La diferencia es un croma de 0.005 en las superficies: se leen grises, pero no del todo neutras. **El verde vive en el acento, no en el mobiliario** — si se sube el croma de las superficies, se pierde el parecido.
 
+**El texto oscuro también sigue a ChatGPT, no sólo las superficies.** Su secundario (`#b4b4b4`, L .77) y su terciario (`#9b9b9b`, L .69) marcan los escalones: aquí van a L .80 y L .70, con el primario en L .94. La primera paleta los tenía en L .86 y L .79, forzados por unos umbrales APCA de Lc 74 y Lc 58 contra la superficie más clara, y la jerarquía quedaba con la mitad de profundidad que en claro (0.155 de L frente a 0.297): placeholder, ayuda, valor deshabilitado y valor escrito se veían iguales. Los umbrales que quedan son Lc 62 secundario y Lc 45 apagado, y AA sigue sobrando sobre `--bg-surface-raised` (7.07:1 y 4.92:1).
+
 **La paleta se calcula, no se elige a ojo.** Los dos temas se generaron igualando el contraste **perceptual (APCA)**, no la ratio de WCAG 2. Importa porque WCAG 2 subestima el contraste sobre fondos oscuros: la paleta anterior daba 7.88:1 para `--text-secondary` en oscuro contra 7.40:1 en claro — aparentemente mejor — mientras APCA medía Lc 58.8 contra Lc 85.7. El modo oscuro estaba muy por debajo y WCAG 2 lo ocultaba.
 
 Criterios que cumple la paleta, y que verifica [tokens.spec.ts](src/styles/tokens.spec.ts) en cada `pnpm test`:
 
 - WCAG 2.1 AA (4.5:1 texto, 3:1 componentes) — es el estándar legal, es el suelo.
-- Umbrales APCA: Lc 90 primario, Lc 74 secundario, Lc 58 muted, contra **todas** las superficies.
+- Umbrales APCA: Lc 90 primario, Lc 62 secundario, Lc 45 apagado, contra **todas** las superficies. En claro sobran (Lc 99 / 81 / 71); los fija el oscuro. Se miden a mano al tocar un token: el spec verifica WCAG y el barrido de tonos.
 - Los pares dependientes del acento, además, en 72 tonos: el acento es configurable (§11.5) y ningún tono elegible puede romper AA.
 
 Al tocar un color hay que revalidar; el test falla si el contraste baja o si los dos bloques oscuros divergen.
@@ -797,6 +800,10 @@ aclarar está en un salto de 0.030 de L\*, la mitad del escalón calibrado del
 sistema y por debajo del umbral que ya se descartó por invisible. Oscurecer
 0.055 —el mismo salto y la misma dirección que en claro— da 6.50:1. La regla
 vale para cualquier relleno pleno con texto invertido, no sólo para `danger`.
+
+**En oscuro el acento se parte en relleno y texto, porque ningún valor sirve para los dos.** En claro `--accent` a L .525 vale a la vez como relleno con texto blanco y como texto sobre blanco. En oscuro, como texto necesita L ≥ .70 sobre las superficies, y a esa luminosidad un relleno sólo admite texto negro: el primario salía pastel con texto oscuro mientras `danger` conservaba su sólido con texto blanco, dos polaridades en la misma fila. Ahora `--accent` es sólo relleno, a L .50 y C .08, con `--text-on-accent` blanco en los dos temas, y hover y active **oscurecen** como en `danger` (L .445 y L .39). `--accent-fg`, a L .78 y C .06, es el acento como texto y trazo, y en claro es un alias de `--accent`. El relleno queda en 2.95:1 sobre `--bg-app` y no se le exige 3:1: WCAG 1.4.11 no pide contraste al fondo de un botón cuyo texto ya identifica el control, y subirlo a L .55 hundiría el texto blanco a 3.94:1 en el peor tono. Los techos de croma con L constante son **C .085** para el relleno, **.075** para el hover y **.0675** para el active; el `-fg` admite hasta .11.
+
+**`--border-default` tiene que verse, aunque sea decorativo.** A L .31 sobre la superficie elevada (L .31) era literalmente el mismo color, y los divisores de las cards, el borde del `<code>` y las cajas discontinuas de los campos deshabilitados desaparecían. Va a L .36, que da 1.45:1 sobre `--bg-surface`, el mismo escalón que el divisor de ChatGPT (`#383838`). Sigue sin requisito de contraste, pero sí de existir.
 
 **Elevación en oscuro**: una sombra negra sobre un fondo casi negro no se ve. La elevación la lleva la **superficie**, que se aclara (`--bg-surface-raised`), más un filo superior (`--edge-raised`). En claro la sombra hace ese trabajo y ambos tokens son neutros. Un componente elevado usa los tres a la vez y funciona en los dos temas sin CSS condicional.
 
@@ -1019,7 +1026,7 @@ Los dos atributos son opcionales: sin ellos, la app se comporta como la base (de
 - **`reset()` vuelve a `baseHue`, no a 158.** Con un tono de entorno, hacer sólo `removeProperty` caería al defecto de `tokens.css` y devolvería el tono equivocado.
 - **El candado ignora lo guardado, no lo borra.** Si algún día se abre, vuelve la preferencia del usuario. Borrarlo es irreversible.
 - **La styleguide es la única exenta**: usa `previewHue()`, que aplica sin persistir, o dejaría de servir para lo que sirve. `setHue()` sí respeta el candado.
-- **El candado no cambia la receta de color todavía**: bloquear da consistencia (todos ven el mismo tono), no identidad — el acento sigue en C 0.060. Subirlo a la paleta afinada del tono elegido es la decisión pendiente de §15, y cuando se tome, `locked` es el interruptor que ya está puesto.
+- **El candado no cambia la receta de color todavía**: bloquear da consistencia (todos ven el mismo tono), no identidad — el acento sigue en C 0.060 en claro y C 0.080 en oscuro. Subirlo a la paleta afinada del tono elegido es la decisión pendiente de §15, y cuando se tome, `locked` es el interruptor que ya está puesto.
 
 Reglas:
 
@@ -1039,9 +1046,10 @@ Reglas:
    `@supports`, regenerar su hex de fallback y dejar que el spec ancle y barra.
    El croma del `--accent-subtle` claro es .014 y no más porque a L .965 el
    azul (H≈258) se sale de sRGB.
-4. Los chips y la pista del selector en la styleguide duplican la receta L/C a
-   propósito (previsualizan "qué pasaría si", no pueden leer `var(--accent)`);
-   si cambian las constantes, cambiarlas también allí.
+4. Los chips y la pista del selector en la styleguide duplican la receta L/C del
+   **relleno** de cada tema a propósito (previsualizan "qué pasaría si", no
+   pueden leer `var(--accent)`); si cambian las constantes, cambiarlas también
+   allí. Las columnas de la comparativa de croma duplican además la del `-fg`.
 
 ### 11.6 Atajos de teclado
 

@@ -39,7 +39,7 @@ option:disabled {
 
 option:checked {
   background-color: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-fg);
 }
 
 .select__divider {
@@ -69,8 +69,8 @@ option:checked {
 
 .select:hover .select__caret,
 .ui-control:focus ~ .select__caret {
-  border-right-color: var(--accent);
-  border-bottom-color: var(--accent);
+  border-right-color: var(--accent-fg);
+  border-bottom-color: var(--accent-fg);
 }
 
 .ui-control:disabled ~ .select__divider {

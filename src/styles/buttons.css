@@ -58,12 +58,12 @@
 
 .btn--secondary:hover:not(:disabled) {
   background-color: var(--bg-surface-hover);
-  border-color: var(--accent);
+  border-color: var(--accent-fg);
 }
 
 .btn--secondary:active:not(:disabled) {
   background-color: var(--bg-surface-active);
-  border-color: var(--accent);
+  border-color: var(--accent-fg);
 }
 
 .btn--ghost {
