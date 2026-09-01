@@ -1,6 +1,8 @@
 /* Sacarlo del flujo con `display: none` o `visibility` lo saca también del árbol de accesibilidad. */
 .sr-only {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   margin: 0;
