@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   inject,
   signal,
   viewChild,
@@ -25,6 +26,8 @@ export class Editor {
   protected readonly store = inject(EditorStore);
   private readonly teclado = inject(KeyboardService);
   private readonly editor = viewChild.required(CodeEditor);
+
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly enTauri = fileApi.enTauri;
   protected readonly cursor = signal<CursorPosition>({ line: 1, column: 1 });
@@ -59,6 +62,8 @@ export class Editor {
       },
       () => this.formatear(),
     );
+
+    this.destroyRef.onDestroy(() => this.retenerEstadoActivo());
   }
 
   protected alMontar(): void {
@@ -99,17 +104,23 @@ export class Editor {
   }
 
   protected async guardar(): Promise<void> {
-    const activo = this.store.activo();
-    if (activo) {
-      await this.store.guardar(activo.id, this.editor().getText());
-    }
+    await this.escribir(false);
   }
 
   protected async guardarComo(): Promise<void> {
+    await this.escribir(true);
+  }
+
+  private async escribir(comoNuevo: boolean): Promise<void> {
     const activo = this.store.activo();
-    if (activo) {
-      await this.store.guardar(activo.id, this.editor().getText(), true);
+    if (!activo) {
+      return;
     }
+    if (!this.enTauri) {
+      this.store.avisar("Guardar sólo está disponible en la app de escritorio.");
+      return;
+    }
+    await this.store.guardar(activo.id, this.editor().getText(), comoNuevo);
   }
 
   protected async cerrarPestana(id: string): Promise<void> {
@@ -133,6 +144,7 @@ export class Editor {
       this.editor().replaceAll(
         formatearSql(this.editor().getText(), activo.dialecto),
       );
+      this.store.avisar(null);
     } catch {
       this.store.avisar("No se pudo formatear: revisa la sintaxis del documento.");
     }
@@ -160,7 +172,7 @@ export class Editor {
 
   private retenerEstadoActivo(): void {
     const id = this.store.activoId();
-    if (id) {
+    if (id && this.editor().mounted) {
       this.store.guardarEstado(id, this.editor().getState());
     }
   }

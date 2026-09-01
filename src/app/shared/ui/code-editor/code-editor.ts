@@ -123,6 +123,10 @@ export class CodeEditor implements FormValueControl<string> {
     });
   }
 
+  get mounted(): boolean {
+    return this.#view !== undefined;
+  }
+
   getState(): EditorState {
     return this.vista().state;
   }

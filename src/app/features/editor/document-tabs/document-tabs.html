@@ -1,6 +1,10 @@
 <div class="tabs" role="tablist" aria-label="Documentos abiertos">
   @for (doc of documentos(); track doc.id) {
-    <div class="tabs__pestana" [class.is-activa]="doc.id === activoId()">
+    <div
+      class="tabs__pestana"
+      role="presentation"
+      [class.is-activa]="doc.id === activoId()"
+    >
       <button
         class="tabs__nombre"
         type="button"

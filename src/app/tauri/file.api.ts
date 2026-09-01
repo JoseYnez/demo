@@ -12,8 +12,10 @@ const FILTROS = [
   { name: "Todos los archivos", extensions: ["*"] },
 ];
 
+const enTauri = isTauri();
+
 export const fileApi = {
-  enTauri: isTauri(),
+  enTauri,
 
   read: async (ruta: string): Promise<ArchivoTexto> => {
     try {
@@ -37,6 +39,7 @@ export const fileApi = {
   },
 
   openDialog: async (): Promise<string | null> => {
+    if (!enTauri) return null;
     try {
       return await open({ multiple: false, filters: FILTROS });
     } catch (e) {
@@ -45,6 +48,7 @@ export const fileApi = {
   },
 
   saveDialog: async (nombre: string): Promise<string | null> => {
+    if (!enTauri) return null;
     try {
       return await save({ defaultPath: nombre, filters: FILTROS });
     } catch (e) {
@@ -53,6 +57,9 @@ export const fileApi = {
   },
 
   confirmarDescarte: async (): Promise<boolean> => {
+    if (!enTauri) {
+      return confirm("Hay cambios sin guardar. ¿Quieres descartarlos?");
+    }
     try {
       return await ask("Hay cambios sin guardar. ¿Quieres descartarlos?", {
         title: "demo",

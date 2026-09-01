@@ -570,7 +570,7 @@ Reglas:
 
 | Wrapper | Comandos | Notas |
 |---|---|---|
-| `fileApi` | `read_text_file`, `write_text_file`, y los diálogos nativos del plugin `dialog` (`open`, `save`, `ask`) | Editor de código (`features/editor/`). Rust detecta BOM y EOL al leer y los restaura al escribir (§8.1); expone `enTauri` para desactivar abrir/guardar fuera de Tauri. |
+| `fileApi` | `read_text_file`, `write_text_file`, y los diálogos nativos del plugin `dialog` (`open`, `save`, `ask`) | Editor de código (`features/editor/`). Rust detecta BOM y EOL al leer y los restaura al escribir (§8.1). **Fuera de Tauri los diálogos no revientan**, igual que `windowApi`: los de archivo devuelven `null` (equivale a cancelar) y el de descarte cae al `confirm()` del navegador, para que cerrar una pestaña con cambios siga funcionando en `pnpm start`. |
 | `greetApi` | `greet` | Demo de IPC de la plantilla de Tauri. Lo consume `features/tauri-demo/`. |
 | `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, y los listeners `onResized` y `onCloseRequested` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
 

@@ -142,6 +142,7 @@ export class EditorStore {
   activar(id: string): void {
     if (this.documento(id)) {
       this.#activoId.set(id);
+      this.#mensaje.set(null);
     }
   }
 
@@ -164,7 +165,7 @@ export class EditorStore {
     return this.#estados.get(id);
   }
 
-  avisar(texto: string): void {
+  avisar(texto: string | null): void {
     this.#mensaje.set(texto);
   }
 
