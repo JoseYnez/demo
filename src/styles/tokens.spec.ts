@@ -114,6 +114,7 @@ const PARES_SEMANTICOS: readonly Par[] = [
   ]),
   { fg: "--color-danger-on-solid", bg: "--color-danger-solid", min: 4.5 },
   { fg: "--color-danger-on-solid", bg: "--color-danger-solid-hover", min: 4.5 },
+  { fg: "--color-danger-on-solid", bg: "--color-danger-solid-active", min: 4.5 },
 ];
 
 const PARES_BORDE: readonly Par[] = SURFACES.map((bg) => ({
@@ -246,6 +247,16 @@ describe("tokens.css", () => {
           expect(ratio).toBeGreaterThanOrEqual(par.min);
         });
       }
+
+      it("el relleno destructivo se oscurece en hover y otra vez en active", () => {
+        const luz = (token: string) => lumAt(scopes, token, DEFAULT_HUE);
+        expect(luz("--color-danger-solid-hover")).toBeLessThan(
+          luz("--color-danger-solid"),
+        );
+        expect(luz("--color-danger-solid-active")).toBeLessThan(
+          luz("--color-danger-solid-hover"),
+        );
+      });
 
       for (const surface of ["--bg-app", "--bg-surface"]) {
         it(`el anillo de foco deja leer texto encima en ${surface}`, () => {

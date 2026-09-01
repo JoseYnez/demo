@@ -94,6 +94,7 @@
 
   --color-danger-solid: #a33630;
   --color-danger-solid-hover: #8c2b26;
+  --color-danger-solid-active: #7a1917;
   --color-danger-on-solid: #ffffff;
 
   --color-neutral-tonal: #a1a6a3;
@@ -183,6 +184,7 @@
 
   --color-danger-solid: #b94a42;
   --color-danger-solid-hover: #a63832;
+  --color-danger-solid-active: #932522;
   --color-danger-on-solid: #ffffff;
 
   --color-neutral-tonal: #474c49;
@@ -267,6 +269,7 @@
 
     --color-danger-solid: #b94a42;
     --color-danger-solid-hover: #a63832;
+    --color-danger-solid-active: #932522;
     --color-danger-on-solid: #ffffff;
 
     --color-neutral-tonal: #474c49;

@@ -91,7 +91,7 @@
 }
 
 .btn--danger:active:not(:disabled) {
-  background-color: var(--color-danger-solid);
+  background-color: var(--color-danger-solid-active);
 }
 
 .btn:focus-visible {
