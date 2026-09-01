@@ -121,6 +121,18 @@
   --ring-focus: 0 0 0 3px rgb(76 117 93 / 25%);
 
   --field-bg: var(--bg-app);
+
+  --code-keyword: #2d5a8a;
+  --code-string: #a33630;
+  --code-number: #8a5d12;
+  --code-comment: #2c6b45;
+  --code-type: #6d3fc0;
+  --code-operator: var(--text-secondary);
+  --code-variable: var(--text-primary);
+  --code-selection: rgb(45 90 138 / 16%);
+  --code-active-line: rgb(0 0 0 / 4%);
+  --code-cursor: var(--text-primary);
+  --code-gutter-fg: var(--text-muted);
 }
 
 :root[data-theme="dark"] {
@@ -196,6 +208,14 @@
   --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
 
   --ring-focus: 0 0 0 3px rgb(166 199 179 / 22%);
+
+  --code-keyword: #a6d6ff;
+  --code-string: #ffc2ba;
+  --code-number: #efcc91;
+  --code-comment: #a1dfb5;
+  --code-type: #d0b3ff;
+  --code-selection: rgb(166 214 255 / 20%);
+  --code-active-line: rgb(255 255 255 / 5%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -272,6 +292,14 @@
     --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
 
     --ring-focus: 0 0 0 3px rgb(166 199 179 / 22%);
+
+    --code-keyword: #a6d6ff;
+    --code-string: #ffc2ba;
+    --code-number: #efcc91;
+    --code-comment: #a1dfb5;
+    --code-type: #d0b3ff;
+    --code-selection: rgb(166 214 255 / 20%);
+    --code-active-line: rgb(255 255 255 / 5%);
   }
 }
 

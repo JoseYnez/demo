@@ -122,6 +122,22 @@ const PARES_BORDE: readonly Par[] = SURFACES.map((bg) => ({
   min: 3.0,
 }));
 
+const CODIGO_SINTAXIS = [
+  "--code-keyword",
+  "--code-string",
+  "--code-number",
+  "--code-comment",
+  "--code-operator",
+  "--code-type",
+  "--code-variable",
+];
+
+const PARES_CODIGO: readonly Par[] = [
+  ...CODIGO_SINTAXIS.map((fg) => ({ fg, bg: "--bg-surface", min: 4.5 })),
+  { fg: "--code-gutter-fg", bg: "--bg-surface", min: 4.5 },
+  { fg: "--code-cursor", bg: "--bg-surface", min: 3.0 },
+];
+
 const RELLENOS_ESTADO = ["--bg-surface-hover", "--bg-surface-active"];
 
 const PARES_ESTADO: readonly Par[] = RELLENOS_ESTADO.flatMap((bg) => [
@@ -137,6 +153,7 @@ function paresDeBarrido(): readonly Par[] {
     ...PARES_BORDE,
     ...PARES_ACENTO,
     ...PARES_ESTADO,
+    ...PARES_CODIGO,
   ];
 }
 
@@ -268,6 +285,22 @@ describe("tokens.css", () => {
                     lumAt(scopes, texto, hue),
                     luminanceOfHex(overlayOver(scopes, overlay, surface, hue)),
                   ),
+                ),
+              ),
+            );
+            expect(peor).toBeGreaterThanOrEqual(4.5);
+          });
+        }
+      }
+
+      for (const capa of ["--code-selection", "--code-active-line"]) {
+        for (const fg of CODIGO_SINTAXIS) {
+          it(`${fg} se lee sobre ${capa} en todo tono`, () => {
+            const peor = Math.min(
+              ...HUES.map((hue) =>
+                contrastRatio(
+                  lumAt(scopes, fg, hue),
+                  luminanceOfHex(overlayOver(scopes, capa, "--bg-surface", hue)),
                 ),
               ),
             );
