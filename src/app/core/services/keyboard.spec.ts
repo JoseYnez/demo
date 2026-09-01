@@ -66,6 +66,24 @@ describe("KeyboardService", () => {
     expect(veces).toBe(0);
   });
 
+  it("allowInEditable dispara también dentro de un campo editable", () => {
+    let veces = 0;
+    teclado.register(
+      { key: "s", ctrl: true, allowInEditable: true },
+      () => veces++,
+      destroyRef,
+    );
+    teclado.register({ key: "/" }, () => veces++, destroyRef);
+
+    const campo = document.createElement("input");
+    document.body.appendChild(campo);
+    pulsar({ key: "s", ctrlKey: true }, campo);
+    pulsar({ key: "/" }, campo);
+    campo.remove();
+
+    expect(veces).toBe(1);
+  });
+
   it("bloquea la combinación nativa del navegador por defecto", () => {
     teclado.register({ key: "b", ctrl: true }, () => {}, destroyRef);
 

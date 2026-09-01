@@ -7,6 +7,7 @@ export interface Shortcut {
   readonly alt?: boolean;
   readonly description?: string;
   readonly preventDefault?: boolean;
+  readonly allowInEditable?: boolean;
 }
 
 export type RegisteredShortcut = Readonly<Shortcut>;
@@ -47,11 +48,12 @@ export class KeyboardService {
   }
 
   private despachar(event: KeyboardEvent): void {
-    if (this.esCampoEditable(event.target)) {
-      return;
-    }
+    const enCampoEditable = this.esCampoEditable(event.target);
     for (let i = this.bindings.length - 1; i >= 0; i--) {
       const binding = this.bindings[i];
+      if (enCampoEditable && !binding.allowInEditable) {
+        continue;
+      }
       if (this.coincide(binding, event)) {
         if (binding.preventDefault !== false) {
           event.preventDefault();
