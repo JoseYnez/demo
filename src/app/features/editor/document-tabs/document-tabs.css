@@ -1,0 +1,75 @@
+.tabs {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tabs__pestana {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border-right: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.tabs__pestana.is-activa {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.tabs__pestana:not(.is-activa):hover {
+  background-color: var(--overlay-hover);
+}
+
+.tabs__nombre {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-1) var(--space-2) var(--space-3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabs__sucio {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background-color: var(--accent);
+}
+
+.tabs__cerrar,
+.tabs__nueva {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.tabs__cerrar {
+  width: 20px;
+  height: 20px;
+  margin-right: var(--space-1);
+}
+
+.tabs__cerrar:hover,
+.tabs__nueva:hover {
+  background-color: var(--overlay-hover);
+  color: var(--text-primary);
+}
+
+.tabs__nueva {
+  width: 28px;
+  margin: var(--space-1);
+  flex: 0 0 auto;
+}

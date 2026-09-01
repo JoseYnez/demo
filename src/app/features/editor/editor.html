@@ -1,0 +1,45 @@
+<div class="editor">
+  <div class="editor__barra">
+    <app-document-tabs
+      class="editor__pestanas"
+      [documentos]="store.documentos()"
+      [activoId]="store.activoId()"
+      (seleccionar)="activar($event)"
+      (cerrarPestana)="cerrarPestana($event)"
+      (crear)="nuevo()"
+    />
+    <div class="editor__acciones">
+      <app-button
+        variant="ghost"
+        size="sm"
+        [disabled]="!enTauri"
+        (click)="abrir()"
+      >
+        Abrir
+      </app-button>
+      <app-button
+        variant="secondary"
+        size="sm"
+        [disabled]="!enTauri"
+        (click)="guardar()"
+      >
+        Guardar
+      </app-button>
+    </div>
+  </div>
+
+  <app-code-editor
+    class="editor__area"
+    [externalState]="true"
+    [dialect]="store.activo()?.dialecto ?? 'tsql'"
+    (ready)="alMontar()"
+    (edited)="alEditar()"
+    (cursor)="cursor.set($event)"
+  />
+
+  <app-status-bar
+    [documento]="store.activo()"
+    [cursor]="cursor()"
+    [mensaje]="store.mensaje()"
+  />
+</div>

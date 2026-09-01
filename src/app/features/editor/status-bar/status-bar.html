@@ -1,0 +1,14 @@
+<footer class="status">
+  <span
+    class="status__ruta selectable"
+    [title]="documento()?.ruta ?? ''"
+  >{{ documento()?.ruta ?? "sin guardar" }}</span>
+
+  @if (mensaje()) {
+    <span class="status__mensaje" role="status">{{ mensaje() }}</span>
+  }
+
+  <span class="status__celda">Ln {{ cursor().line }}, Col {{ cursor().column }}</span>
+  <span class="status__celda">{{ eolEtiqueta() }}</span>
+  <span class="status__celda">{{ codificacionEtiqueta() }}</span>
+</footer>

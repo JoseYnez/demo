@@ -70,6 +70,7 @@ export class CodeEditor implements FormValueControl<string> {
   readonly touch = output<void>();
   readonly edited = output<void>();
   readonly cursor = output<CursorPosition>();
+  readonly ready = output<void>();
 
   readonly #lenguaje = new Compartment();
   readonly #edicion = new Compartment();
@@ -82,6 +83,7 @@ export class CodeEditor implements FormValueControl<string> {
         parent: this.host.nativeElement,
         state: this.createState(this.value()),
       });
+      this.ready.emit();
     });
     this.destroyRef.onDestroy(() => this.#view?.destroy());
 
@@ -148,11 +150,21 @@ export class CodeEditor implements FormValueControl<string> {
     this.vista().focus();
   }
 
+  cursorPosition(): CursorPosition {
+    return CodeEditor.posicion(this.vista().state);
+  }
+
   private vista(): EditorView {
     if (!this.#view) {
       throw new Error("CodeEditor: la vista todavía no está montada");
     }
     return this.#view;
+  }
+
+  private static posicion(state: EditorState): CursorPosition {
+    const head = state.selection.main.head;
+    const linea = state.doc.lineAt(head);
+    return { line: linea.number, column: head - linea.from + 1 };
   }
 
   private static edicion(editable: boolean): Extension {
@@ -198,9 +210,7 @@ export class CodeEditor implements FormValueControl<string> {
           }
         }
         if (update.selectionSet || update.docChanged) {
-          const head = update.state.selection.main.head;
-          const linea = update.state.doc.lineAt(head);
-          this.cursor.emit({ line: linea.number, column: head - linea.from + 1 });
+          this.cursor.emit(CodeEditor.posicion(update.state));
         }
         if (update.focusChanged && !update.view.hasFocus) {
           this.touch.emit();

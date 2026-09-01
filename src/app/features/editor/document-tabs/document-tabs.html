@@ -1,0 +1,38 @@
+<div class="tabs" role="tablist" aria-label="Documentos abiertos">
+  @for (doc of documentos(); track doc.id) {
+    <div class="tabs__pestana" [class.is-activa]="doc.id === activoId()">
+      <button
+        class="tabs__nombre"
+        type="button"
+        role="tab"
+        [attr.aria-selected]="doc.id === activoId()"
+        (click)="seleccionar.emit(doc.id)"
+      >
+        {{ doc.nombre }}
+        @if (doc.sucio) {
+          <span class="tabs__sucio" aria-label="Con cambios sin guardar"></span>
+        }
+      </button>
+      <button
+        class="tabs__cerrar"
+        type="button"
+        [attr.aria-label]="'Cerrar ' + doc.nombre"
+        (click)="cerrarPestana.emit(doc.id)"
+      >
+        <svg viewBox="0 0 10 10" width="8" height="8" aria-hidden="true">
+          <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2" />
+        </svg>
+      </button>
+    </div>
+  }
+  <button
+    class="tabs__nueva"
+    type="button"
+    aria-label="Nuevo documento"
+    (click)="crear.emit()"
+  >
+    <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+      <path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.2" />
+    </svg>
+  </button>
+</div>

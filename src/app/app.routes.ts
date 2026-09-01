@@ -9,6 +9,12 @@ export const routes: Routes = [
       import("./features/styleguide/styleguide").then((m) => m.Styleguide),
   },
   {
+    path: "editor",
+    title: "Editor SQL",
+    loadComponent: () =>
+      import("./features/editor/editor").then((m) => m.Editor),
+  },
+  {
     path: "tauri-demo",
     title: "Tauri IPC",
     loadComponent: () =>

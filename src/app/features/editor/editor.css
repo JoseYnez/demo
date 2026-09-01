@@ -1,0 +1,37 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.editor__barra {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-right: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+  background-color: var(--bg-surface-alt);
+}
+
+.editor__pestanas {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+}
+
+.editor__area {
+  flex: 1;
+  min-height: 0;
+}
