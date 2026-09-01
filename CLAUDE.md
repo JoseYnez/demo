@@ -442,7 +442,7 @@ export const TICKETS_ROUTES: Routes = [
 { path: "tickets", loadChildren: () => import("./features/tickets/tickets.routes").then((m) => m.TICKETS_ROUTES) }
 ```
 
-Una feature de **una sola ruta** no necesita su propio `*.routes.ts`: basta un `loadComponent` directo en `app.routes.ts` (así están hoy `styleguide` y `tauri-demo`). El archivo de rutas se crea en cuanto aparece la segunda ruta.
+Una feature de **una sola ruta** no necesita su propio `*.routes.ts`: basta un `loadComponent` directo en `app.routes.ts` (así están hoy `styleguide`, `editor` y `tauri-demo`). El archivo de rutas se crea en cuanto aparece la segunda ruta.
 
 ### 6.8 Formularios
 
@@ -570,10 +570,11 @@ Reglas:
 
 | Wrapper | Comandos | Notas |
 |---|---|---|
+| `fileApi` | `read_text_file`, `write_text_file`, y los diálogos nativos del plugin `dialog` (`open`, `save`, `ask`) | Editor de código (`features/editor/`). Rust detecta BOM y EOL al leer y los restaura al escribir (§8.1); expone `enTauri` para desactivar abrir/guardar fuera de Tauri. |
 | `greetApi` | `greet` | Demo de IPC de la plantilla de Tauri. Lo consume `features/tauri-demo/`. |
-| `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, y el listener `onResized` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
+| `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, y los listeners `onResized` y `onCloseRequested` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
 
-**Nada emite eventos desde Rust todavía**, pero ya hay un listener: el `onResized` de `windowApi`, que mantiene el icono de maximizar/restaurar en su sitio. Su `unlisten` va registrado en `destroyRef.onDestroy` en [app.ts](src/app/app.ts) — el patrón de §6.6, y el que hay que copiar para el siguiente. Los permisos de eventos ya están concedidos (`core:default` incluye `core:event:default` → `allow-listen`, `allow-unlisten`, `allow-emit`, `allow-emit-to`), así que añadir listeners no requiere tocar `capabilities/`.
+**Nada emite eventos desde Rust todavía**, pero ya hay dos listeners: el `onResized` de `windowApi`, que mantiene el icono de maximizar/restaurar en su sitio, y el `onCloseRequested` con el que el `EditorStore` avisa de cambios sin guardar antes de cerrar (exige `core:window:allow-destroy`, §10). Su `unlisten` va registrado en `destroyRef.onDestroy` en [app.ts](src/app/app.ts) — el patrón de §6.6, y el que hay que copiar para el siguiente. Los permisos de eventos ya están concedidos (`core:default` incluye `core:event:default` → `allow-listen`, `allow-unlisten`, `allow-emit`, `allow-emit-to`), así que añadir listeners no requiere tocar `capabilities/`.
 
 ---
 
@@ -581,7 +582,7 @@ Reglas:
 
 ### 8.1 Backend (Rust)
 
-En cuanto exista el primer comando con I/O, crear `src-tauri/src/error.rs`:
+El primer comando con I/O ya existe (`read_text_file`/`write_text_file`, §7) y con él `src-tauri/src/error.rs`:
 
 ```rust
 use serde::Serialize;
@@ -682,6 +683,10 @@ Inventario vivo de `src-tauri/capabilities/default.json`. Estado actual de la ba
 | `core:window:allow-toggle-maximize` | Botón de maximizar/restaurar | `windowApi.toggleMaximize` |
 | `core:window:allow-close` | Botón de cerrar | `windowApi.close` |
 | `core:window:allow-set-theme` | Que el marco nativo siga el tema de la app | `ThemeService` vía `windowApi.setTheme` |
+| `core:window:allow-destroy` | Requerido por `onCloseRequested`: con el guard de cierre activo, **todo** cierre —limpio incluido— termina en el `destroy()` que la API llama desde JS | Guard del `EditorStore` (§7) |
+| `dialog:allow-open` | Diálogo nativo de abrir archivo | `fileApi.openDialog` |
+| `dialog:allow-save` | Diálogo nativo de guardar como | `fileApi.saveDialog` |
+| `dialog:allow-ask` | Aviso de dos botones con etiquetas propias para descartar cambios (`confirm` no las admite) | `fileApi.confirmarDescarte` |
 
 Los cinco de ventana son los que **no** trae `core:window:default`. Lo que sí trae y por eso no aparece aquí: `is-maximized` (el icono de restaurar), `theme` e `internal-toggle-maximize` (el doble clic en la barra para maximizar).
 
@@ -715,6 +720,7 @@ Roles que los tokens cubren:
 - **Estados tenues**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
 - **Relleno sólido**: `--color-danger-solid` + su `-on-solid` y `-solid-hover`. Es el *fondo* del botón destructivo, con su propio color de texto encima. **Sólo existe para `danger`**: es la única familia que necesita un relleno pleno hoy. Si un proyecto derivado necesita otro, se añade con su `-on-*` y su fila en el spec, no se improvisa.
 - **Rellenos tonales**: `--color-{neutral,success,warning,danger,info}-tonal` + su `-on-tonal`, y `--accent-tonal` / `--accent-on-tonal`. El peldaño intermedio entre el fondo tenue y el relleno pleno — ver abajo.
+- **Código**: `--code-{keyword,string,number,comment,operator,type,variable}` para la sintaxis del editor —hex estático que **no rota** con el acento: azul=palabra clave es convención, como rojo=error— y `--code-{selection,active-line,cursor,gutter-fg}` de mobiliario, los dos primeros translúcidos y los dos últimos alias de los tokens de texto. El fondo del editor es `--bg-surface`; [tokens.spec.ts](src/styles/tokens.spec.ts) verifica los siete de sintaxis contra ella y **compuestos** sobre la selección y la línea activa, en los 72 tonos.
 - **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
 
 > **Regla dura**: prohibido hardcodear colores, espaciados, radios o sombras en el CSS de un componente. Siempre variables. Es lo único que hace que el tema oscuro funcione solo.
@@ -826,6 +832,7 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 | `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint` + el contrato de §6.8 | `FormValueControl<string>`. |
 | `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
 | `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |
+| `CodeEditor` | `<app-code-editor>` | `language` (sql), `dialect` (tsql/postgresql/mysql/sqlite), `disabled`, `externalState` + el contrato de §6.8 | `FormValueControl<string>` sobre CodeMirror 6. Ver abajo. |
 | `GestureButton` | `<app-gesture-button>` | `variant`, `size`, `disabled`, `fullWidth`, `gestures`, `longPressDelay`, `doubleTapDelay`, `longPressGrace` | Toque, doble toque y pulsado largo, con barra de progreso. Ver abajo. |
 | `FilePicker` | `<app-file-picker>` | `label`, `hint`, `sources` (drop/browse/paste), `accept`, `maxFiles`, `maxSize`, `preview` + el contrato de §6.8 | `FormValueControl<readonly File[]>`. Adjuntos por arrastre, explorador y portapapeles, con lista y miniatura. Ver abajo. |
 | `FieldShell` | `<app-field-shell>` | `labelMode`, `label`, `controlId`, `floated`, `required`, `disabled`, `hint`, `error` | Carcasa que comparten los tres: etiqueta, muesca y línea de ayuda/error. Sólo se usa directamente al construir un control propio. |
@@ -839,6 +846,25 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 `tonal` queda para lo que debe notarse sin alarmar: el estado que rompe la norma en una lista, no los veinte que la cumplen. **Si algún día se fija la marca a C 0.120 (§15), esta decisión hay que repasarla** — con un acento vívido, un relleno pleno vuelve a pagar su área.
 
 El badge usa `--radius-lg`, no `--radius-full`. La píldora era la única forma del sistema que contradecía la escala corta de radios; `--radius-full` queda para lo genuinamente circular —el punto de estado, el spinner del botón, el pulgar del slider—.
+
+**CodeEditor — el theme vive en CodeMirror, no en el CSS del componente.** CM crea
+su DOM en runtime y la encapsulación emulada sólo estampa `[_ngcontent-x]` en los
+elementos de la plantilla: una regla `.cm-keyword` en el `.css` del componente **no
+casa jamás** — la variante dinámica de la trampa de scoping de §11.2. Por eso
+`theme.ts` define `EditorView.theme()` y `HighlightStyle` con `var(--code-*)` como
+valores: los tokens siguen mandando, y el cambio de tema y el retinte del acento
+funcionan solos. Lo demás que hay que saber:
+
+- **`externalState` apaga la sincronización del `value`.** Como control de formulario,
+  cada edición serializa el documento al modelo; con pestañas encima (la feature
+  `editor`), eso sería un `toString()` del documento entero por tecla. La feature
+  gestiona un `EditorState` por documento vía `createState`/`getState`/`setState` y
+  lee el texto sólo al guardar.
+- **Tab acepta el autocompletado** y, sin popup, indenta. La salida con teclado es
+  Escape y luego Tab, que viene de serie en CM. Ctrl+F busca, Ctrl+D repite la
+  selección, Alt+click añade cursores.
+- El plegado en SQL alcanza lo que da el árbol de `lang-sql` (paréntesis); los bloques
+  `BEGIN…END` de T-SQL exigirían un `foldService` propio que no existe.
 
 **GestureButton — los gestos se declaran.** `gestures` dice cuáles implementa
 el botón, y **la apariencia sale de ahí**: la barra de progreso sólo existe si
@@ -1034,10 +1060,11 @@ this.teclado.register(
 - **El alcance lo decide dónde se registra**: en `app.ts` vive mientras viva la app; en un componente de feature, sólo mientras esa pantalla está montada. La baja es automática contra el `DestroyRef` de quien registró — por eso `register()` hay que llamarlo en contexto de inyección (constructor o inicializador de campo), o pasarle un `DestroyRef` explícito.
 - **Con la misma combinación gana el último registrado**, y al destruirse el control vuelve al anterior. Nada se sobrescribe: los dos conviven en la pila, sólo cambia cuál responde. Es el mecanismo para que un diálogo se quede `Esc` mientras está abierto y lo devuelva al cerrarse.
 - **Se ignoran los eventos nacidos en un campo editable** (`input`, `textarea`, `select`, `contenteditable`), o un atajo de una sola tecla dispararía mientras el usuario escribe.
+- **`allowInEditable: true` exime de esa regla a un atajo concreto**: es para los atajos de app que deben funcionar con el foco dentro de un editor (el área de CodeMirror es un `contenteditable`, y sin esto Ctrl+S no llegaría nunca). No dárselo a combinaciones Ctrl+Alt: en varios layouts eso es AltGr y rompería la escritura.
 - `preventDefault()` va activo por defecto —el atajo gana a la combinación del navegador—; `preventDefault: false` para los casos en que no se quiera.
 - `description` no es decorativo: `list()` devuelve los registros activos, del más reciente al más antiguo, y es de ahí de donde sale el panel de ayuda. Un atajo sin descripción es un atajo que nadie va a descubrir.
 
-Registrado hoy en el shell: **Ctrl/Cmd + Alt + T** (tema claro/oscuro). Los de la styleguide se registran en su propio componente y desaparecen al salir de la página — el banco de pruebas de `/styleguide` enseña justamente eso.
+Registrado hoy en el shell: **Ctrl/Cmd + Alt + T** (tema claro/oscuro). La pantalla `/editor` registra **Ctrl+S** (guardar), **Ctrl+Shift+S** (guardar como) y **Shift+Alt+F** (formatear), los tres con `allowInEditable`, y los suelta al salir. Los de la styleguide se registran en su propio componente y desaparecen al salir de la página — el banco de pruebas de `/styleguide` enseña justamente eso.
 
 ### 11.7 Página styleguide
 
@@ -1166,6 +1193,9 @@ Deliberadamente **fuera** de esta base. Cada proyecto derivado decide y lo docum
 |---|---|
 | Croma del acento | Sin decidir, pero **medido** — comparativa en `/styleguide#croma`. Con la luminosidad constante que hace configurable el acento, el techo de los 72 tonos es **C 0.075**; lo ata el **gamut de sRGB**, no el contraste. Ese +25% **no vale la pena**: son ΔE 0.015 —un cuarto de un paso de hover, por debajo del listón con el que ya se descartó `--bg-surface-alt` como hover— y deja el sistema al 96% del punto de ruptura, sin margen. La decisión real es binaria. Para pasar de ahí hay que fijar el tono y ajustarle la luminosidad: a sage 158 eso da **C 0.120**, el doble. C 0.12 sólo admite 13 de 72 tonos con L constante, y 0.14 sólo 6. |
 | Persistencia (SQLite / `tauri-plugin-store` / `localStorage`) | Sin decidir. No hay BD ni store en la base. |
+| Diálogo modal propio (tres botones: Guardar / Descartar / Cancelar) | Pendiente. El aviso de cierre del editor usa el `ask` nativo de dos botones; el de tres exige un componente de diálogo en `shared/ui` que no existe. |
+| Ejecución de SQL desde el editor | Fuera de la base. `/editor` sólo edita; ejecutar exige elegir motor, driver, credenciales y panel de resultados. |
+| `cargo audit` en CI | No instalado. Los crates se revisaron a mano contra RUSTSEC al abrir la rama del editor (2026-09-01): sin avisos. |
 | Logging (`tauri-plugin-log`) | Sin decidir. Hoy no hay plugin de log: `println!` sólo vale para depuración local, nunca en un commit. |
 | Barra de título custom vs. nativa | **Cerrada: propia** (`decorations: false`). Ver §3.7. |
 | Versionado sincronizado `package.json` ↔ `tauri.conf.json` | Manual. No hay script de sync. |
