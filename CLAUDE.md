@@ -812,6 +812,16 @@ vale para cualquier relleno pleno con texto invertido, no sólo para `danger`.
 
 Y la variante traicionera del mismo problema: **un descendiente de `:root` tampoco casa**. Angular compila `:root[data-theme="dark"] .x` a `[_ngcontent-xxx]:root[data-theme="dark"] .x[_ngcontent-xxx]` — le pega el atributo de encapsulación al `:root`, y `<html>` no lo lleva. La regla no puede casar jamás y **falla en silencio**: el bloque claro sí aplica, así que parece que el tema oscuro «simplemente no cambia». Para reaccionar al tema desde un componente hay que usar **`:host-context(html[data-theme="dark"])`**, y `:host-context(html:not([data-theme="light"]))` dentro del `@media`; anclar en `html` no es opcional, porque `:host-context(:not([data-theme="light"]))` casaría con cualquier ancestro intermedio.
 
+Y una tercera cara, que no falla en silencio sino al revés —pinta de más—:
+**el atributo de encapsulación cuenta para la especificidad**. Angular compila
+`.zona:hover:not(.is-disabled)` a `.zona[_ngcontent-x]:hover:not(.is-disabled)`,
+que vale (0,4,0), mientras que un `.zona.is-invalid` vecino se queda en (0,3,0):
+el hover **tapa el estado**. Pasó en el FilePicker —el borde de error
+desaparecía justo al dejar el puntero encima tras un rechazo—. La regla: los
+`:not()` de una regla de interacción van dentro de **`:where()`**, que aporta
+cero especificidad, y los estados se ordenan después. Al contar especificidades
+en este repo hay que **sumar siempre un atributo** al selector escrito.
+
 ### 11.3 Componentes en `shared/ui/`
 
 Cada uno en su carpeta, con `.ts` + `.html` + `.css`, exportado desde el barrel `src/app/shared/ui/index.ts`:
@@ -943,9 +953,23 @@ no se declara ni se anuncia en el texto de la zona ni responde.
   `click()` con el que se abre volvería a burbujear hasta ella y se
   realimentaría. Y se le limpia el `value` tras cada selección, o elegir el
   mismo archivo dos veces no vuelve a emitir `change`.
-- Lo rechazado —tipo, tamaño, cupo, duplicado— **no entra al modelo**: se emite
-  por `rejected` y se avisa en la línea de mensaje, con prioridad **error del
-  formulario > aviso de rechazo > hint**.
+- Lo rechazado —tipo, tamaño, cupo, duplicado, carpeta— **no entra al modelo**:
+  se emite por `rejected` y se avisa en la línea de mensaje, con prioridad
+  **error del formulario > aviso de rechazo > hint**. El aviso además se dobla
+  en una región viva (`role="status"`) que **existe desde el primer render**:
+  insertarla junto con su texto es la forma de que ningún lector de pantalla la
+  lea. Es el único mensaje del sistema que se anuncia solo, porque es el único
+  que responde a una acción en vez de aparecer al perder el foco.
+- **Las carpetas no se adjuntan.** `dataTransfer.files` las entrega como un
+  `File` de 0 bytes y tipo vacío, que pasaría todos los filtros y quedaría
+  adjunto e ilegible. Se distinguen recorriendo `items` en paralelo
+  (`webkitGetAsEntry()?.isDirectory`) durante el propio evento de drop, que es
+  cuando `items` sigue siendo válido.
+- **`accept` describe, no se enseña.** La zona y su `aria-label` dicen
+  «imágenes, PDF», no `image/*,.pdf`. Y los comodines universales —`*` y
+  `*/*`— desactivan el filtro en vez de no casar con nada: si no, el atributo
+  nativo aceptaría todo y el filtro propio rechazaría todo, que es justo la
+  divergencia entre fuentes que el componente existe para evitar.
 - Las miniaturas son `createObjectURL`, así que se sincronizan en un `effect()`
   y se revocan al quitar el archivo y al destruirse (§6.6). Crearlas en un
   `computed()` sería una fuga: cada recálculo fabricaría URLs que nadie revoca.

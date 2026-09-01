@@ -17,6 +17,7 @@
       [attr.role]="admiteExplorar() ? 'button' : 'group'"
       [attr.tabindex]="disabled() ? null : 0"
       [attr.aria-label]="etiquetaAccesible()"
+      [attr.aria-invalid]="!!error()"
       [attr.aria-disabled]="disabled() ? true : null"
       (click)="abrir()"
       (keydown)="onKeyDown($event)"
@@ -88,7 +89,7 @@
               <span class="fp__ext" aria-hidden="true">{{ adjunto.extension }}</span>
             }
 
-            <span class="fp__name">{{ adjunto.file.name }}</span>
+            <span class="fp__name" [title]="adjunto.file.name">{{ adjunto.file.name }}</span>
             <span class="fp__size">{{ adjunto.tamano }}</span>
 
             <button
@@ -111,5 +112,7 @@
         }
       </ul>
     }
+
+    <p class="fp__anuncio" role="status">{{ aviso() }}</p>
   </div>
 </app-field-shell>
