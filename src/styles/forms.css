@@ -31,7 +31,7 @@
   color: var(--text-muted);
 }
 
-.ui-control:hover:not(:disabled):not(:focus) {
+.ui-control:hover:where(:not(:disabled):not(:focus)) {
   border-color: var(--text-muted);
 }
 
@@ -63,7 +63,7 @@
 }
 
 .ui-control.is-floating,
-.ui-control.is-floating:hover:not(:disabled):not(:focus),
+.ui-control.is-floating:hover:where(:not(:disabled):not(:focus)),
 .ui-control.is-floating:disabled,
 .ui-control.is-floating:read-only:not(select) {
   position: relative;
@@ -82,7 +82,7 @@
   background-color: var(--bg-surface-alt);
 }
 
-.ui-control.is-inset:hover:not(:disabled):not(:focus) {
+.ui-control.is-inset:hover:where(:not(:disabled):not(:focus)) {
   background-color: var(--bg-surface-raised);
 }
 

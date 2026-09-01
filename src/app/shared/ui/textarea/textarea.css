@@ -14,5 +14,6 @@
 }
 
 .ui-control.is-inset {
+  padding-block-start: var(--space-5);
   min-height: 78px;
 }

@@ -3,7 +3,7 @@
   [class.fs--float]="labelMode() === 'float'"
   [class.fs--inset]="labelMode() === 'inset'"
   [class.fs--multilinea]="multiline()"
-  [class.is-floated]="floated()"
+  [class.is-floated]="floated() && !!label()"
   [class.is-invalid]="!!error()"
   [class.is-readonly]="readonly()"
   [class.is-disabled]="disabled()"

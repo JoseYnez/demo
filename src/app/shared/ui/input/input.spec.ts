@@ -150,6 +150,17 @@ describe("Input", () => {
     expect(el.querySelector("input")?.getAttribute("placeholder")).toBe("Buscar…");
   });
 
+  it("en float sin etiqueta no abre la muesca del borde", async () => {
+    const fixture = TestBed.createComponent(Input);
+    fixture.componentRef.setInput("labelMode", "float");
+    fixture.componentRef.setInput("value", "Ada");
+    await fixture.whenStable();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector(".fs__legend")?.textContent?.trim()).toBe("");
+    expect(el.querySelector(".is-floated")).toBeNull();
+  });
+
   it("propaga lo escrito al signal value", async () => {
     const fixture = TestBed.createComponent(Input);
     await fixture.whenStable();

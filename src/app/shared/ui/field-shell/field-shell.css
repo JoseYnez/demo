@@ -68,6 +68,7 @@
   transition:
     top var(--transition-fast),
     left var(--transition-fast),
+    transform var(--transition-fast),
     font-size var(--transition-fast),
     color var(--transition-fast);
 }
@@ -87,6 +88,10 @@
   color: var(--text-secondary);
 }
 
+:where(.fs--float:not(:focus-within)) .fs__box:hover .fs__outline {
+  border-color: var(--text-muted);
+}
+
 .fs--float.is-readonly .fs__outline {
   border-color: var(--border-default);
   border-style: dashed;
@@ -99,10 +104,6 @@
 
 .fs--float:focus-within .fs__label {
   color: var(--text-primary);
-}
-
-.fs--float:not(:focus-within) .fs__box:hover .fs__outline {
-  border-color: var(--text-muted);
 }
 
 .fs--float.is-invalid .fs__outline {
