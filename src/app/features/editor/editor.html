@@ -17,6 +17,9 @@
       >
         Abrir
       </app-button>
+      <app-button variant="ghost" size="sm" (click)="formatear()">
+        Formatear
+      </app-button>
       <app-button
         variant="secondary"
         size="sm"
@@ -41,5 +44,6 @@
     [documento]="store.activo()"
     [cursor]="cursor()"
     [mensaje]="store.mensaje()"
+    (cambiarDialecto)="cambiarDialecto($event)"
   />
 </div>

@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   input,
+  output,
 } from "@angular/core";
 
 import {
@@ -10,7 +11,8 @@ import {
   Documento,
   FinDeLinea,
 } from "../../../models/documento.model";
-import type { CursorPosition } from "../../../shared/ui";
+import type { CursorPosition, SqlDialect } from "../../../shared/ui";
+import { DIALECTOS } from "../sql/dialects";
 
 const EOL_ETIQUETAS: Record<FinDeLinea, string> = {
   lf: "LF",
@@ -34,6 +36,16 @@ export class StatusBar {
   readonly documento = input.required<Documento | null>();
   readonly cursor = input.required<CursorPosition>();
   readonly mensaje = input<string | null>(null);
+
+  readonly cambiarDialecto = output<SqlDialect>();
+
+  protected readonly dialectos = DIALECTOS;
+
+  protected alCambiarDialecto(event: Event): void {
+    this.cambiarDialecto.emit(
+      (event.target as HTMLSelectElement).value as SqlDialect,
+    );
+  }
 
   protected readonly eolEtiqueta = computed(() => {
     const doc = this.documento();

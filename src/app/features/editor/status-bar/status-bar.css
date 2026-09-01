@@ -29,3 +29,23 @@
   flex: 0 0 auto;
   white-space: nowrap;
 }
+
+.status__dialecto {
+  flex: 0 0 auto;
+  border: none;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 2px var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.status__dialecto:hover {
+  background-color: var(--overlay-hover);
+}
+
+.status__dialecto option {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+}

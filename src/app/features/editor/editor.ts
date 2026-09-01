@@ -7,10 +7,11 @@ import {
 } from "@angular/core";
 
 import { KeyboardService } from "../../core/services/keyboard";
-import { Button, CodeEditor, CursorPosition } from "../../shared/ui";
+import { Button, CodeEditor, CursorPosition, SqlDialect } from "../../shared/ui";
 import { fileApi } from "../../tauri";
 import { DocumentTabs } from "./document-tabs/document-tabs";
 import { EditorStore } from "./editor-store";
+import { formatearSql } from "./sql/format";
 import { StatusBar } from "./status-bar/status-bar";
 
 @Component({
@@ -47,6 +48,16 @@ export class Editor {
         description: "Guardar como…",
       },
       () => void this.guardarComo(),
+    );
+    this.teclado.register(
+      {
+        key: "f",
+        shift: true,
+        alt: true,
+        allowInEditable: true,
+        description: "Formatear el documento",
+      },
+      () => this.formatear(),
     );
   }
 
@@ -110,6 +121,27 @@ export class Editor {
       this.crearDocumento();
     } else if (eraActiva) {
       this.mostrarActivo();
+    }
+  }
+
+  protected formatear(): void {
+    const activo = this.store.activo();
+    if (!activo) {
+      return;
+    }
+    try {
+      this.editor().replaceAll(
+        formatearSql(this.editor().getText(), activo.dialecto),
+      );
+    } catch {
+      this.store.avisar("No se pudo formatear: revisa la sintaxis del documento.");
+    }
+  }
+
+  protected cambiarDialecto(dialecto: SqlDialect): void {
+    const activo = this.store.activo();
+    if (activo) {
+      this.store.cambiarDialecto(activo.id, dialecto);
     }
   }
 
