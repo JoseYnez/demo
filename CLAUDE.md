@@ -121,6 +121,50 @@ Lo que se sigue de tenerlo en `false`:
 - **No hay rutas nativas.** Si un proyecto derivado necesita la ruta absoluta —copiar un archivo enorme sin pasarlo por IPC—, hay que devolverlo a `true` y leer el drop con `onDragDropEvent()`; entonces el explorador pasa a necesitar `@tauri-apps/plugin-dialog` y su fila en §10.
 - Soltar un archivo **fuera** de una zona de adjuntos haría que el webview navegase al archivo y se llevase la app por delante, sin barra de direcciones para volver. Lo impide `bloquearNavegacionAlSoltarArchivos()` en [app.ts](src/app/app.ts), que es un `preventDefault()` de `dragover`/`drop` en `document`. **No quitarlo.**
 
+### 3.6 Identidad del build: versión y commit
+
+La barra superior muestra `v<versión> · <commit corto>`, con el hash completo en el `title`. Es lo que hace respondible «¿qué build traes?» sin pedir capturas ni adivinar.
+
+Los tres valores los genera [scripts/generate-build-info.mjs](scripts/generate-build-info.mjs) en `src/app/core/build-info.ts`: la versión sale de `package.json` y el commit de `git rev-parse`. El navegador no puede ejecutar git en runtime, así que el hash se inyecta en build-time como constantes que el bundler mete en el bundle.
+
+- **El archivo generado no se commitea** (está en `.gitignore`). Committearlo condena el árbol a ensuciarse solo: cada `serve` reescribiría el hash del commit anterior y `git status` nunca volvería a estar limpio.
+- Por eso lo generan `start`, `build`, `watch` y `test` encadenándolo con `&&`, y `postinstall` lo deja listo en un clon recién instalado. **No usar `prestart`/`prebuild`**: que pnpm ejecute los scripts `pre`/`post` arbitrarios depende de `enable-pre-post-scripts`, y el encadenado no depende de configuración.
+- `pnpm tauri dev` / `pnpm tauri build` quedan cubiertos porque llaman a `pnpm start` / `pnpm build` (§3.2).
+- Sin git —un tarball, un runner sin `.git`— el hash cae a `"desconocido"` en vez de romper el build.
+- La versión que se muestra es la de `package.json`, **no la de `tauri.conf.json`**. Las dos siguen sincronizándose a mano (§15).
+
+### 3.7 Barra de título propia
+
+`app.windows[0].decorations` vale **`false`**: la barra de la app *es* la barra de la ventana. Icono y versión a la izquierda, navegación, tema y los tres botones de ventana a la derecha, todo en 44 px. Dos barras apiladas —una nativa que no se puede tematizar y otra nuestra justo debajo— era el precio de no tomar esta decisión.
+
+Lo que hay que saber para no romperlo:
+
+- **La zona de arrastre es `data-tauri-drag-region="deep"` en la barra**, no en cada hueco. El script de Tauri camina el `composedPath` hacia arriba y **corta en el primer elemento clicable** (`BUTTON`, `A`, `INPUT`, `[tabindex]`, roles interactivos), así que los enlaces y los botones siguen recibiendo su click sin declarar nada. El único opt-out explícito es `data-tauri-drag-region="false"` en la versión: sin él, `mousedown` hace `preventDefault()` y el texto deja de poderse seleccionar y copiar, que es justo para lo que está ahí.
+- **El doble clic para maximizar sale gratis** (`internal_toggle_maximize` sí viene en `core:window:default`). Arrastrar no: `start_dragging` hay que concederlo (§10).
+- **En Windows la ventana sigue siendo redimensionable y conserva sombra y snap.** Tauri le engancha su propio handler de resize y `undecorated_shadow`, y el marco se queda: el área no-cliente arriba mide 0 px, pero `WS_THICKFRAME` sigue puesto. No hace falta reimplementar los bordes.
+- **Los botones sólo se dibujan dentro de Tauri.** `windowApi.enTauri` los gatea; en `pnpm start` y en los tests el navegador ya trae su propio marco y unos botones falsos ahí serían mentira. Por eso los métodos del wrapper son no-op fuera de Tauri en vez de reventar.
+- **El hover del botón de cerrar usa `--color-danger-solid` / `--color-danger-on-solid`**, no un rojo literal. Es la convención de Windows y el único relleno pleno del sistema (§11.2); su `:active` baja a `--color-danger-solid-hover`, que oscurece en los dos temas.
+- **Los controles se salen del padding de la barra con un margen negativo**, porque en Windows van pegados al borde. El resto de la barra conserva su `--space-4`.
+- `productName` y `title` siguen siendo `"demo"`: es lo que se ve en la barra de tareas y en Alt+Tab, donde la versión sólo sería ruido.
+
+### 3.8 Icono de la app
+
+El fuente es **un único SVG**, [src/assets/icon.svg](src/assets/icon.svg), y de ahí sale todo:
+
+```bash
+pnpm tauri icon src/assets/icon.svg
+```
+
+- **Vive en `src/assets/`, no en `src-tauri/`**, y de ahí salen tres cosas a la vez: los binarios del bundle, el favicon que enlaza `index.html`, y **la marca de la barra de título** — el `<img src="assets/icon.svg">` que sustituyó al texto «demo» (§3.7). `angular.json` ya copia esa carpeta (§11.1), así que una sola copia sirve a los tres usos y no hay archivos que puedan divergir. El `alt="demo"` no es opcional: es lo único que le queda al lector de pantalla cuando la marca deja de ser texto.
+- **El dibujo llena el lienzo y no lleva sombra**, y las dos cosas son deliberadas. El tamaño real donde se juzga un icono de escritorio es 32 px: ahí un margen transparente del 25% deja 24 px de dibujo y se ve encogido junto a los demás de la barra de tareas. La forma ocupa 480 de 512 (el `scale(1.25)` del grupo, que mantiene el arte en sus coordenadas originales), un 56% más de área. La sombra difusa se quitó por lo mismo: a 32 px no lee como elevación, sólo emborrona el borde y se come otro anillo de pixeles. La elevación la pone el SO, no el archivo.
+- `tauri icon` acepta SVG: no hay PNG maestro que mantener a mano.
+- **Genera también sets de Android e iOS.** Se borran: aquí no hay targets móviles (§1). Igual el `64x64.png`, que no está en `bundle.icon`.
+- Los cinco archivos que consume el bundle están listados en `bundle.icon` de [tauri.conf.json](src-tauri/tauri.conf.json). Los `Square*Logo.png` y `StoreLogo.png` son para MSIX y vienen de la plantilla.
+
+**Cambiar el icono no rebuildea solo, y esto cuesta media hora de desconcierto.** `tauri-build` emite `rerun-if-changed` para `tauri.conf.json`, `capabilities/` y los recursos declarados — **no para `icons/`**. El `.ico` lo empotra `build.rs` en el ejecutable, así que tras regenerar iconos el exe sigue llevando el anterior y `tauri dev` reinicia el proceso sin recompilar: la app *parece* actualizada y en la barra de tareas sale el icono viejo. Hay que invalidar el build a mano — tocar `tauri.conf.json` es lo más barato, `cargo clean -p demo` lo seguro.
+
+**El tema de la ventana se sincroniza con el de la app.** `ThemeService.apply()` llama a `windowApi.setTheme()` además de escribir `data-theme`. Sin decoraciones queda poco nativo que teñir, pero el borde de Windows 11 y los menús del sistema salen de ahí, y sin la llamada se quedaban en claro con la app en oscuro.
+
 ---
 
 ## 4. Estructura de carpetas
@@ -131,7 +175,8 @@ demo/
 │   ├── app/
 │   │   ├── core/               # Singletons: servicios app-wide, guards, error handler
 │   │   │   ├── services/
-│   │   │   └── guards/
+│   │   │   ├── guards/
+│   │   │   └── build-info.ts   # Generado: versión y commit (§3.6, no se commitea)
 │   │   ├── shared/             # Reutilizable entre features
 │   │   │   ├── ui/             # Design system (§11)
 │   │   │   ├── pipes/
@@ -159,6 +204,8 @@ demo/
 │   ├── capabilities/default.json
 │   ├── tauri.conf.json
 │   └── Cargo.toml
+├── scripts/
+│   └── generate-build-info.mjs # Versión + commit para la barra superior (§3.6)
 ├── angular.json
 ├── package.json
 ├── pnpm-workspace.yaml
@@ -524,8 +571,9 @@ Reglas:
 | Wrapper | Comandos | Notas |
 |---|---|---|
 | `greetApi` | `greet` | Demo de IPC de la plantilla de Tauri. Lo consume `features/tauri-demo/`. |
+| `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, y el listener `onResized` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
 
-Todavía **no hay listeners**: nada emite eventos desde Rust y nadie llama `listen()`. Los permisos ya están concedidos (`core:default` incluye `core:event:default` → `allow-listen`, `allow-unlisten`, `allow-emit`, `allow-emit-to`), así que añadirlos no requiere tocar `capabilities/`. Cuando se añada el primero, el `unlisten` va registrado en `destroyRef.onDestroy` — ver §6.6.
+**Nada emite eventos desde Rust todavía**, pero ya hay un listener: el `onResized` de `windowApi`, que mantiene el icono de maximizar/restaurar en su sitio. Su `unlisten` va registrado en `destroyRef.onDestroy` en [app.ts](src/app/app.ts) — el patrón de §6.6, y el que hay que copiar para el siguiente. Los permisos de eventos ya están concedidos (`core:default` incluye `core:event:default` → `allow-listen`, `allow-unlisten`, `allow-emit`, `allow-emit-to`), así que añadir listeners no requiere tocar `capabilities/`.
 
 ---
 
@@ -629,6 +677,13 @@ Inventario vivo de `src-tauri/capabilities/default.json`. Estado actual de la ba
 |---|---|---|
 | `core:default` | Set mínimo del core (eventos, webview, path) | runtime |
 | `opener:default` | Abrir URLs externas con la app por defecto del SO | `tauri-plugin-opener` |
+| `core:window:allow-start-dragging` | Arrastrar la ventana desde la barra propia (§3.7) | El `data-tauri-drag-region` de [app.html](src/app/app.html) |
+| `core:window:allow-minimize` | Botón de minimizar | `windowApi.minimize` |
+| `core:window:allow-toggle-maximize` | Botón de maximizar/restaurar | `windowApi.toggleMaximize` |
+| `core:window:allow-close` | Botón de cerrar | `windowApi.close` |
+| `core:window:allow-set-theme` | Que el marco nativo siga el tema de la app | `ThemeService` vía `windowApi.setTheme` |
+
+Los cinco de ventana son los que **no** trae `core:window:default`. Lo que sí trae y por eso no aparece aquí: `is-maximized` (el icono de restaurar), `theme` e `internal-toggle-maximize` (el doble clic en la barra para maximizar).
 
 **Regla**: al añadir un permiso → fila nueva en esta tabla, scope lo más estrecho posible (`$DOWNLOAD/**` antes que `**`) y justificación en el PR. Un permiso sin fila aquí es un permiso que se elimina.
 
@@ -964,7 +1019,27 @@ Reglas:
    propósito (previsualizan "qué pasaría si", no pueden leer `var(--accent)`);
    si cambian las constantes, cambiarlas también allí.
 
-### 11.6 Página styleguide
+### 11.6 Atajos de teclado
+
+Un único `KeyboardService` (`core/services/keyboard.ts`) escucha `keydown` en `window` y despacha la acción del registro que coincide. Nadie más pone listeners de teclado globales: repartirlos por componentes es cómo se llega a dos atajos peleándose por la misma combinación sin que nadie sepa cuál gana.
+
+```typescript
+this.teclado.register(
+  { key: "t", ctrl: true, alt: true, description: "Cambiar tema claro/oscuro" },
+  () => this.themes.toggle(),
+);
+```
+
+- **`ctrl` cubre Ctrl y Cmd.** Un solo registro sirve en Windows, Linux y macOS.
+- **El alcance lo decide dónde se registra**: en `app.ts` vive mientras viva la app; en un componente de feature, sólo mientras esa pantalla está montada. La baja es automática contra el `DestroyRef` de quien registró — por eso `register()` hay que llamarlo en contexto de inyección (constructor o inicializador de campo), o pasarle un `DestroyRef` explícito.
+- **Con la misma combinación gana el último registrado**, y al destruirse el control vuelve al anterior. Nada se sobrescribe: los dos conviven en la pila, sólo cambia cuál responde. Es el mecanismo para que un diálogo se quede `Esc` mientras está abierto y lo devuelva al cerrarse.
+- **Se ignoran los eventos nacidos en un campo editable** (`input`, `textarea`, `select`, `contenteditable`), o un atajo de una sola tecla dispararía mientras el usuario escribe.
+- `preventDefault()` va activo por defecto —el atajo gana a la combinación del navegador—; `preventDefault: false` para los casos en que no se quiera.
+- `description` no es decorativo: `list()` devuelve los registros activos, del más reciente al más antiguo, y es de ahí de donde sale el panel de ayuda. Un atajo sin descripción es un atajo que nadie va a descubrir.
+
+Registrado hoy en el shell: **Ctrl/Cmd + Alt + T** (tema claro/oscuro). Los de la styleguide se registran en su propio componente y desaparecen al salir de la página — el banco de pruebas de `/styleguide` enseña justamente eso.
+
+### 11.7 Página styleguide
 
 Demo viva de todos los componentes en `features/styleguide/`, ruta `/styleguide`. **Mantenerla al día es parte de agregar un componente**, no un extra.
 
@@ -1047,7 +1122,7 @@ test: agregar tests a ticket-store
 ### Qué se commitea
 
 - Sí: `pnpm-lock.yaml`, `pnpm-workspace.yaml`.
-- No: `package-lock.json`, `yarn.lock`, `node_modules/`, `dist/`, `.angular/`, `src-tauri/target/`.
+- No: `package-lock.json`, `yarn.lock`, `node_modules/`, `dist/`, `.angular/`, `src-tauri/target/`, `src/app/core/build-info.ts` (§3.6).
 
 ---
 
@@ -1066,6 +1141,9 @@ pnpm tauri build --debug    # con símbolos de debug
 # Tests
 pnpm test
 cd src-tauri && cargo test
+
+# Versión y commit de la barra superior (lo llaman start/build/watch/test)
+pnpm gen:build-info
 
 # Rust
 cd src-tauri
@@ -1089,7 +1167,7 @@ Deliberadamente **fuera** de esta base. Cada proyecto derivado decide y lo docum
 | Croma del acento | Sin decidir, pero **medido** — comparativa en `/styleguide#croma`. Con la luminosidad constante que hace configurable el acento, el techo de los 72 tonos es **C 0.075**; lo ata el **gamut de sRGB**, no el contraste. Ese +25% **no vale la pena**: son ΔE 0.015 —un cuarto de un paso de hover, por debajo del listón con el que ya se descartó `--bg-surface-alt` como hover— y deja el sistema al 96% del punto de ruptura, sin margen. La decisión real es binaria. Para pasar de ahí hay que fijar el tono y ajustarle la luminosidad: a sage 158 eso da **C 0.120**, el doble. C 0.12 sólo admite 13 de 72 tonos con L constante, y 0.14 sólo 6. |
 | Persistencia (SQLite / `tauri-plugin-store` / `localStorage`) | Sin decidir. No hay BD ni store en la base. |
 | Logging (`tauri-plugin-log`) | Sin decidir. Hoy no hay plugin de log: `println!` sólo vale para depuración local, nunca en un commit. |
-| Barra de título custom vs. nativa | Nativa (`decorations` por defecto). |
+| Barra de título custom vs. nativa | **Cerrada: propia** (`decorations: false`). Ver §3.7. |
 | Versionado sincronizado `package.json` ↔ `tauri.conf.json` | Manual. No hay script de sync. |
 | Linter (ESLint / `angular-eslint`) | No instalado. |
 | Pre-commit hooks (husky + lint-staged) | No instalados. |

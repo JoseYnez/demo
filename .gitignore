@@ -42,3 +42,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Generado en cada build (scripts/generate-build-info.mjs)
+/src/app/core/build-info.ts

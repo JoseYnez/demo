@@ -13,6 +13,10 @@ import {
 
 import { ACCENT_PRESETS, AccentService } from "../../core/services/accent";
 import {
+  KeyboardService,
+  type RegisteredShortcut,
+} from "../../core/services/keyboard";
+import {
   Badge,
   Button,
   Card,
@@ -59,6 +63,58 @@ interface Alta {
 export class Styleguide {
   protected readonly accents = inject(AccentService);
   protected readonly presets = ACCENT_PRESETS;
+
+  private readonly teclado = inject(KeyboardService);
+
+  protected readonly atajos = signal<readonly RegisteredShortcut[]>([]);
+  protected readonly ultimoAtajo = signal("—");
+  protected readonly disparos = signal(0);
+
+  constructor() {
+    this.teclado.register(
+      {
+        key: "a",
+        ctrl: true,
+        alt: true,
+        description: "Siguiente tono de acento",
+      },
+      () => this.disparar("Ctrl/Cmd + Alt + A", () => this.siguienteTono()),
+    );
+    this.teclado.register(
+      {
+        key: "r",
+        ctrl: true,
+        alt: true,
+        description: "Restaurar el tono base",
+      },
+      () => this.disparar("Ctrl/Cmd + Alt + R", () => this.accents.reset()),
+    );
+
+    this.atajos.set(this.teclado.list());
+  }
+
+  protected combo(atajo: RegisteredShortcut): string {
+    const partes: string[] = [];
+    if (atajo.ctrl) partes.push("Ctrl/Cmd");
+    if (atajo.shift) partes.push("Shift");
+    if (atajo.alt) partes.push("Alt");
+    partes.push(atajo.key.length === 1 ? atajo.key.toUpperCase() : atajo.key);
+    return partes.join(" + ");
+  }
+
+  private disparar(combinacion: string, accion: () => void): void {
+    accion();
+    this.ultimoAtajo.set(combinacion);
+    this.disparos.update((n) => n + 1);
+  }
+
+  private siguienteTono(): void {
+    const actual = this.presets.findIndex(
+      (preset) => preset.hue === this.accents.hue(),
+    );
+    const siguiente = this.presets[(actual + 1) % this.presets.length];
+    this.elegirTono(siguiente.hue);
+  }
 
   protected cambiarTono(event: Event): void {
     this.elegirTono((event.target as HTMLInputElement).valueAsNumber);

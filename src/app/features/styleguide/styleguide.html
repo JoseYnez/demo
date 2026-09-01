@@ -506,6 +506,42 @@
     </div>
   </section>
 
+  <section class="sg__section" id="atajos">
+    <h2 class="sg__title">Atajos de teclado</h2>
+    <p class="sg__note selectable">
+      <code>KeyboardService</code> registra combinaciones contra el
+      <code>DestroyRef</code> de quien las declara: los dos primeros de la lista
+      viven sólo mientras esta página está abierta y se dan de baja solos al
+      navegar a otra; el del tema lo registra el shell, así que funciona en
+      toda la app. Con la misma combinación gana <strong>el último
+      registrado</strong>, y al destruirse el control vuelve al anterior — es
+      el mecanismo con el que un diálogo se queda <kbd>Esc</kbd> mientras está
+      abierto. Se ignoran mientras se escribe en un campo.
+    </p>
+
+    <app-card variant="outlined">
+      <div card-header>
+        <span>Banco de pruebas</span>
+        <app-badge variant="neutral" size="sm">
+          {{ disparos() }} disparos
+        </app-badge>
+      </div>
+
+      <ul class="sg__shortcuts">
+        @for (atajo of atajos(); track combo(atajo)) {
+          <li class="sg__shortcut">
+            <kbd>{{ combo(atajo) }}</kbd>
+            <span>{{ atajo.description }}</span>
+          </li>
+        }
+      </ul>
+
+      <p class="sg__note">
+        Último disparado: <code>{{ ultimoAtajo() }}</code>
+      </p>
+    </app-card>
+  </section>
+
   <section class="sg__section">
     <h2 class="sg__title">Controles sueltos</h2>
     <p class="sg__note selectable">

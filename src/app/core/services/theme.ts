@@ -1,5 +1,7 @@
 import { Service, signal } from "@angular/core";
 
+import { windowApi } from "../../tauri";
+
 export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "theme";
@@ -25,6 +27,7 @@ export class ThemeService {
 
   private apply(theme: Theme): void {
     document.documentElement.dataset["theme"] = theme;
+    void windowApi.setTheme(theme);
   }
 }
 

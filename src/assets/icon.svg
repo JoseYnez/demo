@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="appGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2c7be5"/>
+      <stop offset="50%" stop-color="#1a62d6"/>
+      <stop offset="100%" stop-color="#00a88f"/>
+    </linearGradient>
+
+    <linearGradient id="innerGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+    </linearGradient>
+
+    <clipPath id="topClip">
+      <rect x="64" y="64" width="384" height="384" rx="96" ry="96"/>
+    </clipPath>
+  </defs>
+
+  <g transform="translate(16,16) scale(1.25) translate(-64,-64)">
+    <rect x="64" y="64" width="384" height="384" rx="96" ry="96" fill="url(#appGradient)"/>
+
+    <rect x="64" y="64" width="384" height="192" rx="96" ry="96" fill="url(#innerGlow)" clip-path="url(#topClip)"/>
+
+    <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="20">
+      <circle cx="256" cy="228" r="78"/>
+      <path d="M236 302v30M276 302v30M226 332h60M238 362h36"/>
+    </g>
+  </g>
+</svg>

@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
+    "gen:build-info": "node scripts/generate-build-info.mjs",
+    "postinstall": "node scripts/generate-build-info.mjs",
+    "start": "pnpm gen:build-info && ng serve",
+    "build": "pnpm gen:build-info && ng build",
+    "watch": "pnpm gen:build-info && ng build --watch --configuration development",
     "tauri": "tauri",
-    "test": "ng test"
+    "test": "pnpm gen:build-info && ng test"
   },
   "private": true,
   "packageManager": "pnpm@11.12.0",

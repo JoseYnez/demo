@@ -1,5 +1,20 @@
-<header class="shell__bar">
-  <span class="shell__brand">demo</span>
+<header class="shell__bar" data-tauri-drag-region="deep">
+  <div class="shell__identity">
+    <img
+      class="shell__logo"
+      src="assets/icon.svg"
+      alt="demo"
+      width="22"
+      height="22"
+    />
+    <span
+      class="shell__build selectable"
+      data-tauri-drag-region="false"
+      [title]="commitCompleto"
+    >
+      v{{ version }} · {{ commit }}
+    </span>
+  </div>
 
   <nav class="shell__nav">
     <a routerLink="/styleguide" routerLinkActive="is-active">Styleguide</a>
@@ -36,6 +51,63 @@
       </svg>
     }
   </button>
+
+  @if (enTauri) {
+    <div class="shell__controls">
+      <button
+        class="shell__control"
+        type="button"
+        aria-label="Minimizar"
+        (click)="minimizar()"
+      >
+        <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+          <path d="M0 5h10" stroke="currentColor" stroke-width="1" />
+        </svg>
+      </button>
+
+      <button
+        class="shell__control"
+        type="button"
+        [attr.aria-label]="maximizada() ? 'Restaurar' : 'Maximizar'"
+        (click)="alternarMaximizado()"
+      >
+        @if (maximizada()) {
+          <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+            <path
+              d="M2.5 2.5V0.5h7v7h-2M0.5 2.5h7v7h-7z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+            />
+          </svg>
+        } @else {
+          <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+            <path
+              d="M0.5 0.5h9v9h-9z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+            />
+          </svg>
+        }
+      </button>
+
+      <button
+        class="shell__control shell__control--close"
+        type="button"
+        aria-label="Cerrar"
+        (click)="cerrar()"
+      >
+        <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+          <path
+            d="M0.5 0.5l9 9M9.5 0.5l-9 9"
+            stroke="currentColor"
+            stroke-width="1"
+          />
+        </svg>
+      </button>
+    </div>
+  }
 </header>
 
 <main class="shell__content">
