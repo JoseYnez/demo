@@ -707,6 +707,7 @@ La capa global son tres hojas, importadas por `src/styles.css` en este orden:
 | `styles/fonts.css` | Los tres `@font-face` de IBM Plex. Sólo declara familias; ni un color ni una medida. |
 | `styles/tokens.css` | Las variables. Único sitio donde se escribe un color o una medida literal. |
 | `styles/reset.css` | Normalización y estilos base de `body`, títulos, enlaces y foco. |
+| `styles/a11y.css` | Una sola clase, `.sr-only`: texto que existe para el lector de pantalla y no se dibuja. Es global porque la usan tres componentes de dos capas distintas, y porque `display: none` o `visibility: hidden` —lo que saldría por instinto— sacan el elemento del árbol de accesibilidad y no valen. |
 | `styles/buttons.css` | Base compartida de los botones: `.btn`, sus tamaños y sus variantes. Está en la capa global por la misma razón que `forms.css`: la comparten `Button` y `GestureButton`, y la encapsulación no deja compartirla desde un componente. Cada uno añade sólo lo suyo — el `:host` y, en el gestual, la capa de progreso. |
 | `styles/forms.css` | Base compartida de los controles: `.ui-field`, `.ui-label`, `.ui-control`, `.ui-msg`. Vive en la capa global porque la encapsulación de Angular impide compartir estos estilos entre `input`, `textarea` y `select` sin duplicarlos tres veces. Los componentes consumen esas clases y añaden sólo lo suyo (alto, `resize`, la flecha del select). Todos los controles son **outlined**: fondo transparente, el borde los define. |
 
@@ -718,7 +719,7 @@ Roles que los tokens cubren:
 - **Estados de interacción**: `--bg-surface-hover` / `--bg-surface-active` para un control con relleno propio; `--overlay-hover` / `--overlay-active` para uno transparente.
 - **Acento**: `--accent`, `--accent-hover`, `--accent-active`, `--accent-subtle`, `--accent-border`.
 - **Estados tenues**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
-- **Relleno sólido**: `--color-danger-solid` + su `-on-solid` y `-solid-hover`. Es el *fondo* del botón destructivo, con su propio color de texto encima. **Sólo existe para `danger`**: es la única familia que necesita un relleno pleno hoy. Si un proyecto derivado necesita otro, se añade con su `-on-*` y su fila en el spec, no se improvisa.
+- **Relleno sólido**: `--color-danger-solid` + su `-on-solid`, `-solid-hover` y `-solid-active`. Es el *fondo* del botón destructivo, con su propio color de texto encima. **Sólo existe para `danger`**: es la única familia que necesita un relleno pleno hoy. Si un proyecto derivado necesita otro, se añade con su `-on-*` y su fila en el spec, no se improvisa.
 - **Rellenos tonales**: `--color-{neutral,success,warning,danger,info}-tonal` + su `-on-tonal`, y `--accent-tonal` / `--accent-on-tonal`. El peldaño intermedio entre el fondo tenue y el relleno pleno — ver abajo.
 - **Código**: `--code-{keyword,string,number,comment,operator,type,variable}` para la sintaxis del editor —hex estático que **no rota** con el acento: azul=palabra clave es convención, como rojo=error— y `--code-{selection,active-line,cursor,gutter-fg}` de mobiliario, los dos primeros translúcidos y los dos últimos alias de los tokens de texto. El fondo del editor es `--bg-surface`; [tokens.spec.ts](src/styles/tokens.spec.ts) verifica los siete de sintaxis contra ella y **compuestos** sobre la selección y la línea activa, en los 72 tonos.
 - **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
@@ -804,6 +805,14 @@ sistema y por debajo del umbral que ya se descartó por invisible. Oscurecer
 0.055 —el mismo salto y la misma dirección que en claro— da 6.50:1. La regla
 vale para cualquier relleno pleno con texto invertido, no sólo para `danger`.
 
+**Y el pulsado sigue oscureciendo: son tres peldaños, no dos.** `-solid-active`
+repite el mismo salto que el hover (L .382 en claro, L .442 en oscuro), porque
+si `:active` volviera al color de reposo, pulsar *aclararía* el botón — al
+revés que en `primary`, `secondary` y `ghost`, y justo en la única acción
+destructiva del sistema. Como el texto es blanco, oscurecer sólo sube el
+contraste: 10.6:1 en claro y 8.3:1 en oscuro. [tokens.spec.ts](src/styles/tokens.spec.ts)
+verifica los dos saltos y su dirección, no sólo el contraste de cada peldaño.
+
 **Elevación en oscuro**: una sombra negra sobre un fondo casi negro no se ve. La elevación la lleva la **superficie**, que se aclara (`--bg-surface-raised`), más un filo superior (`--edge-raised`). En claro la sombra hace ese trabajo y ambos tokens son neutros. Un componente elevado usa los tres a la vez y funciona en los dos temas sin CSS condicional.
 
 **Duplicación de los bloques oscuros**: `:root[data-theme="dark"]` y el `@media (prefers-color-scheme: dark)` son idénticos y no se pueden fundir, porque uno vive dentro de una media query. `light-dark()` lo resolvería en una línea por token, pero **no se usa**: WebKitGTK < 2.46 (Ubuntu 24.04 LTS) no lo soporta y la declaración inválida dejaría los tokens sin valor — la app entera sin colores, no sólo sin tema oscuro. El test garantiza que los dos bloques no se separen — y lo mismo con el par de bloques oscuros del `@supports` del acento (§11.5).
@@ -838,20 +847,32 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 |---|---|---|---|
 | `Button` | `<app-button>` | `variant` (primary/secondary/ghost/danger), `size` (sm/md/lg), `type`, `disabled`, `loading`, `fullWidth` | `loading` deshabilita y muestra spinner. |
 | `Card` | `<app-card>` | `variant` (elevated/outlined/flat), `padding` (none/sm/md/lg) | Slots opcionales `[card-header]` y `[card-footer]`; la zona sin contenido no se dibuja. |
-| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (outline/tonal), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla. Ver abajo cuál usar. |
+| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (outline/tonal), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla y al `title`. Ver abajo cuál usar. |
 | `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint` + el contrato de §6.8 | `FormValueControl<string>`. |
 | `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
 | `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |
 | `CodeEditor` | `<app-code-editor>` | `language` (sql), `dialect` (tsql/postgresql/mysql/sqlite), `disabled`, `externalState` + el contrato de §6.8 | `FormValueControl<string>` sobre CodeMirror 6. Ver abajo. |
 | `GestureButton` | `<app-gesture-button>` | `variant`, `size`, `disabled`, `fullWidth`, `gestures`, `longPressDelay`, `doubleTapDelay`, `longPressGrace` | Toque, doble toque y pulsado largo, con barra de progreso. Ver abajo. |
 | `FilePicker` | `<app-file-picker>` | `label`, `hint`, `sources` (drop/browse/paste), `accept`, `maxFiles`, `maxSize`, `preview` + el contrato de §6.8 | `FormValueControl<readonly File[]>`. Adjuntos por arrastre, explorador y portapapeles, con lista y miniatura. Ver abajo. |
-| `FieldShell` | `<app-field-shell>` | `labelMode`, `label`, `controlId`, `floated`, `required`, `disabled`, `hint`, `error` | Carcasa que comparten los tres: etiqueta, muesca y línea de ayuda/error. Sólo se usa directamente al construir un control propio. |
+| `FieldShell` | `<app-field-shell>` | `labelMode`, `label`, `controlId`, `floated`, `required`, `disabled`, `readonly`, `multiline`, `hint`, `error`, `aviso` | Carcasa que comparten los cuatro: etiqueta, muesca y línea de ayuda/aviso/error. Sólo se usa directamente al construir un control propio. |
 
 **Badge — dos apariencias con oficios distintos.** `outline` es el defecto y la de uso general; `tonal` es la del énfasis. Ganaron a `soft` y `solid`, que se retiraron, por tres razones medidas:
 
 - **`outline` no compite con el fondo.** Es la única sin relleno propio, así que deja pasar el `--overlay-hover` de la fila en vez de quedarse congelada encima mientras todo lo demás se oscurece. Con cuatro superficies y overlays translúcidos, esa es la propiedad que más vale en una lista.
 - **Su trazo no es débil.** Es `currentcolor`, o sea `--badge-fg`, que [tokens.spec.ts](src/styles/tokens.spec.ts) ya valida a 4.5:1 contra las cuatro superficies — el doble del 3:1 que WCAG pide para un gráfico no textual.
 - **El color va donde el croma bajo se lee.** Con el acento en C 0.060 (§11.5), un relleno grande gasta el máximo peso visual en el color menos vívido del sistema; el trazo y el texto lo concentran en poca área. Por eso `solid` no pagaba su coste, y `soft` tenía relleno sin cobrar el beneficio: su tinte apenas se distinguía de unas superficies que ya son casi blancas.
+
+**El `label` viaja en un `.sr-only`, no en un `aria-label`.** Un `aria-label`
+sobre un `<span>` sin rol está prohibido —`role=generic` no admite nombre— y
+los lectores lo ignoran, así que la promesa de "el texto entero aunque se
+recorte" no se cumplía. Ahora el texto visible queda `aria-hidden` y el
+completo va en un span oculto; el `title` hace lo propio para el ratón. La
+regla vale para cualquier elemento decorativo del sistema: si hay que nombrar
+algo, o se le da un rol que admita nombre o se escribe texto de verdad. Y lo
+mismo con los roles compuestos: las pestañas del editor dejaron de declararse
+`tablist`/`tab` —sin `tabpanel`, sin `aria-controls` y sin tabulador móvil, el
+patrón anunciaba una navegación que no existía— y son botones con
+`aria-current`. Un patrón ARIA a medias miente más que no ponerlo.
 
 `tonal` queda para lo que debe notarse sin alarmar: el estado que rompe la norma en una lista, no los veinte que la cumplen. **Si algún día se fija la marca a C 0.120 (§15), esta decisión hay que repasarla** — con un acento vívido, un relleno pleno vuelve a pagar su área.
 
@@ -955,11 +976,14 @@ no se declara ni se anuncia en el texto de la zona ni responde.
   mismo archivo dos veces no vuelve a emitir `change`.
 - Lo rechazado —tipo, tamaño, cupo, duplicado, carpeta— **no entra al modelo**:
   se emite por `rejected` y se avisa en la línea de mensaje, con prioridad
-  **error del formulario > aviso de rechazo > hint**. El aviso además se dobla
-  en una región viva (`role="status"`) que **existe desde el primer render**:
-  insertarla junto con su texto es la forma de que ningún lector de pantalla la
-  lea. Es el único mensaje del sistema que se anuncia solo, porque es el único
-  que responde a una acción en vez de aparecer al perder el foco.
+  **error del formulario > aviso de rechazo > hint**. Va por el input `aviso`
+  de la carcasa, no por `error`: la zona se marca en ámbar y **no** declara el
+  campo inválido, porque rechazar un archivo no invalida los que sí entraron.
+  El aviso además se dobla en una región viva (`role="status"`) que **existe
+  desde el primer render**: insertarla junto con su texto es la forma de que
+  ningún lector de pantalla la lea. Es el único mensaje del sistema que se
+  anuncia solo, porque es el único que responde a una acción en vez de aparecer
+  al perder el foco.
 - **Las carpetas no se adjuntan.** `dataTransfer.files` las entrega como un
   `File` de 0 bytes y tipo vacío, que pasaría todos los filtros y quedaría
   adjunto e ilegible. Se distinguen recorriendo `items` en paralelo
@@ -975,6 +999,34 @@ no se declara ni se anuncia en el texto de la zona ni responde.
   `computed()` sería una fuga: cada recálculo fabricaría URLs que nadie revoca.
 
 Los tres controles de formulario gatean el mensaje de error tras `touched`: enseñar "requerido" en un formulario recién abierto es hostil.
+
+**La línea de mensaje va ligada al control con `aria-describedby`, y el id lo
+pone la carcasa.** Sin eso, el error se pinta en rojo y no existe para quien no
+lo ve: medir el contraste al tercer decimal (§11.2) no sirve de nada si el
+mensaje nunca llega. El id sale de `idDelMensaje(controlId)` —una función
+exportada por `field-shell`, no una plantilla de texto repetida en cada
+control—, y cada control apunta a él **sólo cuando hay mensaje**; si no, el
+atributo no se escribe. Un control propio que use la carcasa tiene que hacer lo
+mismo.
+
+**`aviso` no es un error, y por eso es un input aparte.** La prioridad de la
+línea es **error > aviso > hint**, pero sólo el error marca `aria-invalid` y
+tiñe el borde de rojo: un archivo rechazado por duplicado no invalida un campo
+con otros tres archivos correctos. El aviso va en `--color-warning-fg`. Hoy lo
+usa el `FilePicker`; cualquier control con la misma distinción lo hereda.
+
+**`readonly` se ve en los tres modos.** En `top` lo dice el borde discontinuo
+del propio control, en `inset` la pérdida del relleno, y en `float` hay que
+declararlo en la carcasa —el control es transparente y el borde lo dibuja el
+`<fieldset>`—, o un campo de sólo lectura queda idéntico a uno editable. La
+regla va **antes** que la del foco, para que enfocarlo siga enseñando el anillo
+como en `top`.
+
+**`multiline` sube la etiqueta flotante a la primera línea.** El `top: 50%` de
+la etiqueta está pensado para una caja de 40 px; en un `textarea` de 85 la deja
+flotando en mitad del hueco, lejos de donde va a aparecer el texto. Con
+`multiline` se alinea con la primera línea, que es donde el usuario espera un
+placeholder.
 
 **`labelMode`** decide dónde vive la etiqueta. Hay tres modos conviviendo **a la espera de que se elija uno**; cuando se decida, el sistema se unifica a ése y los otros se retiran. Comparativa viva en `/styleguide`, sección "Comparativa: dónde va la etiqueta".
 
