@@ -570,7 +570,7 @@ Reglas:
 
 | Wrapper | Comandos | Notas |
 |---|---|---|
-| `fileApi` | `read_text_file`, `write_text_file`, y los diálogos nativos del plugin `dialog` (`open`, `save`, `ask`) | Editor de código (`features/editor/`). Rust detecta BOM y EOL al leer y los restaura al escribir (§8.1). **Fuera de Tauri los diálogos no revientan**, igual que `windowApi`: los de archivo devuelven `null` (equivale a cancelar) y el de descarte cae al `confirm()` del navegador, para que cerrar una pestaña con cambios siga funcionando en `pnpm start`. |
+| `fileApi` | `read_text_file`, `write_text_file`, y los diálogos nativos del plugin `dialog` (`open`, `save`, `ask`) | Editor de código (`features/editor/`). Rust detecta BOM y EOL al leer y los restaura al escribir (§8.1). **Fuera de Tauri los diálogos no revientan**, igual que `windowApi`: los de archivo devuelven `null` (equivale a cancelar) y el de descarte cae al `confirm()` del navegador, para que cerrar una pestaña con cambios siga funcionando en `pnpm start`. **El `import()` de `@tauri-apps/plugin-dialog` es dinámico a propósito**: este barrel lo carga `app.ts`, así que un import estático metería en el bundle inicial una dependencia que sólo usa una feature perezosa. No devolverlo a estático. |
 | `greetApi` | `greet` | Demo de IPC de la plantilla de Tauri. Lo consume `features/tauri-demo/`. |
 | `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, y los listeners `onResized` y `onCloseRequested` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
 
@@ -686,7 +686,7 @@ Inventario vivo de `src-tauri/capabilities/default.json`. Estado actual de la ba
 | `core:window:allow-destroy` | Requerido por `onCloseRequested`: con el guard de cierre activo, **todo** cierre —limpio incluido— termina en el `destroy()` que la API llama desde JS | Guard del `EditorStore` (§7) |
 | `dialog:allow-open` | Diálogo nativo de abrir archivo | `fileApi.openDialog` |
 | `dialog:allow-save` | Diálogo nativo de guardar como | `fileApi.saveDialog` |
-| `dialog:allow-ask` | Aviso de dos botones con etiquetas propias para descartar cambios (`confirm` no las admite) | `fileApi.confirmarDescarte` |
+| `dialog:allow-message` | Aviso de dos botones con etiquetas propias para descartar cambios (`confirm` no las admite). **Es el permiso del comando `message`, no de `ask`**: el plugin sólo expone tres comandos —`open`, `save`, `message`— y la función `ask()` de JS es un envoltorio sobre `message`. `dialog:allow-ask` autoriza lo mismo, pero es un alias deprecado que desaparece en la v3 del plugin. | `fileApi.confirmarDescarte` |
 
 Los cinco de ventana son los que **no** trae `core:window:default`. Lo que sí trae y por eso no aparece aquí: `is-maximized` (el icono de restaurar), `theme` e `internal-toggle-maximize` (el doble clic en la barra para maximizar).
 

@@ -1,5 +1,4 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import { ask, open, save } from "@tauri-apps/plugin-dialog";
 
 import {
   ArchivoTexto,
@@ -13,6 +12,8 @@ const FILTROS = [
 ];
 
 const enTauri = isTauri();
+
+const dialogos = () => import("@tauri-apps/plugin-dialog");
 
 export const fileApi = {
   enTauri,
@@ -41,6 +42,7 @@ export const fileApi = {
   openDialog: async (): Promise<string | null> => {
     if (!enTauri) return null;
     try {
+      const { open } = await dialogos();
       return await open({ multiple: false, filters: FILTROS });
     } catch (e) {
       throw new Error(`fileApi.openDialog: ${e}`);
@@ -50,6 +52,7 @@ export const fileApi = {
   saveDialog: async (nombre: string): Promise<string | null> => {
     if (!enTauri) return null;
     try {
+      const { save } = await dialogos();
       return await save({ defaultPath: nombre, filters: FILTROS });
     } catch (e) {
       throw new Error(`fileApi.saveDialog: ${e}`);
@@ -61,6 +64,7 @@ export const fileApi = {
       return confirm("Hay cambios sin guardar. ¿Quieres descartarlos?");
     }
     try {
+      const { ask } = await dialogos();
       return await ask("Hay cambios sin guardar. ¿Quieres descartarlos?", {
         title: "demo",
         kind: "warning",
