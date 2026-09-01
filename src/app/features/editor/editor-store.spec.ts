@@ -3,7 +3,7 @@ import { EditorState } from "@codemirror/state";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EditorStore } from "./editor-store";
-import { fileApi } from "../../tauri";
+import { fileApi, windowApi } from "../../tauri";
 
 const openDialog = vi.spyOn(fileApi, "openDialog");
 const saveDialog = vi.spyOn(fileApi, "saveDialog");
@@ -169,5 +169,47 @@ describe("EditorStore", () => {
 
     store.marcarSucio(id);
     expect(store.haySucios()).toBe(true);
+  });
+
+  describe("guard de cierre de la ventana", () => {
+    const onCloseRequested = vi.spyOn(windowApi, "onCloseRequested");
+
+    async function guardCon(sucio: boolean, confirmar: boolean) {
+      windowApi.enTauri = true;
+      onCloseRequested.mockResolvedValue(() => {});
+      TestBed.resetTestingModule();
+      const conGuard = TestBed.inject(EditorStore);
+      windowApi.enTauri = false;
+
+      const id = conGuard.crearNuevo();
+      if (sucio) {
+        conGuard.marcarSucio(id);
+      }
+      confirmarDescarte.mockResolvedValue(confirmar);
+
+      const handler = onCloseRequested.mock.calls.at(-1)?.[0];
+      const preventDefault = vi.fn();
+      await handler?.({ preventDefault } as never);
+      return preventDefault;
+    }
+
+    it("sin cambios deja cerrar sin preguntar", async () => {
+      const preventDefault = await guardCon(false, false);
+
+      expect(preventDefault).not.toHaveBeenCalled();
+      expect(confirmarDescarte).not.toHaveBeenCalled();
+    });
+
+    it("con cambios y cancelación impide el cierre", async () => {
+      const preventDefault = await guardCon(true, false);
+
+      expect(preventDefault).toHaveBeenCalled();
+    });
+
+    it("con cambios y descarte confirmado deja cerrar", async () => {
+      const preventDefault = await guardCon(true, true);
+
+      expect(preventDefault).not.toHaveBeenCalled();
+    });
   });
 });

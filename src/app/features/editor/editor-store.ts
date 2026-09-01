@@ -3,7 +3,7 @@ import { EditorState } from "@codemirror/state";
 
 import { ArchivoTexto, Documento } from "../../models/documento.model";
 import type { SqlDialect } from "../../shared/ui";
-import { fileApi } from "../../tauri";
+import { fileApi, windowApi } from "../../tauri";
 
 export interface Apertura {
   id: string;
@@ -31,6 +31,16 @@ export class EditorStore {
   readonly #estados = new Map<string, EditorState>();
   #siguienteNumero = 1;
   #siguienteId = 1;
+
+  constructor() {
+    if (windowApi.enTauri) {
+      void windowApi.onCloseRequested(async (event) => {
+        if (this.haySucios() && !(await fileApi.confirmarDescarte())) {
+          event.preventDefault();
+        }
+      });
+    }
+  }
 
   crearNuevo(): string {
     const id = String(this.#siguienteId++);

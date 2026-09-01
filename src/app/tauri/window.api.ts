@@ -1,6 +1,10 @@
 import { isTauri } from "@tauri-apps/api/core";
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import { getCurrentWindow, type Theme } from "@tauri-apps/api/window";
+import {
+  getCurrentWindow,
+  type CloseRequestedEvent,
+  type Theme,
+} from "@tauri-apps/api/window";
 
 const enTauri = isTauri();
 
@@ -49,6 +53,17 @@ export const windowApi = {
       await getCurrentWindow().setTheme(theme);
     } catch (e) {
       throw new Error(`windowApi.setTheme: ${e}`);
+    }
+  },
+
+  onCloseRequested: async (
+    handler: (event: CloseRequestedEvent) => void | Promise<void>,
+  ): Promise<UnlistenFn> => {
+    if (!enTauri) return () => {};
+    try {
+      return await getCurrentWindow().onCloseRequested(handler);
+    } catch (e) {
+      throw new Error(`windowApi.onCloseRequested: ${e}`);
     }
   },
 
