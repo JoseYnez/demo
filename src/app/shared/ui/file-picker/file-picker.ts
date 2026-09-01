@@ -18,7 +18,7 @@ import { FormValueControl, ValidationError } from "@angular/forms/signals";
 import { FieldShell } from "../field-shell/field-shell";
 
 export type FileSource = "drop" | "browse" | "paste";
-export type RejectionReason = "type" | "size" | "count" | "duplicate";
+export type RejectionReason = "type" | "size" | "count" | "duplicate" | "folder";
 
 export interface RejectedFile {
   readonly file: File;
@@ -67,6 +67,8 @@ export class FilePicker implements FormValueControl<readonly File[]> {
 
   protected readonly multiple = computed(() => this.maxFiles() !== 1);
 
+  private readonly reglas = computed(() => reglasDe(this.accept()));
+
   private readonly profundidad = signal(0);
   protected readonly encima = computed(() => this.profundidad() > 0);
 
@@ -76,7 +78,7 @@ export class FilePicker implements FormValueControl<readonly File[]> {
     () => this.admitePegar() && !this.disabled() && (this.enfocado() || this.senalado()),
   );
 
-  private readonly aviso = signal("");
+  protected readonly aviso = signal("");
   private readonly urls = signal<ReadonlyMap<File, string>>(new Map());
 
   protected readonly error = computed(() => {
@@ -110,7 +112,8 @@ export class FilePicker implements FormValueControl<readonly File[]> {
 
   protected readonly limites = computed(() => {
     const partes: string[] = [];
-    if (this.accept()) partes.push(this.accept());
+    const tipos = describirReglas(this.reglas());
+    if (tipos) partes.push(tipos);
     if (this.maxSize() > 0) partes.push(`hasta ${formatearBytes(this.maxSize())}`);
     if (this.maxFiles() > 0) {
       partes.push(this.maxFiles() === 1 ? "1 archivo" : `${this.maxFiles()} archivos`);
@@ -184,7 +187,8 @@ export class FilePicker implements FormValueControl<readonly File[]> {
     this.profundidad.set(0);
     if (this.disabled() || !this.admiteSoltar()) return;
     event.preventDefault();
-    this.agregar(Array.from(event.dataTransfer?.files ?? []));
+    const { archivos, carpetas } = separarCarpetas(event.dataTransfer);
+    this.agregar(archivos, carpetas);
   }
 
   protected onFocus(): void {
@@ -205,6 +209,7 @@ export class FilePicker implements FormValueControl<readonly File[]> {
   }
 
   protected onKeyDown(event: KeyboardEvent): void {
+    if (event.repeat) return;
     if (event.key !== "Enter" && event.key !== " ") return;
     if (this.disabled() || !this.admiteExplorar()) return;
     event.preventDefault();
@@ -225,26 +230,34 @@ export class FilePicker implements FormValueControl<readonly File[]> {
   protected quitar(file: File): void {
     this.aviso.set("");
     this.value.set(this.value().filter((actual) => actual !== file));
+    this.touch.emit();
   }
 
-  private agregar(entrantes: readonly File[]): void {
-    if (entrantes.length === 0) return;
+  private agregar(
+    entrantes: readonly File[],
+    previos: readonly RejectedFile[] = [],
+  ): void {
+    if (entrantes.length === 0 && previos.length === 0) return;
 
     const limite = this.maxFiles();
+    const maximo = this.maxSize();
+    const reglas = this.reglas();
     const base = limite === 1 ? [] : [...this.value()];
+    const vistos = new Set(base.map(claveDe));
     const aceptados: File[] = [];
-    const rechazados: RejectedFile[] = [];
+    const rechazados: RejectedFile[] = [...previos];
 
     for (const file of entrantes) {
-      if (!aceptaTipo(file, this.accept())) {
+      if (!aceptaTipo(file, reglas)) {
         rechazados.push({ file, reason: "type" });
         continue;
       }
-      if (this.maxSize() > 0 && file.size > this.maxSize()) {
+      if (maximo > 0 && file.size > maximo) {
         rechazados.push({ file, reason: "size" });
         continue;
       }
-      if ([...base, ...aceptados].some((actual) => mismoArchivo(actual, file))) {
+      const clave = claveDe(file);
+      if (vistos.has(clave)) {
         rechazados.push({ file, reason: "duplicate" });
         continue;
       }
@@ -252,6 +265,7 @@ export class FilePicker implements FormValueControl<readonly File[]> {
         rechazados.push({ file, reason: "count" });
         continue;
       }
+      vistos.add(clave);
       aceptados.push(file);
     }
 
@@ -282,6 +296,7 @@ function olvidar(candidato: Candidato): void {
 }
 
 function repartirPegado(event: ClipboardEvent): void {
+  if (event.defaultPrevented) return;
   const archivos = Array.from(event.clipboardData?.files ?? []);
   if (archivos.length === 0) return;
 
@@ -303,9 +318,12 @@ function repartirPegado(event: ClipboardEvent): void {
   elegido.recibir(archivos);
 }
 
+const EDITABLES =
+  'input, textarea, select, [contenteditable]:not([contenteditable="false"])';
+
 function escribeEn(nodo: Node | null): boolean {
   const elemento = nodo instanceof Element ? nodo : (nodo?.parentElement ?? null);
-  return elemento?.closest("input, textarea, select, [contenteditable]") != null;
+  return elemento?.closest(EDITABLES) != null;
 }
 
 const MOTIVOS: Record<RejectionReason, string> = {
@@ -313,6 +331,7 @@ const MOTIVOS: Record<RejectionReason, string> = {
   size: "supera el tamaño máximo",
   count: "no cabe, se alcanzó el máximo",
   duplicate: "ya estaba adjunto",
+  folder: "las carpetas no se adjuntan",
 };
 
 function avisoDe(rechazados: readonly RejectedFile[]): string {
@@ -323,14 +342,59 @@ function avisoDe(rechazados: readonly RejectedFile[]): string {
 }
 
 function llevaArchivos(event: DragEvent): boolean {
-  return Array.from(event.dataTransfer?.types ?? []).includes("Files");
+  return event.dataTransfer?.types.includes("Files") ?? false;
 }
 
-function aceptaTipo(file: File, accept: string): boolean {
+function separarCarpetas(datos: DataTransfer | null): {
+  archivos: readonly File[];
+  carpetas: readonly RejectedFile[];
+} {
+  const archivos = Array.from(datos?.files ?? []);
+  const entradas = Array.from(datos?.items ?? []).filter((item) => item.kind === "file");
+  if (entradas.length !== archivos.length) return { archivos, carpetas: [] };
+
+  const sueltos: File[] = [];
+  const carpetas: RejectedFile[] = [];
+  archivos.forEach((file, i) => {
+    if (entradas[i].webkitGetAsEntry?.()?.isDirectory) {
+      carpetas.push({ file, reason: "folder" });
+    } else {
+      sueltos.push(file);
+    }
+  });
+  return { archivos: sueltos, carpetas };
+}
+
+function reglasDe(accept: string): readonly string[] {
   const reglas = accept
     .split(",")
     .map((regla) => regla.trim().toLowerCase())
     .filter(Boolean);
+  return reglas.some(esUniversal) ? [] : reglas;
+}
+
+function esUniversal(regla: string): boolean {
+  return regla === "*" || regla === "*/*";
+}
+
+const FAMILIAS: Record<string, string> = {
+  image: "imágenes",
+  video: "vídeos",
+  audio: "audio",
+  text: "texto",
+};
+
+function describirReglas(reglas: readonly string[]): string {
+  const nombres = reglas.map((regla) => {
+    if (regla.startsWith(".")) return regla.slice(1).toUpperCase();
+    const [familia, subtipo] = regla.split("/");
+    if (subtipo === "*") return FAMILIAS[familia] ?? familia;
+    return (subtipo ?? regla).toUpperCase();
+  });
+  return [...new Set(nombres)].join(", ");
+}
+
+function aceptaTipo(file: File, reglas: readonly string[]): boolean {
   if (reglas.length === 0) return true;
 
   const tipo = file.type.toLowerCase();
@@ -342,8 +406,8 @@ function aceptaTipo(file: File, accept: string): boolean {
   });
 }
 
-function mismoArchivo(a: File, b: File): boolean {
-  return a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
+function claveDe(file: File): string {
+  return `${file.name}|${file.size}|${file.lastModified}`;
 }
 
 function esImagen(file: File): boolean {
@@ -351,15 +415,15 @@ function esImagen(file: File): boolean {
 }
 
 function extensionDe(file: File): string {
-  const punto = file.name.lastIndexOf(".");
-  if (punto < 0) return "?";
-  return file.name.slice(punto + 1, punto + 5).toUpperCase();
+  const extension = file.name.slice(file.name.lastIndexOf(".") + 1);
+  if (extension === "" || extension === file.name) return "?";
+  return extension.slice(0, 4).toUpperCase();
 }
 
 function formatearBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   const kb = bytes / 1024;
-  if (kb < 1024) return `${redondear(kb)} kB`;
+  if (kb < 1024) return `${redondear(kb)} KB`;
   const mb = kb / 1024;
   if (mb < 1024) return `${redondear(mb)} MB`;
   return `${redondear(mb / 1024)} GB`;

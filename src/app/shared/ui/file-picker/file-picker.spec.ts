@@ -45,10 +45,18 @@ describe("FilePicker", () => {
     return new File(["x".repeat(bytes)], nombre, { type: tipo, lastModified: fecha });
   }
 
-  function conArchivos(tipo: string, archivos: readonly File[]): Event {
+  function conArchivos(
+    tipo: string,
+    archivos: readonly File[],
+    carpetas: readonly string[] = [],
+  ): Event {
     const evento = new Event(tipo, { bubbles: true, cancelable: true });
+    const items = archivos.map((file) => ({
+      kind: "file",
+      webkitGetAsEntry: () => ({ isDirectory: carpetas.includes(file.name) }),
+    }));
     Object.defineProperty(evento, "dataTransfer", {
-      value: { files: archivos, types: ["Files"], dropEffect: "none" },
+      value: { files: archivos, items, types: ["Files"], dropEffect: "none" },
     });
     return evento;
   }
@@ -64,8 +72,11 @@ describe("FilePicker", () => {
   const campo = () => raiz().querySelector<HTMLInputElement>(".fp__campo")!;
   const nombres = () => fixture.componentInstance.value().map((file) => file.name);
 
-  async function soltar(archivos: readonly File[]): Promise<void> {
-    zona().dispatchEvent(conArchivos("drop", archivos));
+  async function soltar(
+    archivos: readonly File[],
+    carpetas: readonly string[] = [],
+  ): Promise<void> {
+    zona().dispatchEvent(conArchivos("drop", archivos, carpetas));
     await fixture.whenStable();
   }
 
@@ -263,6 +274,89 @@ describe("FilePicker", () => {
     );
   });
 
+
+  it("acepta todo con el comodín universal, igual que el atributo nativo", async () => {
+    await montar({ accept: "*/*" });
+    await soltar([archivo("notas.txt"), archivo("foto.png", { tipo: "image/png" })]);
+
+    expect(nombres()).toEqual(["notas.txt", "foto.png"]);
+    expect(rechazos).toEqual([]);
+  });
+
+  it("describe el accept en vez de enseñar su sintaxis", async () => {
+    await montar({ accept: "image/*,.pdf" });
+    expect(raiz().querySelector(".fp__pista")?.textContent).toContain("imágenes, PDF");
+  });
+
+  it("no adjunta las carpetas que se sueltan", async () => {
+    await montar();
+    await soltar([archivo("informes"), archivo("uno.txt")], ["informes"]);
+
+    expect(nombres()).toEqual(["uno.txt"]);
+    expect(rechazos.map((r) => [r.file.name, r.reason])).toEqual([
+      ["informes", "folder"],
+    ]);
+  });
+
+  it("anuncia el rechazo en una región viva que ya existía", async () => {
+    await montar({ maxSize: 1 });
+    const anuncio = raiz().querySelector(".fp__anuncio")!;
+    expect(anuncio.getAttribute("role")).toBe("status");
+    expect(anuncio.textContent?.trim()).toBe("");
+
+    await soltar([archivo("grande.txt", { bytes: 11 })]);
+    expect(anuncio.textContent?.trim()).toBe(
+      "1 archivo sin adjuntar: supera el tamaño máximo.",
+    );
+  });
+
+  it("marca la zona como inválida para el lector de pantalla", async () => {
+    await montar({ maxSize: 1 });
+    expect(zona().getAttribute("aria-invalid")).toBe("false");
+
+    await soltar([archivo("grande.txt", { bytes: 11 })]);
+    expect(zona().getAttribute("aria-invalid")).toBe("true");
+  });
+
+  it("da el nombre entero en el title, que la lista lo recorta", async () => {
+    await montar();
+    const largo = `${"nombre-larguísimo-".repeat(5)}.txt`;
+    await soltar([archivo(largo)]);
+
+    expect(raiz().querySelector(".fp__name")?.getAttribute("title")).toBe(largo);
+  });
+
+  it("quitar un archivo marca el campo como tocado", async () => {
+    await montar();
+    await soltar([archivo("uno.txt")]);
+
+    let tocado = 0;
+    fixture.componentInstance.touch.subscribe(() => tocado++);
+    raiz().querySelector<HTMLButtonElement>(".fp__remove")!.click();
+    await fixture.whenStable();
+
+    expect(tocado).toBe(1);
+  });
+
+  it("el autorrepetir del teclado no reabre el explorador", async () => {
+    await montar();
+    const abrir = vi.spyOn(campo(), "click").mockImplementation(() => {});
+
+    zona().dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", repeat: true, bubbles: true }),
+    );
+    await fixture.whenStable();
+
+    expect(abrir).not.toHaveBeenCalled();
+  });
+
+  it("un nombre acabado en punto no deja la insignia vacía", async () => {
+    await montar();
+    await soltar([archivo("archivo.")]);
+
+    expect(raiz().querySelector(".fp__ext")?.textContent?.trim()).toBe("?");
+  });
+
   describe("reparto del pegado entre varios", () => {
     const zonaDe = (f: ComponentFixture<FilePicker>) =>
       (f.nativeElement as HTMLElement).querySelector<HTMLElement>(".fp__zone")!;
@@ -350,6 +444,29 @@ describe("FilePicker", () => {
 
       expect(nombres()).toEqual([]);
       expect(nombresDe(otro)).toEqual([]);
+    });
+
+    it("no le roba el pegado a quien ya lo consumió", async () => {
+      await montar();
+      const evento = pegado([archivo("suelto.txt")]);
+      document.body.addEventListener("paste", (e) => e.preventDefault(), { once: true });
+
+      document.body.dispatchEvent(evento);
+      await fixture.whenStable();
+
+      expect(nombres()).toEqual([]);
+    });
+
+    it("un contenteditable=\"false\" no es un campo de texto", async () => {
+      await montar();
+      const inerte = document.createElement("div");
+      inerte.setAttribute("contenteditable", "false");
+      document.body.appendChild(inerte);
+
+      await pegarEn(inerte);
+      inerte.remove();
+
+      expect(nombres()).toEqual(["suelto.txt"]);
     });
 
     it("un adjuntador destruido deja de competir por el pegado", async () => {
