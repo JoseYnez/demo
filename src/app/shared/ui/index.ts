@@ -7,6 +7,10 @@ export type { ButtonSize, ButtonType, ButtonVariant } from "./button/button";
 export { Card } from "./card/card";
 export type { CardPadding, CardVariant } from "./card/card";
 
+export { CodeEditor } from "./code-editor/code-editor";
+export type { CursorPosition } from "./code-editor/code-editor";
+export type { EditorLanguage, SqlDialect } from "./code-editor/languages";
+
 export { GestureButton } from "./gesture-button/gesture-button";
 export type { Gesture } from "./gesture-button/gesture-button";
 

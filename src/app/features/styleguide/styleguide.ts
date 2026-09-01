@@ -20,6 +20,7 @@ import {
   Badge,
   Button,
   Card,
+  CodeEditor,
   FilePicker,
   GestureButton,
   Input,
@@ -48,6 +49,7 @@ interface Alta {
     Badge,
     Button,
     Card,
+    CodeEditor,
     FilePicker,
     GestureButton,
     Input,
@@ -164,6 +166,23 @@ export class Styleguide {
     "danger",
     "info",
   ];
+
+  protected readonly sqlDemo = signal(
+    [
+      "-- Ventas por cliente (demo)",
+      "SELECT TOP 10",
+      "  c.Nombre,",
+      "  COUNT(*) AS Pedidos,",
+      "  SUM(p.Total) AS Importe",
+      "FROM dbo.Cliente AS c",
+      "  JOIN dbo.Pedido AS p ON p.ClienteId = c.Id",
+      "WHERE p.Fecha >= '2026-01-01'",
+      "  AND p.Total > 100",
+      "GROUP BY c.Nombre",
+      "ORDER BY Importe DESC;",
+      "",
+    ].join("\n"),
+  );
 
   protected readonly gestos = signal<readonly string[]>([]);
 

@@ -506,6 +506,24 @@
     </div>
   </section>
 
+  <section class="sg__section" id="code-editor">
+    <h2 class="sg__title">CodeEditor</h2>
+    <p class="sg__note selectable">
+      <code>&lt;app-code-editor&gt;</code> — language, dialect, disabled,
+      externalState. CodeMirror 6 con el theme del sistema: la sintaxis se pinta
+      con los tokens <code>--code-*</code>, que no rotan con el acento.
+      Ctrl+Espacio abre el autocompletado y Tab lo acepta; Ctrl+F busca,
+      Ctrl+D repite la selección, Escape y luego Tab salen del editor.
+    </p>
+
+    <div class="sg__editor">
+      <app-code-editor [(value)]="sqlDemo" dialect="tsql" />
+    </div>
+    <p class="sg__note">
+      El modelo vive en un signal: {{ sqlDemo().length }} caracteres.
+    </p>
+  </section>
+
   <section class="sg__section" id="atajos">
     <h2 class="sg__title">Atajos de teclado</h2>
     <p class="sg__note selectable">
