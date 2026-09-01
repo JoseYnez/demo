@@ -257,7 +257,7 @@ describe("FilePicker", () => {
     await montar({ maxSize: 1 });
     await soltar([archivo("grande.txt", { bytes: 11 })]);
 
-    expect(raiz().querySelector(".ui-msg--error")?.textContent?.trim()).toBe(
+    expect(raiz().querySelector(".ui-msg--aviso")?.textContent?.trim()).toBe(
       "1 archivo sin adjuntar: supera el tamaño máximo.",
     );
   });
@@ -300,7 +300,7 @@ describe("FilePicker", () => {
 
   it("anuncia el rechazo en una región viva que ya existía", async () => {
     await montar({ maxSize: 1 });
-    const anuncio = raiz().querySelector(".fp__anuncio")!;
+    const anuncio = raiz().querySelector('.sr-only[role="status"]')!;
     expect(anuncio.getAttribute("role")).toBe("status");
     expect(anuncio.textContent?.trim()).toBe("");
 
@@ -310,12 +310,33 @@ describe("FilePicker", () => {
     );
   });
 
-  it("marca la zona como inválida para el lector de pantalla", async () => {
+  it("un rechazo avisa, pero no declara el campo inválido", async () => {
     await montar({ maxSize: 1 });
     expect(zona().getAttribute("aria-invalid")).toBe("false");
 
     await soltar([archivo("grande.txt", { bytes: 11 })]);
+    expect(zona().getAttribute("aria-invalid")).toBe("false");
+    expect(zona().classList.contains("is-aviso")).toBe(true);
+  });
+
+  it("marca la zona como inválida cuando el error viene del formulario", async () => {
+    await montar({ touched: true });
+    fixture.componentRef.setInput("errors", [
+      { kind: "required", message: "Adjunta al menos un archivo." },
+    ]);
+    await fixture.whenStable();
+
     expect(zona().getAttribute("aria-invalid")).toBe("true");
+  });
+
+  it("liga la línea de mensaje al control con aria-describedby", async () => {
+    await montar({ hint: "Obligatorio: al menos uno." });
+
+    const id = zona().getAttribute("aria-describedby");
+    expect(id).toBeTruthy();
+    expect(raiz().querySelector(`#${id}`)?.textContent?.trim()).toBe(
+      "Obligatorio: al menos uno.",
+    );
   });
 
   it("da el nombre entero en el title, que la lista lo recorta", async () => {

@@ -94,8 +94,13 @@
 .ui-msg {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
+  user-select: text;
 }
 
 .ui-msg--error {
   color: var(--color-danger-fg);
+}
+
+.ui-msg--aviso {
+  color: var(--color-warning-fg);
 }

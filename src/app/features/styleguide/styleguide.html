@@ -753,6 +753,12 @@
       <app-input label="Requerido" labelMode="float" [required]="true" [(value)]="floatVacio" />
       <app-input label="Deshabilitado" labelMode="float" value="No editable" [disabled]="true" />
       <app-input
+        label="Sólo lectura"
+        labelMode="float"
+        value="Se puede copiar"
+        [readonly]="true"
+      />
+      <app-input
         label="Con error"
         labelMode="float"
         value="ada@"

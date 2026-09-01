@@ -1,0 +1,12 @@
+/* Sacarlo del flujo con `display: none` o `visibility` lo saca también del árbol de accesibilidad. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

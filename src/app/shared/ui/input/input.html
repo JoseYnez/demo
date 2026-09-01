@@ -5,6 +5,7 @@
   [floated]="floated()"
   [required]="required()"
   [disabled]="disabled()"
+  [readonly]="readonly()"
   [hint]="hint()"
   [error]="error()"
 >
@@ -21,6 +22,7 @@
     [readOnly]="readonly()"
     [required]="required()"
     [attr.aria-invalid]="!!error()"
+    [attr.aria-describedby]="describedBy()"
     [value]="value()"
     (input)="value.set($any($event.target).value)"
     (focus)="focused.set(true)"

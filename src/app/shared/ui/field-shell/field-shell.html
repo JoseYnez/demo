@@ -2,8 +2,10 @@
   class="fs"
   [class.fs--float]="labelMode() === 'float'"
   [class.fs--inset]="labelMode() === 'inset'"
+  [class.fs--multilinea]="multiline()"
   [class.is-floated]="floated()"
   [class.is-invalid]="!!error()"
+  [class.is-readonly]="readonly()"
   [class.is-disabled]="disabled()"
 >
   @if (labelMode() === "top" && label()) {
@@ -44,8 +46,10 @@
   </div>
 
   @if (error()) {
-    <p class="ui-msg ui-msg--error">{{ error() }}</p>
+    <p class="ui-msg ui-msg--error" [id]="idMensaje()">{{ error() }}</p>
+  } @else if (aviso()) {
+    <p class="ui-msg ui-msg--aviso" [id]="idMensaje()">{{ aviso() }}</p>
   } @else if (hint()) {
-    <p class="ui-msg">{{ hint() }}</p>
+    <p class="ui-msg" [id]="idMensaje()">{{ hint() }}</p>
   }
 </div>

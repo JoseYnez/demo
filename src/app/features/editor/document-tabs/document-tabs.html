@@ -1,20 +1,16 @@
-<div class="tabs" role="tablist" aria-label="Documentos abiertos">
+<div class="tabs" role="group" aria-label="Documentos abiertos">
   @for (doc of documentos(); track doc.id) {
-    <div
-      class="tabs__pestana"
-      role="presentation"
-      [class.is-activa]="doc.id === activoId()"
-    >
+    <div class="tabs__pestana" [class.is-activa]="doc.id === activoId()">
       <button
         class="tabs__nombre"
         type="button"
-        role="tab"
-        [attr.aria-selected]="doc.id === activoId()"
+        [attr.aria-current]="doc.id === activoId() ? 'true' : null"
         (click)="seleccionar.emit(doc.id)"
       >
         {{ doc.nombre }}
         @if (doc.sucio) {
-          <span class="tabs__sucio" aria-label="Con cambios sin guardar"></span>
+          <span class="tabs__sucio" aria-hidden="true"></span>
+          <span class="sr-only">con cambios sin guardar</span>
         }
       </button>
       <button

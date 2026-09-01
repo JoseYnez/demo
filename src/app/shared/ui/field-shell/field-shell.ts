@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component, input } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, input } from "@angular/core";
 
 export type LabelMode = "top" | "float" | "inset";
+
+export function idDelMensaje(controlId: string): string {
+  return `${controlId}-msg`;
+}
 
 @Component({
   selector: "app-field-shell",
@@ -15,6 +19,11 @@ export class FieldShell {
   readonly floated = input(false);
   readonly required = input(false);
   readonly disabled = input(false);
+  readonly readonly = input(false);
+  readonly multiline = input(false);
   readonly hint = input("");
   readonly error = input<string | undefined>(undefined);
+  readonly aviso = input("");
+
+  protected readonly idMensaje = computed(() => idDelMensaje(this.controlId()));
 }

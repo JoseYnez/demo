@@ -52,6 +52,10 @@
   color: var(--text-primary);
 }
 
+.fp__zone.is-aviso {
+  border-color: var(--color-warning-fg);
+}
+
 .fp__zone.is-invalid {
   border-color: var(--color-danger-solid);
 }
@@ -98,16 +102,6 @@
   pointer-events: none;
 }
 
-.fp__anuncio {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 .fp__list {
   display: flex;
   flex-direction: column;
@@ -151,6 +145,7 @@
 .fp__name {
   flex: 1;
   min-width: 0;
+  user-select: text;
   overflow: hidden;
   color: var(--text-primary);
   font-size: var(--font-size-base);

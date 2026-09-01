@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
-import { FieldShell, LabelMode } from "../field-shell/field-shell";
+import { FieldShell, idDelMensaje, LabelMode } from "../field-shell/field-shell";
 
 let nextId = 0;
 
@@ -44,11 +44,17 @@ export class Textarea implements FormValueControl<string> {
   protected readonly floated = computed(() => this.focused() || this.value() !== "");
 
   protected readonly visiblePlaceholder = computed(() =>
-    this.labelMode() === "float" && !this.floated() ? "" : this.placeholder(),
+    this.labelMode() === "float" && this.label() !== "" && !this.floated()
+      ? ""
+      : this.placeholder(),
   );
 
   protected readonly error = computed(() =>
     this.touched() ? this.errors()[0]?.message : undefined,
+  );
+
+  protected readonly describedBy = computed(() =>
+    this.error() || this.hint() ? idDelMensaje(this.id) : null,
   );
 
   protected onBlur(): void {

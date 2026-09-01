@@ -14,7 +14,7 @@ export type { EditorLanguage, SqlDialect } from "./code-editor/languages";
 export { GestureButton } from "./gesture-button/gesture-button";
 export type { Gesture } from "./gesture-button/gesture-button";
 
-export { FieldShell } from "./field-shell/field-shell";
+export { FieldShell, idDelMensaje } from "./field-shell/field-shell";
 export type { LabelMode } from "./field-shell/field-shell";
 
 export { FilePicker } from "./file-picker/file-picker";

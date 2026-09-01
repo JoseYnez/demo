@@ -5,6 +5,7 @@
   [disabled]="disabled()"
   [hint]="hint()"
   [error]="error()"
+  [aviso]="aviso()"
 >
   <div class="fp">
     <div
@@ -12,12 +13,14 @@
       [class.is-over]="encima()"
       [class.is-armado]="armado()"
       [class.is-pulsable]="admiteExplorar() && !disabled()"
+      [class.is-aviso]="!!aviso()"
       [class.is-invalid]="!!error()"
       [class.is-disabled]="disabled()"
       [attr.role]="admiteExplorar() ? 'button' : 'group'"
       [attr.tabindex]="disabled() ? null : 0"
       [attr.aria-label]="etiquetaAccesible()"
       [attr.aria-invalid]="!!error()"
+      [attr.aria-describedby]="describedBy()"
       [attr.aria-disabled]="disabled() ? true : null"
       (click)="abrir()"
       (keydown)="onKeyDown($event)"
@@ -113,6 +116,6 @@
       </ul>
     }
 
-    <p class="fp__anuncio" role="status">{{ aviso() }}</p>
+    <p class="sr-only" role="status">{{ aviso() }}</p>
   </div>
 </app-field-shell>

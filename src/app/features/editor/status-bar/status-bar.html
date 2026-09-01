@@ -5,8 +5,9 @@
   >{{ documento()?.ruta ?? "sin guardar" }}</span>
 
   @if (mensaje()) {
-    <span class="status__mensaje" role="status">{{ mensaje() }}</span>
+    <span class="status__mensaje">{{ mensaje() }}</span>
   }
+  <span class="sr-only" role="status">{{ mensaje() }}</span>
 
   <span class="status__celda">Ln {{ cursor().line }}, Col {{ cursor().column }}</span>
 

@@ -8,7 +8,7 @@ import {
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
-import { FieldShell, LabelMode } from "../field-shell/field-shell";
+import { FieldShell, idDelMensaje, LabelMode } from "../field-shell/field-shell";
 
 export interface SelectOption {
   readonly value: string;
@@ -48,5 +48,9 @@ export class Select implements FormValueControl<string> {
 
   protected readonly error = computed(() =>
     this.touched() ? this.errors()[0]?.message : undefined,
+  );
+
+  protected readonly describedBy = computed(() =>
+    this.error() || this.hint() ? idDelMensaje(this.id) : null,
   );
 }

@@ -19,6 +19,7 @@
       [disabled]="disabled()"
       [required]="required()"
       [attr.aria-invalid]="!!error()"
+      [attr.aria-describedby]="describedBy()"
       [value]="value()"
       (change)="value.set($any($event.target).value)"
       (blur)="touch.emit()"

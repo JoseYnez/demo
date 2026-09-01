@@ -15,7 +15,7 @@ import {
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
-import { FieldShell } from "../field-shell/field-shell";
+import { FieldShell, idDelMensaje } from "../field-shell/field-shell";
 
 export type FileSource = "drop" | "browse" | "paste";
 export type RejectionReason = "type" | "size" | "count" | "duplicate" | "folder";
@@ -81,10 +81,13 @@ export class FilePicker implements FormValueControl<readonly File[]> {
   protected readonly aviso = signal("");
   private readonly urls = signal<ReadonlyMap<File, string>>(new Map());
 
-  protected readonly error = computed(() => {
-    const formulario = this.touched() ? this.errors()[0]?.message : undefined;
-    return formulario ?? (this.aviso() || undefined);
-  });
+  protected readonly error = computed(() =>
+    this.touched() ? this.errors()[0]?.message : undefined,
+  );
+
+  protected readonly describedBy = computed(() =>
+    this.error() || this.aviso() || this.hint() ? idDelMensaje(this.id) : null,
+  );
 
   protected readonly adjuntos = computed(() =>
     this.value().map((file) => ({

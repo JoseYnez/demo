@@ -1,5 +1,6 @@
 @import "./styles/fonts.css";
 @import "./styles/tokens.css";
 @import "./styles/reset.css";
+@import "./styles/a11y.css";
 @import "./styles/forms.css";
 @import "./styles/buttons.css";

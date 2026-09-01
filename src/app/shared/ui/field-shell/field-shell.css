@@ -72,6 +72,12 @@
     color var(--transition-fast);
 }
 
+.fs--float.fs--multilinea:not(.is-floated) .fs__label {
+  top: calc(var(--space-3) + 1px);
+  transform: none;
+  line-height: var(--line-height-normal);
+}
+
 .fs--float.is-floated .fs__label {
   top: 0;
   left: calc(var(--space-2) + 1px);
@@ -79,6 +85,11 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
+}
+
+.fs--float.is-readonly .fs__outline {
+  border-color: var(--border-default);
+  border-style: dashed;
 }
 
 .fs--float:focus-within .fs__outline {
