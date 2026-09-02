@@ -176,4 +176,32 @@ describe("KeyboardService", () => {
     pulsar({ key: "x" });
     expect(fixture.componentInstance.veces).toBe(1);
   });
+
+  it("la baja que devuelve register retira el atajo sin esperar al DestroyRef", () => {
+    let veces = 0;
+    const soltar = teclado.register({ key: "k" }, () => veces++, destroyRef);
+
+    pulsar({ key: "k" });
+    soltar();
+    pulsar({ key: "k" });
+
+    expect(veces).toBe(1);
+    expect(teclado.list()).toHaveLength(0);
+  });
+
+  it("al soltar el registro de encima, el control vuelve al anterior", () => {
+    const disparos: string[] = [];
+    teclado.register({ key: "k" }, () => disparos.push("base"), destroyRef);
+    const soltar = teclado.register(
+      { key: "k" },
+      () => disparos.push("encima"),
+      destroyRef,
+    );
+
+    pulsar({ key: "k" });
+    soltar();
+    pulsar({ key: "k" });
+
+    expect(disparos).toEqual(["encima", "base"]);
+  });
 });

@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   signal,
 } from "@angular/core";
@@ -38,6 +39,13 @@ export class App {
 
   protected readonly enTauri = windowApi.enTauri;
   protected readonly maximizada = signal(false);
+  protected readonly pantallaCompleta = this.pantalla.active;
+  protected readonly etiquetaDeExpansion = computed(() => {
+    if (this.pantallaCompleta()) {
+      return "Salir de pantalla completa";
+    }
+    return this.maximizada() ? "Restaurar" : "Maximizar";
+  });
 
   protected readonly pendientes = this.notificaciones.unread;
   protected readonly contador = computed(() => {
@@ -68,6 +76,7 @@ export class App {
       { key: "F11", description: "Pantalla completa" },
       () => this.pantalla.toggle(),
     );
+    this.ofrecerEscapeEnPantallaCompleta();
   }
 
   protected abrirNotificaciones(): void {
@@ -78,7 +87,11 @@ export class App {
     void windowApi.minimize();
   }
 
-  protected alternarMaximizado(): void {
+  protected alternarExpansion(): void {
+    if (this.pantallaCompleta()) {
+      this.pantalla.set(false);
+      return;
+    }
     void windowApi.toggleMaximize();
   }
 
@@ -87,9 +100,6 @@ export class App {
   }
 
   private seguirEstadoDeLaVentana(): void {
-    if (!this.enTauri) {
-      return;
-    }
     const sincronizar = async () => {
       this.maximizada.set(await windowApi.isMaximized());
       await this.pantalla.sync();
@@ -97,8 +107,23 @@ export class App {
 
     void sincronizar();
 
-    const desuscribir = windowApi.onResized(() => void sincronizar());
+    const desuscribir = windowApi.onWindowChanged(() => void sincronizar());
     this.destroyRef.onDestroy(() => void desuscribir.then((f) => f()));
+  }
+
+  private ofrecerEscapeEnPantallaCompleta(): void {
+    let soltar: (() => void) | undefined;
+
+    effect(() => {
+      soltar?.();
+      soltar = this.pantallaCompleta()
+        ? this.teclado.register(
+            { key: "Escape", description: "Salir de pantalla completa" },
+            () => this.pantalla.set(false),
+            this.destroyRef,
+          )
+        : undefined;
+    });
   }
 
   private bloquearNavegacionAlSoltarArchivos(): void {

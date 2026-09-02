@@ -23,7 +23,11 @@ export class FullscreenService {
     if (this.#enTransicion) {
       return;
     }
-    this.#active.set(await windowApi.isFullscreen());
+    const real = await windowApi.isFullscreen();
+    if (this.#enTransicion) {
+      return;
+    }
+    this.#active.set(real);
   }
 
   private async aplicar(active: boolean): Promise<void> {

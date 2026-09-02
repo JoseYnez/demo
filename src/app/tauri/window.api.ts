@@ -61,8 +61,15 @@ export const windowApi = {
     }
   },
   setFullscreen: async (fullscreen: boolean): Promise<void> => {
-    if (!enTauri) return;
     try {
+      if (!enTauri) {
+        if (fullscreen) {
+          await document.documentElement.requestFullscreen?.();
+        } else if (document.fullscreenElement) {
+          await document.exitFullscreen?.();
+        }
+        return;
+      }
       await getCurrentWindow().setFullscreen(fullscreen);
     } catch (e) {
       throw new Error(`windowApi.setFullscreen: ${e}`);
@@ -70,8 +77,10 @@ export const windowApi = {
   },
 
   isFullscreen: async (): Promise<boolean> => {
-    if (!enTauri) return false;
     try {
+      if (!enTauri) {
+        return !!document.fullscreenElement;
+      }
       return await getCurrentWindow().isFullscreen();
     } catch (e) {
       throw new Error(`windowApi.isFullscreen: ${e}`);
@@ -86,12 +95,16 @@ export const windowApi = {
     }
   },
 
-  onResized: async (handler: () => void): Promise<UnlistenFn> => {
-    if (!enTauri) return () => {};
+  onWindowChanged: async (handler: () => void): Promise<UnlistenFn> => {
+    if (!enTauri) {
+      const escuchar = () => handler();
+      document.addEventListener("fullscreenchange", escuchar);
+      return () => document.removeEventListener("fullscreenchange", escuchar);
+    }
     try {
       return await getCurrentWindow().onResized(() => handler());
     } catch (e) {
-      throw new Error(`windowApi.onResized: ${e}`);
+      throw new Error(`windowApi.onWindowChanged: ${e}`);
     }
   },
 };

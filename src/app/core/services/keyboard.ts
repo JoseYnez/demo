@@ -33,15 +33,22 @@ export class KeyboardService {
     shortcut: Shortcut,
     run: () => void,
     destroyRef = inject(DestroyRef),
-  ): void {
+  ): () => void {
     const binding: Binding = { ...shortcut, run };
     this.bindings.push(binding);
-    destroyRef.onDestroy(() => {
+
+    const soltar = () => {
       const indice = this.bindings.indexOf(binding);
       if (indice !== -1) {
         this.bindings.splice(indice, 1);
       }
-    });
+    };
+    const olvidarLaBaja = destroyRef.onDestroy(soltar);
+
+    return () => {
+      olvidarLaBaja();
+      soltar();
+    };
   }
 
   list(): readonly RegisteredShortcut[] {

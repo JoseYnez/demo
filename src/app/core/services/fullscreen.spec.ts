@@ -89,4 +89,21 @@ describe("FullscreenService", () => {
 
     expect(pantalla.active()).toBe(true);
   });
+
+  it("descarta un sync que ya estaba en vuelo cuando arranca la transición", async () => {
+    espiar(false);
+    let contestar!: (real: boolean) => void;
+    vi.spyOn(windowApi, "isFullscreen").mockReturnValue(
+      new Promise<boolean>((r) => {
+        contestar = r;
+      }),
+    );
+
+    const enVuelo = pantalla.sync();
+    pantalla.toggle();
+    contestar(false);
+    await enVuelo;
+
+    expect(pantalla.active()).toBe(true);
+  });
 });

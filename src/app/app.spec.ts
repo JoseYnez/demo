@@ -5,9 +5,26 @@ import { App } from "./app";
 import { routes } from "./app.routes";
 import { APP_VERSION, GIT_COMMIT } from "./core/build-info";
 import { FullscreenService } from "./core/services/fullscreen";
+import { KeyboardService } from "./core/services/keyboard";
 import { NotificationsService } from "./core/services/notifications";
+import { windowApi } from "./tauri";
 
 describe("App", () => {
+  const enLaVentana = () => {
+    Object.defineProperty(windowApi, "enTauri", {
+      value: true,
+      configurable: true,
+    });
+    return TestBed.createComponent(App);
+  };
+
+  afterEach(() => {
+    Object.defineProperty(windowApi, "enTauri", {
+      value: false,
+      configurable: true,
+    });
+  });
+
   beforeEach(async () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
@@ -116,5 +133,60 @@ describe("App", () => {
     await fixture.whenStable();
 
     expect(pantalla.active()).toBe(true);
+  });
+
+  it("sólo ofrece Esc mientras la pantalla completa está activa", async () => {
+    const teclado = TestBed.inject(KeyboardService);
+    const pantalla = TestBed.inject(FullscreenService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    const ofreceEscape = () =>
+      teclado.list().some((atajo) => atajo.key === "Escape");
+
+    expect(ofreceEscape()).toBe(false);
+
+    pantalla.set(true);
+    await fixture.whenStable();
+    expect(ofreceEscape()).toBe(true);
+
+    pantalla.set(false);
+    await fixture.whenStable();
+    expect(ofreceEscape()).toBe(false);
+  });
+
+  it("Esc sale de pantalla completa", async () => {
+    const pantalla = TestBed.inject(FullscreenService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    pantalla.set(true);
+    await fixture.whenStable();
+
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    await fixture.whenStable();
+
+    expect(pantalla.active()).toBe(false);
+  });
+
+  it("el botón de tamaño pasa a salir de pantalla completa", async () => {
+    const pantalla = TestBed.inject(FullscreenService);
+    const fixture = enLaVentana();
+    await fixture.whenStable();
+
+    const boton = () =>
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
+        ".shell__control",
+      )[1];
+
+    expect(boton().getAttribute("aria-label")).toBe("Maximizar");
+
+    pantalla.set(true);
+    await fixture.whenStable();
+    expect(boton().getAttribute("aria-label")).toBe("Salir de pantalla completa");
+
+    boton().click();
+    await fixture.whenStable();
+    expect(pantalla.active()).toBe(false);
   });
 });
