@@ -5,17 +5,20 @@
   [floated]="floated()"
   [required]="required()"
   [disabled]="disabled()"
-  [hint]="hint()"
+  [hint]="help()"
   [error]="error()"
 >
   <input
+    #control
     class="ui-control"
     [class.is-floating]="labelMode() === 'float'"
     [class.is-inset]="labelMode() === 'inset'"
     [class.is-invalid]="!!error()"
+    [class.has-reveal]="showReveal()"
     [id]="id"
-    [type]="type()"
+    [type]="effectiveType()"
     [attr.name]="name() || null"
+    [attr.autocomplete]="autocomplete() || null"
     [placeholder]="visiblePlaceholder()"
     [disabled]="disabled()"
     [readOnly]="readonly()"
@@ -23,7 +26,46 @@
     [attr.aria-invalid]="!!error()"
     [value]="value()"
     (input)="value.set($any($event.target).value)"
+    (keydown)="onKey($event)"
+    (keyup)="onKey($event)"
     (focus)="focused.set(true)"
     (blur)="onBlur()"
   />
+
+  @if (showReveal()) {
+    <button
+      class="reveal"
+      type="button"
+      [attr.aria-label]="revealed() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+      [attr.aria-pressed]="revealed()"
+      [disabled]="disabled()"
+      (mousedown)="$event.preventDefault()"
+      (click)="toggleReveal()"
+    >
+      @if (revealed()) {
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path
+            d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linejoin="round"
+          />
+          <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6" />
+          <path d="M4 20 20 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      } @else {
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path
+            d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linejoin="round"
+          />
+          <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6" />
+        </svg>
+      }
+    </button>
+  }
 </app-field-shell>

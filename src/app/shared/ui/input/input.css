@@ -13,3 +13,39 @@
 .ui-control.is-inset {
   height: 52px;
 }
+
+.ui-control.has-reveal {
+  padding-right: calc(var(--space-3) + 28px);
+}
+
+.reveal {
+  position: absolute;
+  top: 50%;
+  right: var(--space-1);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  transform: translateY(-50%);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.reveal:hover:not(:disabled) {
+  background-color: var(--overlay-hover);
+  color: var(--text-primary);
+}
+
+.reveal:active:not(:disabled) {
+  background-color: var(--overlay-active);
+}
+
+.reveal:disabled {
+  color: var(--text-muted);
+  opacity: 0.5;
+}

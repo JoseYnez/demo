@@ -609,6 +609,38 @@
       <app-input label="Requerido" placeholder="Obligatorio" [required]="true" />
     </div>
 
+    <h3 class="sg__subtitle">Contraseña</h3>
+    <div class="sg__grid">
+      <app-input
+        label="Sin ojo"
+        type="password"
+        value="hunter42"
+        hint="type=&quot;password&quot; a secas."
+      />
+      <app-input
+        label="Con ojo"
+        type="password"
+        value="hunter42"
+        [revealable]="true"
+        hint="revealable: pulsa el ojo o escribe con Bloq Mayús."
+      />
+      <app-input
+        label="Flotante con ojo"
+        labelMode="float"
+        type="password"
+        [revealable]="true"
+        autocomplete="current-password"
+      />
+    </div>
+    <p class="sg__note selectable">
+      <code>revealable</code> añade el botón de mostrar/ocultar sólo en un
+      <code>type="password"</code>. Pulsarlo no roba el foco al campo, y todo
+      campo de contraseña avisa de Bloq Mayús mientras se escribe —el aviso
+      ocupa la línea del <code>hint</code>, y el error del formulario le gana—.
+      <code>autocomplete</code> se pasa tal cual al nativo, que es lo que
+      necesita el gestor de contraseñas para rellenar el login.
+    </p>
+
     <pre class="sg__output selectable">{{ sueltoTexto() }} | {{ sueltoArea() }} | {{ sueltoNotas() }}</pre>
   </section>
 
