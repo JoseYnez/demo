@@ -4,6 +4,64 @@ use crate::clock::unix_millis;
 use crate::error::{AppError, AppResult};
 use crate::models::{Contact, ContactDraft, ContactInput};
 
+const SEMILLA: [(&str, &str, &str, &str); 20] = [
+    (
+        "Ada Lovelace",
+        "ada@example.com",
+        "admin",
+        "Cuenta de prueba.",
+    ),
+    ("Grace Hopper", "grace@example.com", "editor", ""),
+    ("Alan Turing", "alan@example.com", "viewer", ""),
+    (
+        "Margaret Hamilton",
+        "margaret@example.com",
+        "admin",
+        "Responsable del software de vuelo.",
+    ),
+    ("Katherine Johnson", "katherine@example.com", "editor", ""),
+    (
+        "Barbara Liskov",
+        "barbara@example.com",
+        "admin",
+        "Revisa los cambios de arquitectura.",
+    ),
+    ("Donald Knuth", "donald@example.com", "viewer", ""),
+    (
+        "Edsger Dijkstra",
+        "edsger@example.com",
+        "viewer",
+        "Sólo consulta; no edita nada.",
+    ),
+    ("Linus Torvalds", "linus@example.com", "editor", ""),
+    ("Radia Perlman", "radia@example.com", "admin", ""),
+    (
+        "Tim Berners-Lee",
+        "tim@example.com",
+        "editor",
+        "Contacto para todo lo que toque la red.",
+    ),
+    ("Ken Thompson", "ken@example.com", "viewer", ""),
+    ("Dennis Ritchie", "dennis@example.com", "editor", ""),
+    ("Frances Allen", "frances@example.com", "admin", ""),
+    (
+        "Shafi Goldwasser",
+        "shafi@example.com",
+        "editor",
+        "Criptografía y revisión de seguridad.",
+    ),
+    ("Leslie Lamport", "leslie@example.com", "viewer", ""),
+    ("Anita Borg", "anita@example.com", "admin", ""),
+    ("Jean Bartik", "jean@example.com", "editor", ""),
+    (
+        "Hedy Lamarr",
+        "hedy@example.com",
+        "viewer",
+        "Alta antigua, pendiente de revisar.",
+    ),
+    ("Vint Cerf", "vint@example.com", "editor", ""),
+];
+
 #[derive(Default)]
 struct Store {
     contacts: Vec<Contact>,
@@ -21,15 +79,11 @@ impl ContactService {
     }
 
     pub fn seeded() -> AppResult<Self> {
-        Self::new()
-            .with_contact(
-                "Ada Lovelace",
-                "ada@example.com",
-                "admin",
-                "Cuenta de prueba.",
-            )?
-            .with_contact("Grace Hopper", "grace@example.com", "editor", "")?
-            .with_contact("Alan Turing", "alan@example.com", "viewer", "")
+        SEMILLA
+            .iter()
+            .try_fold(Self::new(), |servicio, &(name, email, role, notes)| {
+                servicio.with_contact(name, email, role, notes)
+            })
     }
 
     pub fn with_contact(self, name: &str, email: &str, role: &str, notes: &str) -> AppResult<Self> {
@@ -247,9 +301,15 @@ mod tests {
     }
 
     #[test]
-    fn la_lista_de_ejemplo_arranca_con_tres_contactos() {
+    fn la_lista_de_ejemplo_arranca_sembrada_y_ordenada() {
         let lista = ContactService::seeded().unwrap().list().unwrap();
-        assert_eq!(lista.len(), 3);
+        assert_eq!(lista.len(), SEMILLA.len());
         assert_eq!(lista[0].name, "Ada Lovelace");
+
+        let mut correos: Vec<&str> = lista.iter().map(|c| c.email.as_str()).collect();
+        correos.sort_unstable();
+        let antes = correos.len();
+        correos.dedup();
+        assert_eq!(correos.len(), antes, "hay correos repetidos en la semilla");
     }
 }
