@@ -16,6 +16,7 @@ import {
   KeyboardService,
   type RegisteredShortcut,
 } from "../../core/services/keyboard";
+import { NotificationsService } from "../../core/services/notifications";
 import {
   Badge,
   Button,
@@ -65,6 +66,9 @@ export class Styleguide {
   protected readonly presets = ACCENT_PRESETS;
 
   private readonly teclado = inject(KeyboardService);
+  private readonly notificaciones = inject(NotificationsService);
+
+  protected readonly pendientes = this.notificaciones.unread;
 
   protected readonly atajos = signal<readonly RegisteredShortcut[]>([]);
   protected readonly ultimoAtajo = signal("—");
@@ -91,6 +95,16 @@ export class Styleguide {
     );
 
     this.atajos.set(this.teclado.list());
+  }
+
+  protected avisar(cuantas: number): void {
+    for (let i = 0; i < cuantas; i++) {
+      this.notificaciones.push({ title: "Aviso de prueba" });
+    }
+  }
+
+  protected vaciarAvisos(): void {
+    this.notificaciones.clear();
   }
 
   protected combo(atajo: RegisteredShortcut): string {

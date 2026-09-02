@@ -7,7 +7,7 @@
 .shell__bar {
   display: flex;
   align-items: center;
-  gap: var(--space-6);
+  gap: var(--space-2);
   flex-shrink: 0;
   height: 44px;
   padding: 0 var(--space-4);
@@ -15,21 +15,10 @@
   border-bottom: 1px solid var(--border-default);
 }
 
-.shell__identity {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
 .shell__logo {
   display: block;
-}
-
-.shell__build {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
+  flex-shrink: 0;
+  margin-right: var(--space-2);
 }
 
 .shell__nav {
@@ -60,7 +49,13 @@
   color: var(--accent-fg);
 }
 
-.shell__theme {
+.shell__actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.shell__action {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,14 +68,40 @@
     color var(--transition-fast);
 }
 
-.shell__theme:hover {
+.shell__action:hover {
   background-color: var(--overlay-hover);
   color: var(--text-primary);
+}
+
+.shell__action:active {
+  background-color: var(--overlay-active);
+}
+
+.shell__badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-full);
+  background-color: var(--color-danger-solid);
+  box-shadow: 0 0 0 2px var(--bg-surface);
+  color: var(--color-danger-on-solid);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .shell__controls {
   display: flex;
   align-self: stretch;
+  margin-left: var(--space-3);
   margin-right: calc(var(--space-4) * -1);
 }
 

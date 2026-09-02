@@ -542,6 +542,38 @@
     </app-card>
   </section>
 
+  <section class="sg__section" id="notificaciones">
+    <h2 class="sg__title">Notificaciones de la barra</h2>
+    <p class="sg__note selectable">
+      <code>NotificationsService</code> es la única fuente del contador rojo de
+      la campana, arriba a la derecha. El conteo se recorta en
+      <strong>9+</strong> para que la píldora no crezca y descuadre la barra, y
+      pulsar la campana marca todo como leído sin borrar nada. Todavía no hay
+      panel: llega cuando haya una lista que enseñar.
+    </p>
+
+    <app-card variant="outlined">
+      <div card-header>
+        <span>Banco de pruebas</span>
+        <app-badge variant="neutral" size="sm">
+          {{ pendientes() }} sin leer
+        </app-badge>
+      </div>
+
+      <div class="sg__inline">
+        <app-button variant="secondary" size="sm" (click)="avisar(1)">
+          Añadir una
+        </app-button>
+        <app-button variant="secondary" size="sm" (click)="avisar(10)">
+          Añadir diez
+        </app-button>
+        <app-button variant="ghost" size="sm" (click)="vaciarAvisos()">
+          Vaciar
+        </app-button>
+      </div>
+    </app-card>
+  </section>
+
   <section class="sg__section">
     <h2 class="sg__title">Controles sueltos</h2>
     <p class="sg__note selectable">

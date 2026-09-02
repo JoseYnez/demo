@@ -10,6 +10,7 @@
     "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Code", Consolas,
     "Liberation Mono", monospace;
 
+  --font-size-2xs: 0.625rem;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.8125rem;
   --font-size-base: 0.875rem;

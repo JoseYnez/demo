@@ -123,7 +123,9 @@ Lo que se sigue de tenerlo en `false`:
 
 ### 3.6 Identidad del build: versión y commit
 
-La barra superior muestra `v<versión> · <commit corto>`, con el hash completo en el `title`. Es lo que hace respondible «¿qué build traes?» sin pedir capturas ni adivinar.
+El **`title` del icono de la barra** dice `demo v<versión> · <commit completo>`. Es lo que hace respondible «¿qué build traes?» sin pedir capturas ni adivinar.
+
+**Ya no ocupa píxeles.** Estuvo escrito al lado del icono, y era lo único de la barra que crecía con la longitud del hash sin comunicar nada al 99% de las sesiones. El tooltip lo conserva entero —el hash completo, no el corto— a cambio de un hover: la información sigue siendo recuperable sin capturas, que es la única exigencia real de esta sección.
 
 Los tres valores los genera [scripts/generate-build-info.mjs](scripts/generate-build-info.mjs) en `src/app/core/build-info.ts`: la versión sale de `package.json` y el commit de `git rev-parse`. El navegador no puede ejecutar git en runtime, así que el hash se inyecta en build-time como constantes que el bundler mete en el bundle.
 
@@ -135,16 +137,19 @@ Los tres valores los genera [scripts/generate-build-info.mjs](scripts/generate-b
 
 ### 3.7 Barra de título propia
 
-`app.windows[0].decorations` vale **`false`**: la barra de la app *es* la barra de la ventana. Icono y versión a la izquierda, navegación, tema y los tres botones de ventana a la derecha, todo en 44 px. Dos barras apiladas —una nativa que no se puede tematizar y otra nuestra justo debajo— era el precio de no tomar esta decisión.
+`app.windows[0].decorations` vale **`false`**: la barra de la app *es* la barra de la ventana. Icono de 18 px y navegación a la izquierda; a la derecha tema, notificaciones y los tres botones de ventana, todo en 44 px. Dos barras apiladas —una nativa que no se puede tematizar y otra nuestra justo debajo— era el precio de no tomar esta decisión.
 
 Lo que hay que saber para no romperlo:
 
-- **La zona de arrastre es `data-tauri-drag-region="deep"` en la barra**, no en cada hueco. El script de Tauri camina el `composedPath` hacia arriba y **corta en el primer elemento clicable** (`BUTTON`, `A`, `INPUT`, `[tabindex]`, roles interactivos), así que los enlaces y los botones siguen recibiendo su click sin declarar nada. El único opt-out explícito es `data-tauri-drag-region="false"` en la versión: sin él, `mousedown` hace `preventDefault()` y el texto deja de poderse seleccionar y copiar, que es justo para lo que está ahí.
+- **La zona de arrastre es `data-tauri-drag-region="deep"` en la barra**, no en cada hueco. El script de Tauri camina el `composedPath` hacia arriba y **corta en el primer elemento clicable** (`BUTTON`, `A`, `INPUT`, `[tabindex]`, roles interactivos), así que los enlaces y los botones siguen recibiendo su click sin declarar nada. Hoy **no hay ningún opt-out** (`data-tauri-drag-region="false"`) porque no queda texto seleccionable en la barra; si algún día vuelve alguno, lo necesita: sin él, `mousedown` hace `preventDefault()` y el texto deja de poderse seleccionar y copiar.
 - **El doble clic para maximizar sale gratis** (`internal_toggle_maximize` sí viene en `core:window:default`). Arrastrar no: `start_dragging` hay que concederlo (§10).
 - **En Windows la ventana sigue siendo redimensionable y conserva sombra y snap.** Tauri le engancha su propio handler de resize y `undecorated_shadow`, y el marco se queda: el área no-cliente arriba mide 0 px, pero `WS_THICKFRAME` sigue puesto. No hace falta reimplementar los bordes.
 - **Los botones sólo se dibujan dentro de Tauri.** `windowApi.enTauri` los gatea; en `pnpm start` y en los tests el navegador ya trae su propio marco y unos botones falsos ahí serían mentira. Por eso los métodos del wrapper son no-op fuera de Tauri en vez de reventar.
 - **El hover del botón de cerrar usa `--color-danger-solid` / `--color-danger-on-solid`**, no un rojo literal. Es la convención de Windows y el único relleno pleno del sistema (§11.2); su `:active` baja a `--color-danger-solid-hover`, que oscurece en los dos temas.
 - **Los controles se salen del padding de la barra con un margen negativo**, porque en Windows van pegados al borde. El resto de la barra conserva su `--space-4`.
+- **El contador de notificaciones es una píldora `--color-danger-solid` / `--color-danger-on-solid`**, la misma pareja que el hover de cerrar, y por lo mismo: es el único relleno pleno del sistema (§11.2) y **no rota con el acento**, que es lo que se quiere de una alarma. Se recorta en `9+` —la píldora no puede ensanchar la barra— y `--radius-full` es aquí legítimo por la misma excepción que el punto de estado: un contador es un punto que echó un número, no la píldora que §11.2 retiró del `Badge`.
+- **La campana va la última del grupo de acciones, no junto a la navegación.** La píldora desborda 4 px del botón por arriba y por la derecha para no taparle el dibujo; con la campana en medio, ese desbordamiento caía encima del botón del tema. Los `--space-3` que la separan de los controles de ventana son ese hueco.
+- **`NotificationsService` (`core/services/`) es la única fuente del contador**, con el patrón signal privado + `readonly` y un `computed` de las no leídas. Pulsar la campana las marca todas como leídas; **todavía no hay panel**, y hasta que lo haya el banco de pruebas de `/styleguide#notificaciones` es la única forma de provocarlas.
 - `productName` y `title` siguen siendo `"demo"`: es lo que se ve en la barra de tareas y en Alt+Tab, donde la versión sólo sería ruido.
 
 ### 3.8 Icono de la app
@@ -715,7 +720,8 @@ Roles que los tokens cubren:
 - **Estados tenues**: `--color-{success,warning,danger,info}-{bg,fg,border}`.
 - **Relleno sólido**: `--color-danger-solid` + su `-on-solid` y `-solid-hover`. Es el *fondo* del botón destructivo, con su propio color de texto encima. **Sólo existe para `danger`**: es la única familia que necesita un relleno pleno hoy. Si un proyecto derivado necesita otro, se añade con su `-on-*` y su fila en el spec, no se improvisa.
 - **Rellenos tonales**: `--color-{neutral,success,warning,danger,info}-tonal` + su `-on-tonal`, y `--accent-tonal` / `--accent-on-tonal`. El peldaño intermedio entre el fondo tenue y el relleno pleno — ver abajo.
-- **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
+- **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-2xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
+  `--font-size-2xs` (10 px) **no es texto de lectura**: existe para los conteos que van dentro de un glifo —hoy sólo el de la campana (§3.7)—, donde el `xs` de 12 px tapaba el dibujo entero. No usarlo para una etiqueta, una ayuda ni un mensaje.
 
 > **Regla dura**: prohibido hardcodear colores, espaciados, radios o sombras en el CSS de un componente. Siempre variables. Es lo único que hace que el tema oscuro funcione solo.
 

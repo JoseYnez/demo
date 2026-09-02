@@ -3,10 +3,12 @@ import { provideRouter } from "@angular/router";
 
 import { App } from "./app";
 import { routes } from "./app.routes";
-import { APP_VERSION, GIT_COMMIT, GIT_COMMIT_SHORT } from "./core/build-info";
+import { APP_VERSION, GIT_COMMIT } from "./core/build-info";
+import { NotificationsService } from "./core/services/notifications";
 
 describe("App", () => {
   beforeEach(async () => {
+    TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [provideRouter(routes)],
@@ -18,17 +20,16 @@ describe("App", () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it("muestra la versión y el commit en la barra superior", async () => {
+  it("guarda la versión y el commit en el tooltip del icono", async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
 
-    const build = (fixture.nativeElement as HTMLElement).querySelector(
-      ".shell__build",
+    const logo = (fixture.nativeElement as HTMLElement).querySelector(
+      ".shell__logo",
     );
-    expect(build?.textContent?.trim()).toBe(
-      `v${APP_VERSION} · ${GIT_COMMIT_SHORT}`,
+    expect(logo?.getAttribute("title")).toBe(
+      `demo v${APP_VERSION} · ${GIT_COMMIT}`,
     );
-    expect(build?.getAttribute("title")).toBe(GIT_COMMIT);
   });
 
   it("renderiza la navegación", async () => {
@@ -43,4 +44,65 @@ describe("App", () => {
       "Tauri IPC",
     ]);
   });
+
+  it("no dibuja el contador sin notificaciones pendientes", async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector(".shell__badge")).toBeNull();
+    expect(
+      raiz.querySelector(".shell__action--campana")?.getAttribute("aria-label"),
+    ).toBe("Notificaciones: ninguna sin leer");
+  });
+
+  it("muestra las pendientes y las anuncia en la etiqueta", async () => {
+    const notificaciones = TestBed.inject(NotificationsService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    notificaciones.push({ title: "Primera" });
+    notificaciones.push({ title: "Segunda" });
+    await fixture.whenStable();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector(".shell__badge")?.textContent?.trim()).toBe("2");
+    expect(
+      raiz.querySelector(".shell__action--campana")?.getAttribute("aria-label"),
+    ).toBe("Notificaciones: 2 sin leer");
+  });
+
+  it("recorta el contador en 9+", async () => {
+    const notificaciones = TestBed.inject(NotificationsService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    for (let i = 0; i < 12; i++) {
+      notificaciones.push({ title: `Aviso ${i}` });
+    }
+    await fixture.whenStable();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector(".shell__badge")?.textContent?.trim()).toBe("9+");
+    expect(
+      raiz.querySelector(".shell__action--campana")?.getAttribute("aria-label"),
+    ).toBe("Notificaciones: 12 sin leer");
+  });
+
+  it("apaga el contador al pulsar la campana", async () => {
+    const notificaciones = TestBed.inject(NotificationsService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    notificaciones.push({ title: "Primera" });
+    await fixture.whenStable();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    raiz.querySelector<HTMLButtonElement>(".shell__action--campana")?.click();
+    await fixture.whenStable();
+
+    expect(raiz.querySelector(".shell__badge")).toBeNull();
+    expect(notificaciones.items()).toHaveLength(1);
+  });
+
 });
