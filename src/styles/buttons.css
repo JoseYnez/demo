@@ -120,3 +120,8 @@
     animation-duration: 2s;
   }
 }
+
+a.btn,
+a.btn:hover {
+  text-decoration: none;
+}

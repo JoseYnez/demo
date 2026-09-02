@@ -157,6 +157,7 @@ Lo que hay que saber para no romperlo:
 - **Ocultar la barra del todo sigue descartado.** Se intentó ocultarla y hacerla asomar al acercar el cursor al borde superior, y **se retiró**: la franja sensible vive en el borde del *webview*, y mientras el área de cliente no coincida con la del monitor ese borde no es el de la pantalla — el cursor deja de poder estrellarse contra el tope, que es lo único que hace usable un objetivo de 6 px. No se reintenta hasta que esté confirmado que el webview llena el monitor, y entonces hay que probarlo **en la ventana real**: el panel del navegador no puede ejercerlo, porque su puntero sintético no produce `:hover` de verdad.
 - **En `pnpm start` F11 sí agranda: cae a la Fullscreen API del navegador.** Es la única excepción al «fuera de Tauri los métodos son no-op» de §7, y se gana su excepción: con el no-op, F11 se tragaba el atajo nativo del navegador y **no lo sustituía por nada**, así que la pantalla completa no podía probarse sin compilar Tauri. `setFullscreen` llama a `requestFullscreen()` / `exitFullscreen()`, `isFullscreen` lee `document.fullscreenElement`, y `onWindowChanged` escucha `fullscreenchange` en vez de `onResized` — ese último es el que hace que salir con el Esc nativo del navegador no deje el estado mintiendo. El coste sigue siendo que en dev pierdes el F11 del navegador, pero ahora a cambio de algo.
 - **El panel del navegador de Claude Code no puede ejercer esto.** Su `requestFullscreen()` se llama, y la promesa **no resuelve ni rechaza**: se queda colgada, porque el webview embebido no tiene ventana que agrandar. En dev hay que probarlo en Chrome o Edge de verdad.
+- **El tamaño de la ventana no se decide aquí, sino en §11.8**: 1100×720 con un suelo de 640×520, porque lo fija el patrón de pantalla que tiene que caber dentro, no la barra.
 - `productName` y `title` siguen siendo `"demo"`: es lo que se ve en la barra de tareas y en Alt+Tab, donde la versión sólo sería ruido.
 
 ### 3.8 Icono de la app
@@ -250,12 +251,15 @@ Decisiones que no son negociables sin leer esto:
 
 ### 3.11 Contactos: el CRUD de ejemplo
 
-La pantalla vive en `features/contacts/`, ruta `/contacts`, y es el patrón que se copia para cualquier listado con alta, edición y baja. Donde el acceso (§3.9) enseña un formulario que llama una vez, éste enseña **estado que va y viene**: una lista que el backend posee y cuatro operaciones que la mueven. Las piezas, de fuera adentro:
+La feature vive en `features/contacts/` y ocupa **tres rutas**: `/contacts` es la lista, `/contacts/nuevo` y `/contacts/:id` son la ficha. Es el patrón que se copia para cualquier listado con alta, edición y baja, y el que estrena la norma de §11.8. Donde el acceso (§3.9) enseña un formulario que llama una vez, éste enseña **estado que va y viene**: una lista que el backend posee y cuatro operaciones que la mueven. Las piezas, de fuera adentro:
 
 | Pieza | Dónde | Qué hace |
 |---|---|---|
-| `Contacts` | `features/contacts/` | La pantalla: buscador, lista, formulario de alta/edición y confirmación de borrado en la fila. |
-| `ContactStore` | `features/contacts/contact-store.ts` | El estado de la feature — la lista, el indicador de carga y las cuatro operaciones. `@Service({ autoProvided: false })`, provisto por el componente (§6.2). |
+| `CONTACTS_ROUTES` | `features/contacts/contacts.routes.ts` | Las tres rutas, y el `providers: [ContactStore]` de la ruta padre que las hace compartir datos. |
+| `ContactList` | `features/contacts/contact-list/` | La lista: buscador, filas y confirmación de borrado en la propia fila. |
+| `ContactForm` | `features/contacts/contact-form/` | La ficha: alta y edición, con el aviso de cambios sin guardar. Implementa `puedeSalir()` para `unsavedChangesGuard` (§11.8). |
+| `contact-role.ts` | `features/contacts/` | Etiquetas, variantes de badge y opciones de `<select>` del rol, que comparten lista y ficha. |
+| `ContactStore` | `features/contacts/contact-store.ts` | El estado de la feature — la lista, el indicador de carga y las cuatro operaciones. `@Service({ autoProvided: false })`, provisto por la ruta (§6.2). |
 | `contactApi` | `tauri/contact.api.ts` | El wrapper de §7. Relanza con prefijo y con `cause`, igual que `authApi`. |
 | `contact.rs` (comandos) | `src-tauri/src/commands/` | `list_contacts`, `create_contact`, `update_contact`, `delete_contact`. Sólo orquestan: validan el borrador y delegan. |
 | `ContactService` | `src-tauri/src/services/contact.rs` | El almacén: un `Vec` bajo `Mutex`, ids que no se reutilizan y el correo como clave única. |
@@ -267,16 +271,16 @@ Decisiones que no son negociables sin leer esto:
 - **El borrador viaja como texto plano y se valida entero al entrar.** `ContactDraft` es cuatro `String` en los dos lados; `ContactInput` es lo que sale de los newtypes. Por eso el rol es una cadena hasta el límite: un `enum` en el DTO haría que un valor vacío muriera en serde con un mensaje de librería, en vez de con «Elige un rol de la lista.».
 - **El correo es la clave que no se puede repetir**, y al editar el propio no cuenta. Es la única regla de negocio del ejemplo, y está donde tienen que estar todas: en el servicio, no en el formulario.
 - **Los ids no se reutilizan.** El contador sólo sube, aunque se borre el último. Reciclarlos haría que una vista con datos viejos editara al contacto equivocado, que es el bug que ninguna prueba manual encuentra.
-- **Crear y editar son el mismo formulario, y abrirlo limpia el estado de tocado.** `reset()` de Signal Forms (§6.8) devuelve `touched`/`dirty` a cero: sin eso, abrir el formulario para un contacto nuevo justo después de otro estrenaba los errores de campo obligatorio sobre campos vacíos que nadie había tocado (§11.3).
-- **Borrar pregunta en la propia fila, no en un diálogo.** Un modal es la respuesta de reflejo y aquí no cabe: no hay componente de diálogo en el sistema (§11.6 lo da por futuro) y montar uno a medias —sin trampa de foco ni capa superior— por una confirmación de dos botones sería peor que no tenerlo. La fila entra en modo pregunta, la columna de acciones **tiene ancho fijo** para que nada se mueva al pulsar, y el nombre del contacto va en el texto que sólo leen los lectores de pantalla.
+- **Crear y editar son el mismo componente en dos rutas, y el modelo deriva del contacto.** `linkedSignal` (§6.4) rellena el borrador con lo que haya en el store y admite que el usuario lo pise; en `/contacts/nuevo` el origen es nulo y sale vacío. Al cambiar de ruta el componente se monta de nuevo, así que `touched`/`dirty` nacen a cero sin tener que acordarse de un `reset()`, y nadie estrena los errores de campo obligatorio sobre campos que no ha tocado (§11.3).
+- **Borrar pregunta en la propia fila, no en un diálogo**, aunque el `ConfirmDialog` exista (§11.3). Un modal para una confirmación de dos botones aleja la pregunta de la fila que la provocó y obliga a repetir el nombre del contacto para decir de cuál se hablaba. La fila entra en modo pregunta, la columna de acciones **tiene ancho fijo** para que nada se mueva al pulsar, y el nombre del contacto va en el texto que sólo leen los lectores de pantalla.
 - **Las cuatro columnas de la fila son fijas, no `auto`.** Cada fila es su propia retícula, así que con columnas automáticas las etiquetas de rol y las fechas empezaban en una `x` distinta en cada fila: una lista de registros que no alinea sus campos se lee como tres tarjetas sueltas.
 - **La lista se recoloca en el frontend con lo que devuelve el backend, sin volver a pedirla.** El comando ya devuelve el registro guardado; pedir la lista otra vez sería un IPC de más y un parpadeo. El orden por nombre se aplica en los dos lados por lo mismo.
 - **Cada operación deja un aviso por `NotificationsService` (§3.10)**, que es lo que hace visible el resultado cuando el cambio ocurre fuera de la vista. Los fallos, no: ésos se quedan en la línea de error del formulario o de la lista, junto a lo que hay que corregir.
 - **La búsqueda filtra en memoria y no llama al backend.** Con una lista que cabe en la ventana, un comando de búsqueda sería latencia a cambio de nada. Cuando el listado deje de caber, eso es paginación en el servicio, no un `filter` más grande.
 - **No está detrás del `authGuard`.** El guard ya se ejerce en `tauri-demo`, y aquí sólo conseguiría que la pantalla de ejemplo fuese inalcanzable en `pnpm start`, donde el acceso tampoco funciona (§3.9).
 - **La lista de ejemplo son tres contactos sembrados al arrancar**, con el mismo constructor encadenado que la cuenta `demo` de §3.9 (`ContactService::seeded()`), y viven en memoria: se reinician al cerrar la app. Es el almacén provisional hasta que se decida la persistencia (§15); el resto del flujo no cambia cuando se decida.
-- **Salir del formulario con cambios sin guardar pregunta antes**, y ése es el único modal de la pantalla (§11.3). Cancelar, abrir otro contacto y crear uno nuevo pasan por la misma guarda, que sólo salta si el formulario está `dirty()`. Borrar una fila **no** abre modal: sigue preguntando en la fila, que es donde está el contacto.
-- **En `pnpm start` la pantalla se dibuja pero la lista no llega.** No hay backend, así que se ve el mensaje que relanza el wrapper —igual que en `tauri-demo`— y el hueco de lista vacía. El formulario, el filtro y la confirmación sí se pueden probar en el navegador; el ciclo completo, sólo en la ventana de Tauri.
+- **Salir de la ficha con cambios sin guardar pregunta antes**, y ése es el único modal de la feature (§11.3). No lo gobierna el componente sino `unsavedChangesGuard` sobre la ruta (§11.8), y por eso lo cubre **todo**: el enlace de vuelta, Cancelar y cualquier enlace de la barra de navegación. Sólo salta si el formulario está `dirty()`, y guardar hace `reset()` antes de navegar para no preguntar por lo que se acaba de escribir en el backend. Borrar una fila **no** abre modal: sigue preguntando en la fila, que es donde está el contacto.
+- **En `pnpm start` la pantalla se dibuja pero la lista no llega.** No hay backend, así que se ve el mensaje que relanza el wrapper —igual que en `tauri-demo`— y el hueco de lista vacía. `/contacts/nuevo` **no** enseña ese error: dar de alta no necesita la lista, y un fallo de carga ahí sería ruido sobre un formulario que funciona. `/contacts/:id` sí lo enseña, porque sin lista no hay contacto que editar. El formulario, el filtro, la confirmación y el aviso de cambios sin guardar se prueban en el navegador; el ciclo completo, sólo en la ventana de Tauri.
 
 ---
 
@@ -288,7 +292,7 @@ demo/
 │   ├── app/
 │   │   ├── core/               # Singletons: servicios app-wide, guards, error handler
 │   │   │   ├── services/       # ThemeService, AccentService, AuthService (§3.9), …
-│   │   │   ├── guards/         # authGuard (§3.9)
+│   │   │   ├── guards/         # authGuard (§3.9), unsavedChangesGuard (§11.8)
 │   │   │   └── build-info.ts   # Generado: versión y commit (§3.6, no se commitea)
 │   │   ├── shared/             # Reutilizable entre features
 │   │   │   ├── ui/             # Design system (§11)
@@ -558,7 +562,25 @@ export const TICKETS_ROUTES: Routes = [
 { path: "tickets", loadChildren: () => import("./features/tickets/tickets.routes").then((m) => m.TICKETS_ROUTES) }
 ```
 
-Una feature de **una sola ruta** no necesita su propio `*.routes.ts`: basta un `loadComponent` directo en `app.routes.ts` (así están hoy `login`, `styleguide` y `tauri-demo`). El archivo de rutas se crea en cuanto aparece la segunda ruta.
+Una feature de **una sola ruta** no necesita su propio `*.routes.ts`: basta un `loadComponent` directo en `app.routes.ts` (así están hoy `login`, `styleguide` y `tauri-demo`). El archivo de rutas se crea en cuanto aparece la segunda ruta — `contacts` es el ejemplo vivo (§3.11).
+
+**El estado que comparten las rutas de una feature se provee en la ruta, no en un componente.** Una ruta padre con `providers` abre un inyector para todo su subárbol, así que la lista y la ficha ven el mismo store y volver de editar no vuelve a pedir la lista; al salir de la feature, muere. Es la alternativa correcta a subirlo a `root`, que lo dejaría vivo para siempre.
+
+```typescript
+export const CONTACTS_ROUTES: Routes = [
+  {
+    path: "",
+    providers: [ContactStore],
+    children: [
+      { path: "", title: "Contactos", loadComponent: … },
+      { path: "nuevo", canDeactivate: [unsavedChangesGuard], loadComponent: … },
+      { path: ":id", canDeactivate: [unsavedChangesGuard], loadComponent: … },
+    ],
+  },
+];
+```
+
+`:id` va **después** de `nuevo`: gana la primera que casa, y al revés `/contacts/nuevo` entraría en la ficha de un contacto llamado «nuevo». Recibir el parámetro como `input()` en vez de leer `ActivatedRoute` exige `withComponentInputBinding()` en `provideRouter`, que ya está puesto en `app.config.ts`.
 
 ### 6.8 Formularios
 
@@ -830,7 +852,7 @@ La capa global son tres hojas, importadas por `src/styles.css` en este orden:
 | `styles/fonts.css` | Los tres `@font-face` de IBM Plex. Sólo declara familias; ni un color ni una medida. |
 | `styles/tokens.css` | Las variables. Único sitio donde se escribe un color o una medida literal. |
 | `styles/reset.css` | Normalización y estilos base de `body`, títulos, enlaces y foco. |
-| `styles/buttons.css` | Base compartida de los botones: `.btn`, sus tamaños y sus variantes. Está en la capa global por la misma razón que `forms.css`: la comparten `Button` y `GestureButton`, y la encapsulación no deja compartirla desde un componente. Cada uno añade sólo lo suyo — el `:host` y, en el gestual, la capa de progreso. |
+| `styles/buttons.css` | Base compartida de los botones: `.btn`, sus tamaños y sus variantes. Está en la capa global por la misma razón que `forms.css`: la comparten `Button` y `GestureButton`, y la encapsulación no deja compartirla desde un componente. Cada uno añade sólo lo suyo — el `:host` y, en el gestual, la capa de progreso. La usan también los **enlaces que se ven como un botón** (§11.8), y por eso la hoja neutraliza ahí el subrayado que el reset da a `a:hover`. |
 | `styles/forms.css` | Base compartida de los controles: `.ui-field`, `.ui-label`, `.ui-control`, `.ui-msg`. Vive en la capa global porque la encapsulación de Angular impide compartir estos estilos entre `input`, `textarea` y `select` sin duplicarlos tres veces. Los componentes consumen esas clases y añaden sólo lo suyo (alto, `resize`, la flecha del select). Todos los controles son **outlined**: fondo transparente, el borde los define. |
 
 Roles que los tokens cubren:
@@ -1244,6 +1266,28 @@ Registrado hoy en el shell: **Ctrl/Cmd + Alt + T** (tema claro/oscuro), **F11** 
 ### 11.7 Página styleguide
 
 Demo viva de todos los componentes en `features/styleguide/`, ruta `/styleguide`. **Mantenerla al día es parte de agregar un componente**, no un extra.
+
+### 11.8 Anatomía de una pantalla de listado
+
+**La lista ocupa el ancho de la pantalla, siempre.** No hay listados a media pantalla con el detalle al lado. Lo que se decide por pantalla es sólo *dónde* aparece el formulario, y se decide con una medida, no por gusto:
+
+> Si el formulario cabe dejando visibles **al menos tres filas** de lista, va inline en la propia pantalla. Si no cabe, va a **su propia ruta**.
+
+El maestro-detalle a dos columnas está **descartado como norma**, y las cifras son la razón. Una fila de listado gasta 556 px en columnas fijas —150 de etiqueta, 110 de fecha, 216 de acciones, más 48 de gaps y 32 de padding— así que con 240 px para el nombre y el correo necesita **796 px**. Un split al 50% sobre la ventana por defecto deja 364 px por columna: la lista tendría que rediseñarse como tarjeta estrecha y **habría que mantener dos diseños de lista para siempre**, uno ancho y otro comprimido. Y no escala: cuatro campos entran en 364 px, doce con secciones y un `FilePicker` no. Cabe como excepción documentada para una cola de revisión donde el coste dominante sea saltar de registro, y entonces exige `minWidth` propio y su diseño de fila estrecha; nadie la adopta por reflejo.
+
+**La ventana por defecto es 1100×720, con un suelo de 640×520.** El 800×600 de la plantilla de Tauri no era una decisión, y con él la app arrancaba siempre por debajo del punto de ruptura: el listado de cuatro columnas que justifica todo esto **no se veía nunca** de fábrica. 720 px de alto es el techo real, no una preferencia: por encima deja de caber en un portátil de 1366×768.
+
+**El rescalado se ancla al ancho de la lista, no al del viewport.** Cada pantalla declara `container: <nombre> / inline-size` en su contenedor y usa `@container`, porque el contenedor tiene `max-width` y a partir de cierto tamaño deja de seguir a la ventana — una media query mide entonces lo que no es. El listado rompe en **800 px de contenedor**, que es lo que la fila necesita, y ahí pasa a dos columnas: los datos arriba, y la etiqueta, la fecha y las acciones debajo. `@container` no obliga a un fallback: donde no se soporte, la regla se ignora y queda el diseño ancho, que es exactamente la degradación deseada.
+
+**El contenedor de una lista llega a 1200 px; el de un formulario se queda en 900.** No es incoherencia: la lista es la pieza que usa el ancho y el formulario es una columna de edición, que a más de 900 px se lee peor. El texto explicativo sigue con su `max-width: 72ch` en las dos.
+
+**El formulario en ruta propia cobra cuatro cosas que la versión inline tenía que coser a mano**: el `title` de la ruta, el `loadComponent` perezoso, el guard de entrada y `CanDeactivateFn` para los cambios sin guardar. El guard es `unsavedChangesGuard` (`core/guards/`), que sólo llama al `puedeSalir()` del componente; quien lo implemente devuelve `true`, o una promesa que resuelve cuando el usuario decide en el `ConfirmDialog` (§11.3). Con eso, **cualquier** salida pregunta —el enlace de vuelta, Cancelar, un enlace de la barra—, que es justo lo que un signal local no cubría.
+
+**El botón que navega es un `<a>`, no un `<app-button>`.** Un enlace envolviendo un botón es HTML inválido y deja al lector de pantalla dos controles donde hay uno. Se usan las clases de `styles/buttons.css` directamente (`class="btn btn--secondary btn--sm"`), que están en la capa global precisamente para poder compartirse (§11.1); la hoja neutraliza ahí el subrayado que el reset da a los enlaces.
+
+**El store de la feature se provee en la ruta padre, no en el componente.** Es lo que hace que la lista y la ficha compartan los mismos datos y que volver de editar no vuelva a pedir la lista. Muere al salir de la feature, que es cuando conviene que muera.
+
+**La ficha se apaña con la lista que ya hay, sin comando nuevo.** Entrar en `/x/:id` con el store vacío dispara la carga y espera; si el id no aparece cuando termina, la pantalla lo dice y ofrece volver, en vez de quedarse en blanco. Un `get_one` en Rust sería un comando y una fila de §7 a cambio de nada mientras la lista quepa en memoria.
 
 ---
 

@@ -7,15 +7,29 @@ import { contactApi, mensajeDelBackend } from "../../tauri";
 export class ContactStore {
   readonly #items = signal<readonly Contact[]>([]);
   readonly #loading = signal(false);
+  readonly #loaded = signal(false);
 
   readonly items = this.#items.asReadonly();
   readonly loading = this.#loading.asReadonly();
+  readonly loaded = this.#loaded.asReadonly();
   readonly count = computed(() => this.#items().length);
+
+  byId(id: number): Contact | undefined {
+    return this.#items().find((item) => item.id === id);
+  }
+
+  async ensureLoaded(): Promise<void> {
+    if (this.#loaded() || this.#loading()) {
+      return;
+    }
+    await this.load();
+  }
 
   async load(): Promise<void> {
     this.#loading.set(true);
     try {
       this.#items.set(ordenados(await contactApi.list()));
+      this.#loaded.set(true);
     } catch (e) {
       throw new Error(mensajeDelBackend(e));
     } finally {

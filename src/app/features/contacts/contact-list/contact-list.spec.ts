@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { provideRouter } from "@angular/router";
 import { invoke } from "@tauri-apps/api/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Contact } from "../../models/contact.model";
-import { Contacts } from "./contacts";
+import type { Contact } from "../../../models/contact.model";
+import { ContactStore } from "../contact-store";
+import { ContactList } from "./contact-list";
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
@@ -30,27 +32,30 @@ const ZOE: Contact = {
 
 async function montar(
   contactos: readonly Contact[] = [ADA, ZOE],
-): Promise<ComponentFixture<Contacts>> {
+): Promise<ComponentFixture<ContactList>> {
   vi.mocked(invoke).mockResolvedValue(contactos);
   TestBed.resetTestingModule();
-  await TestBed.configureTestingModule({ imports: [Contacts] }).compileComponents();
-  const fixture = TestBed.createComponent(Contacts);
+  await TestBed.configureTestingModule({
+    imports: [ContactList],
+    providers: [ContactStore, provideRouter([])],
+  }).compileComponents();
+  const fixture = TestBed.createComponent(ContactList);
   await fixture.whenStable();
   return fixture;
 }
 
-function raizDe(fixture: ComponentFixture<Contacts>): HTMLElement {
+function raizDe(fixture: ComponentFixture<ContactList>): HTMLElement {
   return fixture.nativeElement as HTMLElement;
 }
 
-function nombres(fixture: ComponentFixture<Contacts>): string[] {
+function nombres(fixture: ComponentFixture<ContactList>): string[] {
   return Array.from(raizDe(fixture).querySelectorAll(".crud__nombre")).map(
     (fila) => fila.textContent?.trim() ?? "",
   );
 }
 
 async function pulsar(
-  fixture: ComponentFixture<Contacts>,
+  fixture: ComponentFixture<ContactList>,
   texto: string,
 ): Promise<void> {
   const boton = Array.from(raizDe(fixture).querySelectorAll("button")).find(
@@ -63,7 +68,7 @@ async function pulsar(
 }
 
 async function buscar(
-  fixture: ComponentFixture<Contacts>,
+  fixture: ComponentFixture<ContactList>,
   texto: string,
 ): Promise<void> {
   const buscador = raizDe(fixture).querySelector<HTMLInputElement>(
@@ -74,7 +79,7 @@ async function buscar(
   await fixture.whenStable();
 }
 
-describe("Contacts", () => {
+describe("ContactList", () => {
   beforeEach(() => {
     vi.mocked(invoke).mockReset();
   });
@@ -111,30 +116,15 @@ describe("Contacts", () => {
     expect(raizDe(fixture).textContent).toContain("Todavía no hay contactos");
   });
 
-  it("abre el formulario vacío para un contacto nuevo", async () => {
+  it("enlaza a la ficha de cada contacto en vez de abrir un formulario", async () => {
     const fixture = await montar();
 
-    await pulsar(fixture, "Nuevo contacto");
-
     const raiz = raizDe(fixture);
-    expect(raiz.querySelector("form")).not.toBeNull();
-    expect(raiz.textContent).toContain("Nuevo contacto");
-    const campos = raiz.querySelectorAll<HTMLInputElement>("form input");
-    expect(Array.from(campos).map((campo) => campo.value)).toEqual(["", ""]);
-  });
-
-  it("abre el formulario relleno al editar", async () => {
-    const fixture = await montar();
-
-    await pulsar(fixture, "Editar");
-
-    const raiz = raizDe(fixture);
-    expect(raiz.textContent).toContain("Editar contacto");
-    const campos = raiz.querySelectorAll<HTMLInputElement>("form input");
-    expect(Array.from(campos).map((campo) => campo.value)).toEqual([
-      ADA.name,
-      ADA.email,
-    ]);
+    expect(raiz.querySelector("form")).toBeNull();
+    const destinos = Array.from(
+      raiz.querySelectorAll<HTMLAnchorElement>(".crud__acciones-fila a"),
+    ).map((enlace) => enlace.getAttribute("href"));
+    expect(destinos).toEqual(["/contacts/1", "/contacts/2"]);
   });
 
   it("no borra hasta que se confirma", async () => {
@@ -166,8 +156,11 @@ describe("Contacts", () => {
   it("enseña el fallo del backend si la lista no llega", async () => {
     vi.mocked(invoke).mockRejectedValue("Error interno: qué mal.");
     TestBed.resetTestingModule();
-    await TestBed.configureTestingModule({ imports: [Contacts] }).compileComponents();
-    const fixture = TestBed.createComponent(Contacts);
+    await TestBed.configureTestingModule({
+      imports: [ContactList],
+      providers: [ContactStore, provideRouter([])],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(ContactList);
     await fixture.whenStable();
     await new Promise((resolve) => setTimeout(resolve));
     await fixture.whenStable();

@@ -24,66 +24,14 @@
       <app-button variant="ghost" (click)="recargar()" [loading]="cargando()">
         Actualizar
       </app-button>
-      <app-button (click)="nuevo()">Nuevo contacto</app-button>
+      <a class="btn btn--primary btn--md" routerLink="/contacts/nuevo">
+        Nuevo contacto
+      </a>
     </div>
   </div>
 
-  @if (errorDeLaLista()) {
-    <p class="crud__error selectable" role="alert">{{ errorDeLaLista() }}</p>
-  }
-
-  @if (formularioAbierto()) {
-    <app-card variant="elevated">
-      <div card-header>
-        <span>{{ titulo() }}</span>
-      </div>
-
-      <form class="crud__form" [formRoot]="ficha" (submit)="guardar()" novalidate>
-        <div class="crud__campos">
-          <app-input
-            #nombre
-            label="Nombre"
-            placeholder="Ada Lovelace"
-            autocomplete="off"
-            [formField]="ficha.name"
-          />
-          <app-input
-            label="Correo"
-            type="email"
-            placeholder="ada@example.com"
-            autocomplete="off"
-            [formField]="ficha.email"
-          />
-          <app-select
-            label="Rol"
-            placeholder="Elige un rol…"
-            [options]="roles"
-            [formField]="ficha.role"
-          />
-        </div>
-
-        <app-textarea
-          label="Notas"
-          placeholder="Opcional"
-          hint="Hasta 280 caracteres."
-          [rows]="2"
-          [formField]="ficha.notes"
-        />
-
-        @if (errorDelFormulario()) {
-          <p class="crud__error selectable" role="alert">
-            {{ errorDelFormulario() }}
-          </p>
-        }
-
-        <div class="crud__botones">
-          <app-button type="submit" [loading]="ficha().submitting()">
-            {{ editando() ? "Guardar cambios" : "Crear contacto" }}
-          </app-button>
-          <app-button variant="ghost" (click)="cancelar()">Cancelar</app-button>
-        </div>
-      </form>
-    </app-card>
+  @if (error()) {
+    <p class="crud__error selectable" role="alert">{{ error() }}</p>
   }
 
   <section class="crud__resultado" aria-label="Lista de contactos">
@@ -113,7 +61,7 @@
     } @else {
       <ul class="crud__lista">
         @for (contacto of visibles(); track contacto.id) {
-          <li class="crud__fila" [class.is-editando]="editando()?.id === contacto.id">
+          <li class="crud__fila">
             <div class="crud__datos">
               <p class="crud__nombre selectable">{{ contacto.name }}</p>
               <p class="crud__correo selectable">{{ contacto.email }}</p>
@@ -123,6 +71,7 @@
             </div>
 
             <app-badge
+              class="crud__rol"
               appearance="tonal"
               size="sm"
               [variant]="varianteDelRol(contacto.role)"
@@ -144,9 +93,12 @@
               </div>
             } @else {
               <div class="crud__acciones-fila">
-                <app-button variant="secondary" size="sm" (click)="editar(contacto)">
+                <a
+                  class="btn btn--secondary btn--sm"
+                  [routerLink]="['/contacts', contacto.id]"
+                >
                   Editar<span class="crud__aparte"> a {{ contacto.name }}</span>
-                </app-button>
+                </a>
                 <app-button variant="ghost" size="sm" (click)="pedirBorrado(contacto)">
                   Eliminar<span class="crud__aparte"> a {{ contacto.name }}</span>
                 </app-button>
@@ -157,15 +109,4 @@
       </ul>
     }
   </section>
-
-  <app-confirm-dialog
-    heading="Hay cambios sin guardar"
-    detail="Si sales ahora se pierde lo que has escrito en el formulario."
-    confirmLabel="Descartar"
-    cancelLabel="Seguir editando"
-    variant="danger"
-    [open]="avisoDeDescarte()"
-    (confirmed)="descartar()"
-    (dismissed)="seguirEditando()"
-  />
 </div>

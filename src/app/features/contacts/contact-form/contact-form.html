@@ -1,0 +1,84 @@
+<div class="ficha">
+  <header class="ficha__intro">
+    <a class="ficha__volver" routerLink="/contacts">
+      <span class="ficha__flecha" aria-hidden="true">←</span>
+      Contactos
+    </a>
+    <h1>{{ titulo() }}</h1>
+  </header>
+
+  @if (editando() && errorDeCarga()) {
+    <p class="ficha__error selectable" role="alert">{{ errorDeCarga() }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="ficha__nota">Cargando contacto…</p>
+  } @else if (noEncontrado()) {
+    <div class="ficha__hueco">
+      <p class="ficha__hueco-titulo">Ese contacto ya no existe</p>
+      <p class="ficha__nota">
+        Puede que se haya eliminado desde otra ventana.
+      </p>
+      <a class="btn btn--secondary btn--md" routerLink="/contacts">
+        Volver a la lista
+      </a>
+    </div>
+  } @else {
+    <app-card variant="elevated">
+      <form class="ficha__form" [formRoot]="ficha" (submit)="guardar()" novalidate>
+        <div class="ficha__campos">
+          <app-input
+            #nombre
+            label="Nombre"
+            placeholder="Ada Lovelace"
+            autocomplete="off"
+            [formField]="ficha.name"
+          />
+          <app-input
+            label="Correo"
+            type="email"
+            placeholder="ada@example.com"
+            autocomplete="off"
+            [formField]="ficha.email"
+          />
+          <app-select
+            label="Rol"
+            placeholder="Elige un rol…"
+            [options]="roles"
+            [formField]="ficha.role"
+          />
+        </div>
+
+        <app-textarea
+          label="Notas"
+          placeholder="Opcional"
+          hint="Hasta 280 caracteres."
+          [rows]="3"
+          [formField]="ficha.notes"
+        />
+
+        @if (error()) {
+          <p class="ficha__error selectable" role="alert">{{ error() }}</p>
+        }
+
+        <div class="ficha__botones">
+          <app-button type="submit" [loading]="ficha().submitting()">
+            {{ editando() ? "Guardar cambios" : "Crear contacto" }}
+          </app-button>
+          <app-button variant="ghost" (click)="volver()">Cancelar</app-button>
+        </div>
+      </form>
+    </app-card>
+  }
+
+  <app-confirm-dialog
+    heading="Hay cambios sin guardar"
+    detail="Si sales ahora se pierde lo que has escrito en el formulario."
+    confirmLabel="Descartar"
+    cancelLabel="Seguir editando"
+    variant="danger"
+    [open]="avisoDeDescarte()"
+    (confirmed)="descartar()"
+    (dismissed)="seguirEditando()"
+  />
+</div>

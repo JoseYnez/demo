@@ -6,9 +6,10 @@ export const routes: Routes = [
   { path: "", pathMatch: "full", redirectTo: "styleguide" },
   {
     path: "contacts",
-    title: "Contactos",
-    loadComponent: () =>
-      import("./features/contacts/contacts").then((m) => m.Contacts),
+    loadChildren: () =>
+      import("./features/contacts/contacts.routes").then(
+        (m) => m.CONTACTS_ROUTES,
+      ),
   },
   {
     path: "login",
