@@ -150,6 +150,10 @@ Lo que hay que saber para no romperlo:
 - **El contador de notificaciones es una píldora `--color-danger-solid` / `--color-danger-on-solid`**, la misma pareja que el hover de cerrar, y por lo mismo: es el único relleno pleno del sistema (§11.2) y **no rota con el acento**, que es lo que se quiere de una alarma. Se recorta en `9+` —la píldora no puede ensanchar la barra— y `--radius-full` es aquí legítimo por la misma excepción que el punto de estado: un contador es un punto que echó un número, no la píldora que §11.2 retiró del `Badge`.
 - **La campana va la última del grupo de acciones, no junto a la navegación.** La píldora desborda 4 px del botón por arriba y por la derecha para no taparle el dibujo; con la campana en medio, ese desbordamiento caía encima del botón del tema. Los `--space-3` que la separan de los controles de ventana son ese hueco.
 - **`NotificationsService` (`core/services/`) es la única fuente del contador**, con el patrón signal privado + `readonly` y un `computed` de las no leídas. Pulsar la campana las marca todas como leídas; **todavía no hay panel**, y hasta que lo haya el banco de pruebas de `/styleguide#notificaciones` es la única forma de provocarlas.
+- **Hay que desmaximizar antes de entrar en pantalla completa, y volver a maximizar al salir.** No es cosmético: el `WM_NCCALCSIZE` de tao comprueba `is_maximized()` **antes** que el caso de pantalla completa y sin mirarlo, y en esa rama recorta el área de cliente al **área de trabajo** del monitor. `set_fullscreen` dimensiona la *ventana* al monitor entero pero nunca deshace `SW_MAXIMIZE` —`is_maximized` lee `GetWindowPlacement().showCmd`, que `SetWindowPos` no toca—, así que la ventana tapa la pantalla y el webview se queda más pequeño: marco negro a los lados y abajo. Lo enuncia el test «deshace el maximizado antes de entrar y lo restaura al salir» de [fullscreen.spec.ts](src/app/core/services/fullscreen.spec.ts).
+- **`sync()` se calla mientras hay una transición en vuelo.** Desmaximizar y entrar en pantalla completa son dos cambios de tamaño, y el `onResized` del primero llega con `isFullscreen()` todavía en `false`: sin la guarda, la barra reaparecía a mitad del gesto.
+- **En pantalla completa la barra se queda tal cual.** Se intentó ocultarla y hacerla asomar al acercar el cursor al borde superior, y **se retiró**: la franja sensible vive en el borde del *webview*, y mientras el área de cliente no coincida con la del monitor ese borde no es el de la pantalla — el cursor deja de poder estrellarse contra el tope, que es lo único que hace usable un objetivo de 6 px. No se reintenta hasta que esté confirmado que el webview llena el monitor, y entonces hay que probarlo **en la ventana real**: el panel del navegador no puede ejercerlo, porque su puntero sintético no produce `:hover` de verdad.
+- **En `pnpm start` F11 no agranda la ventana.** Se registra igual para que el atajo exista en los dos sitios; fuera de la ventana `setFullscreen` es no-op, como el resto del wrapper. El coste es que en dev pierdes el F11 del navegador.
 - `productName` y `title` siguen siendo `"demo"`: es lo que se ve en la barra de tareas y en Alt+Tab, donde la versión sólo sería ruido.
 
 ### 3.8 Icono de la app
@@ -576,7 +580,7 @@ Reglas:
 | Wrapper | Comandos | Notas |
 |---|---|---|
 | `greetApi` | `greet` | Demo de IPC de la plantilla de Tauri. Lo consume `features/tauri-demo/`. |
-| `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, y el listener `onResized` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
+| `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, `window\|set_fullscreen`, `window\|is_fullscreen`, `window\|maximize`, `window\|unmaximize`, y el listener `onResized` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
 
 **Nada emite eventos desde Rust todavía**, pero ya hay un listener: el `onResized` de `windowApi`, que mantiene el icono de maximizar/restaurar en su sitio. Su `unlisten` va registrado en `destroyRef.onDestroy` en [app.ts](src/app/app.ts) — el patrón de §6.6, y el que hay que copiar para el siguiente. Los permisos de eventos ya están concedidos (`core:default` incluye `core:event:default` → `allow-listen`, `allow-unlisten`, `allow-emit`, `allow-emit-to`), así que añadir listeners no requiere tocar `capabilities/`.
 
@@ -687,8 +691,11 @@ Inventario vivo de `src-tauri/capabilities/default.json`. Estado actual de la ba
 | `core:window:allow-toggle-maximize` | Botón de maximizar/restaurar | `windowApi.toggleMaximize` |
 | `core:window:allow-close` | Botón de cerrar | `windowApi.close` |
 | `core:window:allow-set-theme` | Que el marco nativo siga el tema de la app | `ThemeService` vía `windowApi.setTheme` |
+| `core:window:allow-set-fullscreen` | Pantalla completa con F11 (§3.7) | `FullscreenService` vía `windowApi.setFullscreen` |
+| `core:window:allow-maximize` | Restaurar el maximizado al salir de pantalla completa (§3.7) | `FullscreenService` vía `windowApi.maximize` |
+| `core:window:allow-unmaximize` | Desmaximizar antes de entrar en pantalla completa (§3.7) | `FullscreenService` vía `windowApi.unmaximize` |
 
-Los cinco de ventana son los que **no** trae `core:window:default`. Lo que sí trae y por eso no aparece aquí: `is-maximized` (el icono de restaurar), `theme` e `internal-toggle-maximize` (el doble clic en la barra para maximizar).
+Los ocho de ventana son los que **no** trae `core:window:default`. Lo que sí trae y por eso no aparece aquí: `is-maximized` (el icono de restaurar), **`is-fullscreen`** (con el que `FullscreenService` se resincroniza en cada `onResized`), `theme` e `internal-toggle-maximize` (el doble clic en la barra para maximizar).
 
 **Regla**: al añadir un permiso → fila nueva en esta tabla, scope lo más estrecho posible (`$DOWNLOAD/**` antes que `**`) y justificación en el PR. Un permiso sin fila aquí es un permiso que se elimina.
 
@@ -1071,11 +1078,11 @@ this.teclado.register(
 - **`ctrl` cubre Ctrl y Cmd.** Un solo registro sirve en Windows, Linux y macOS.
 - **El alcance lo decide dónde se registra**: en `app.ts` vive mientras viva la app; en un componente de feature, sólo mientras esa pantalla está montada. La baja es automática contra el `DestroyRef` de quien registró — por eso `register()` hay que llamarlo en contexto de inyección (constructor o inicializador de campo), o pasarle un `DestroyRef` explícito.
 - **Con la misma combinación gana el último registrado**, y al destruirse el control vuelve al anterior. Nada se sobrescribe: los dos conviven en la pila, sólo cambia cuál responde. Es el mecanismo para que un diálogo se quede `Esc` mientras está abierto y lo devuelva al cerrarse.
-- **Se ignoran los eventos nacidos en un campo editable** (`input`, `textarea`, `select`, `contenteditable`), o un atajo de una sola tecla dispararía mientras el usuario escribe.
+- **Se ignoran los eventos nacidos en un campo editable** (`input`, `textarea`, `select`, `contenteditable`), o un atajo de una sola tecla dispararía mientras el usuario escribe. **Las teclas de función (F1–F24) están exentas**: no escriben nada, así que la guarda no las protege de nada y sin la excepción F11 no haría pantalla completa con el cursor dentro de un campo.
 - `preventDefault()` va activo por defecto —el atajo gana a la combinación del navegador—; `preventDefault: false` para los casos en que no se quiera.
 - `description` no es decorativo: `list()` devuelve los registros activos, del más reciente al más antiguo, y es de ahí de donde sale el panel de ayuda. Un atajo sin descripción es un atajo que nadie va a descubrir.
 
-Registrado hoy en el shell: **Ctrl/Cmd + Alt + T** (tema claro/oscuro). Los de la styleguide se registran en su propio componente y desaparecen al salir de la página — el banco de pruebas de `/styleguide` enseña justamente eso.
+Registrado hoy en el shell: **Ctrl/Cmd + Alt + T** (tema claro/oscuro) y **F11** (pantalla completa, §3.7). Los de la styleguide se registran en su propio componente y desaparecen al salir de la página — el banco de pruebas de `/styleguide` enseña justamente eso.
 
 ### 11.7 Página styleguide
 

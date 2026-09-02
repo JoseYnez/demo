@@ -9,6 +9,7 @@ import {
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 
 import { APP_VERSION, GIT_COMMIT } from "./core/build-info";
+import { FullscreenService } from "./core/services/fullscreen";
 import { KeyboardService } from "./core/services/keyboard";
 import { NotificationsService } from "./core/services/notifications";
 import { ThemeService } from "./core/services/theme";
@@ -27,6 +28,7 @@ export class App {
   private readonly destroyRef = inject(DestroyRef);
   private readonly teclado = inject(KeyboardService);
   private readonly notificaciones = inject(NotificationsService);
+  private readonly pantalla = inject(FullscreenService);
 
   protected readonly themes = inject(ThemeService);
 
@@ -60,6 +62,10 @@ export class App {
       },
       () => this.themes.toggle(),
     );
+    this.teclado.register(
+      { key: "F11", description: "Pantalla completa" },
+      () => this.pantalla.toggle(),
+    );
   }
 
   protected abrirNotificaciones(): void {
@@ -82,8 +88,10 @@ export class App {
     if (!this.enTauri) {
       return;
     }
-    const sincronizar = async () =>
+    const sincronizar = async () => {
       this.maximizada.set(await windowApi.isMaximized());
+      await this.pantalla.sync();
+    };
 
     void sincronizar();
 

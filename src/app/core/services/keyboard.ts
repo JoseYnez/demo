@@ -11,6 +11,8 @@ export interface Shortcut {
 
 export type RegisteredShortcut = Readonly<Shortcut>;
 
+const TECLAS_DE_FUNCION = /^F([1-9]|1[0-9]|2[0-4])$/;
+
 interface Binding extends Shortcut {
   readonly run: () => void;
 }
@@ -47,7 +49,7 @@ export class KeyboardService {
   }
 
   private despachar(event: KeyboardEvent): void {
-    if (this.esCampoEditable(event.target)) {
+    if (this.puedeEscribir(event) && this.esCampoEditable(event.target)) {
       return;
     }
     for (let i = this.bindings.length - 1; i >= 0; i--) {
@@ -69,6 +71,10 @@ export class KeyboardService {
       event.shiftKey === !!binding.shift &&
       event.altKey === !!binding.alt
     );
+  }
+
+  private puedeEscribir(event: KeyboardEvent): boolean {
+    return !TECLAS_DE_FUNCION.test(event.key);
   }
 
   private esCampoEditable(target: EventTarget | null): boolean {

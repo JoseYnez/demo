@@ -4,6 +4,7 @@ import { provideRouter } from "@angular/router";
 import { App } from "./app";
 import { routes } from "./app.routes";
 import { APP_VERSION, GIT_COMMIT } from "./core/build-info";
+import { FullscreenService } from "./core/services/fullscreen";
 import { NotificationsService } from "./core/services/notifications";
 
 describe("App", () => {
@@ -105,4 +106,14 @@ describe("App", () => {
     expect(notificaciones.items()).toHaveLength(1);
   });
 
+  it("registra F11 como atajo de pantalla completa", async () => {
+    const pantalla = TestBed.inject(FullscreenService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "F11" }));
+    await fixture.whenStable();
+
+    expect(pantalla.active()).toBe(true);
+  });
 });

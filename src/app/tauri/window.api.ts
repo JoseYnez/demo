@@ -43,6 +43,40 @@ export const windowApi = {
     }
   },
 
+  maximize: async (): Promise<void> => {
+    if (!enTauri) return;
+    try {
+      await getCurrentWindow().maximize();
+    } catch (e) {
+      throw new Error(`windowApi.maximize: ${e}`);
+    }
+  },
+
+  unmaximize: async (): Promise<void> => {
+    if (!enTauri) return;
+    try {
+      await getCurrentWindow().unmaximize();
+    } catch (e) {
+      throw new Error(`windowApi.unmaximize: ${e}`);
+    }
+  },
+  setFullscreen: async (fullscreen: boolean): Promise<void> => {
+    if (!enTauri) return;
+    try {
+      await getCurrentWindow().setFullscreen(fullscreen);
+    } catch (e) {
+      throw new Error(`windowApi.setFullscreen: ${e}`);
+    }
+  },
+
+  isFullscreen: async (): Promise<boolean> => {
+    if (!enTauri) return false;
+    try {
+      return await getCurrentWindow().isFullscreen();
+    } catch (e) {
+      throw new Error(`windowApi.isFullscreen: ${e}`);
+    }
+  },
   setTheme: async (theme: Theme): Promise<void> => {
     if (!enTauri) return;
     try {

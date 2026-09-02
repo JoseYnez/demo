@@ -66,6 +66,18 @@ describe("KeyboardService", () => {
     expect(veces).toBe(0);
   });
 
+  it("deja pasar las teclas de función desde un campo editable", () => {
+    let veces = 0;
+    teclado.register({ key: "F11" }, () => veces++, destroyRef);
+
+    const campo = document.createElement("input");
+    document.body.appendChild(campo);
+    pulsar({ key: "F11" }, campo);
+    campo.remove();
+
+    expect(veces).toBe(1);
+  });
+
   it("bloquea la combinación nativa del navegador por defecto", () => {
     teclado.register({ key: "b", ctrl: true }, () => {}, destroyRef);
 
