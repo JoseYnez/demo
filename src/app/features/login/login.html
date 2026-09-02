@@ -1,0 +1,72 @@
+<div class="login">
+  <section class="login__hero">
+    <div class="login__fondo" aria-hidden="true">
+      <span class="login__halo login__halo--1"></span>
+      <span class="login__halo login__halo--2"></span>
+      <span class="login__halo login__halo--3"></span>
+    </div>
+
+    <header class="login__marca">
+      <span class="login__icono">
+        <img src="assets/icon.svg" alt="" width="28" height="28" />
+      </span>
+      <span class="login__kicker">demo · acceso</span>
+    </header>
+
+    <div class="login__mensaje">
+      <h1 class="login__title">Hola de nuevo.</h1>
+      <p class="login__lead">
+        Entra con tu usuario y tu contraseña. La sesión vive en esta ventana y
+        se cierra con ella.
+      </p>
+    </div>
+
+    <p class="login__pie">demo v{{ version }}</p>
+  </section>
+
+  <section class="login__panel">
+    <div class="login__contenido">
+      @if (sesion(); as sesionActiva) {
+        <h2 class="login__subtitulo">Sesión iniciada</h2>
+        <p class="login__activa" role="status">
+          Has entrado como <strong>{{ sesionActiva.displayName }}</strong>.
+        </p>
+        <div class="login__acciones">
+          <app-button variant="secondary" (click)="salir()">Cerrar sesión</app-button>
+          <a class="btn btn--primary btn--md" routerLink="/">Continuar</a>
+        </div>
+      } @else {
+        <h2 class="login__subtitulo">Iniciar sesión</h2>
+
+        <form class="login__form" [formRoot]="acceso" (submit)="entrar()" novalidate>
+          <app-input
+            #usuario
+            label="Usuario"
+            autocomplete="username"
+            placeholder="tu.usuario"
+            [formField]="acceso.username"
+          />
+          <app-input
+            label="Contraseña"
+            type="password"
+            autocomplete="current-password"
+            [revealable]="true"
+            [formField]="acceso.password"
+          />
+
+          @if (fallo()) {
+            <p class="login__error" role="alert">{{ fallo() }}</p>
+          }
+
+          <app-button type="submit" size="lg" [fullWidth]="true" [loading]="acceso().submitting()">
+            Entrar
+          </app-button>
+        </form>
+
+        <p class="login__demo selectable">
+          Cuenta de prueba: <code>demo</code> / <code>demo1234</code>
+        </p>
+      }
+    </div>
+  </section>
+</div>

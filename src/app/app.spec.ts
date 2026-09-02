@@ -43,6 +43,7 @@ describe("App", () => {
     expect(Array.from(links).map((a) => a.textContent?.trim())).toEqual([
       "Styleguide",
       "Tauri IPC",
+      "Acceso",
     ]);
   });
 

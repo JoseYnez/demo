@@ -9,6 +9,7 @@ import {
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 
 import { APP_VERSION, GIT_COMMIT } from "./core/build-info";
+import { AuthService } from "./core/services/auth";
 import { FullscreenService } from "./core/services/fullscreen";
 import { KeyboardService } from "./core/services/keyboard";
 import { NotificationsService } from "./core/services/notifications";
@@ -31,6 +32,7 @@ export class App {
   private readonly pantalla = inject(FullscreenService);
 
   protected readonly themes = inject(ThemeService);
+  protected readonly auth = inject(AuthService);
 
   protected readonly identidadDelBuild = `demo v${APP_VERSION} · ${GIT_COMMIT}`;
 

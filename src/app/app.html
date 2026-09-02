@@ -11,9 +11,40 @@
   <nav class="shell__nav">
     <a routerLink="/styleguide" routerLinkActive="is-active">Styleguide</a>
     <a routerLink="/tauri-demo" routerLinkActive="is-active">Tauri IPC</a>
+    @if (!auth.authenticated()) {
+      <a routerLink="/login" routerLinkActive="is-active">Acceso</a>
+    }
   </nav>
 
   <div class="shell__actions">
+    @if (auth.session(); as sesion) {
+      <button
+        class="shell__action shell__action--salir"
+        type="button"
+        (click)="auth.logout()"
+        [attr.aria-label]="'Cerrar la sesión de ' + sesion.displayName"
+        [title]="'Cerrar la sesión de ' + sesion.displayName"
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path
+            d="M10 4.5H6.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2H10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+          <path
+            d="M14.5 8.5 18 12l-3.5 3.5M18 12H9.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    }
+
     <button
       class="shell__action"
       type="button"
