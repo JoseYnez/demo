@@ -5,6 +5,12 @@ import { authGuard } from "./core/guards/auth-guard";
 export const routes: Routes = [
   { path: "", pathMatch: "full", redirectTo: "styleguide" },
   {
+    path: "contacts",
+    title: "Contactos",
+    loadComponent: () =>
+      import("./features/contacts/contacts").then((m) => m.Contacts),
+  },
+  {
     path: "login",
     title: "Iniciar sesión",
     loadComponent: () => import("./features/login/login").then((m) => m.Login),

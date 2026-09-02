@@ -1,0 +1,171 @@
+<div class="crud">
+  <header class="crud__intro">
+    <h1>Contactos</h1>
+    <p class="crud__lead selectable">
+      Alta, listado, edición y baja contra los comandos
+      <code>list_contacts</code>, <code>create_contact</code>,
+      <code>update_contact</code> y <code>delete_contact</code> a través del
+      wrapper <code>contactApi</code>. La lista vive en memoria dentro de Rust,
+      así que se reinicia al cerrar la app y fuera de la ventana de Tauri (por
+      ejemplo en <code>pnpm start</code>) las llamadas fallan.
+    </p>
+  </header>
+
+  <div class="crud__barra">
+    <app-input
+      class="crud__buscador"
+      label="Buscar"
+      type="search"
+      placeholder="Nombre o correo…"
+      [(value)]="busqueda"
+    />
+
+    <div class="crud__acciones-barra">
+      <app-button variant="ghost" (click)="recargar()" [loading]="cargando()">
+        Actualizar
+      </app-button>
+      <app-button (click)="nuevo()">Nuevo contacto</app-button>
+    </div>
+  </div>
+
+  @if (errorDeLaLista()) {
+    <p class="crud__error selectable" role="alert">{{ errorDeLaLista() }}</p>
+  }
+
+  @if (formularioAbierto()) {
+    <app-card variant="elevated">
+      <div card-header>
+        <span>{{ titulo() }}</span>
+      </div>
+
+      <form class="crud__form" [formRoot]="ficha" (submit)="guardar()" novalidate>
+        <div class="crud__campos">
+          <app-input
+            #nombre
+            label="Nombre"
+            placeholder="Ada Lovelace"
+            autocomplete="off"
+            [formField]="ficha.name"
+          />
+          <app-input
+            label="Correo"
+            type="email"
+            placeholder="ada@example.com"
+            autocomplete="off"
+            [formField]="ficha.email"
+          />
+          <app-select
+            label="Rol"
+            placeholder="Elige un rol…"
+            [options]="roles"
+            [formField]="ficha.role"
+          />
+        </div>
+
+        <app-textarea
+          label="Notas"
+          placeholder="Opcional"
+          hint="Hasta 280 caracteres."
+          [rows]="2"
+          [formField]="ficha.notes"
+        />
+
+        @if (errorDelFormulario()) {
+          <p class="crud__error selectable" role="alert">
+            {{ errorDelFormulario() }}
+          </p>
+        }
+
+        <div class="crud__botones">
+          <app-button type="submit" [loading]="ficha().submitting()">
+            {{ editando() ? "Guardar cambios" : "Crear contacto" }}
+          </app-button>
+          <app-button variant="ghost" (click)="cancelar()">Cancelar</app-button>
+        </div>
+      </form>
+    </app-card>
+  }
+
+  <section class="crud__resultado" aria-label="Lista de contactos">
+    <p class="crud__cuenta">
+      @if (busqueda().trim()) {
+        {{ visibles().length }} de {{ total() }}
+      } @else {
+        {{ total() }} {{ total() === 1 ? "contacto" : "contactos" }}
+      }
+    </p>
+
+    @if (cargando() && total() === 0) {
+      <p class="crud__hueco-nota">Cargando contactos…</p>
+    } @else if (visibles().length === 0) {
+      <div class="crud__hueco">
+        <p class="crud__hueco-titulo">
+          {{ total() === 0 ? "Todavía no hay contactos" : "Ningún contacto coincide" }}
+        </p>
+        <p class="crud__hueco-nota">
+          {{
+            total() === 0
+              ? "Crea el primero con «Nuevo contacto»."
+              : "Prueba con otro nombre o correo."
+          }}
+        </p>
+      </div>
+    } @else {
+      <ul class="crud__lista">
+        @for (contacto of visibles(); track contacto.id) {
+          <li class="crud__fila" [class.is-editando]="editando()?.id === contacto.id">
+            <div class="crud__datos">
+              <p class="crud__nombre selectable">{{ contacto.name }}</p>
+              <p class="crud__correo selectable">{{ contacto.email }}</p>
+              @if (contacto.notes) {
+                <p class="crud__notas selectable">{{ contacto.notes }}</p>
+              }
+            </div>
+
+            <app-badge
+              appearance="tonal"
+              size="sm"
+              [variant]="varianteDelRol(contacto.role)"
+            >
+              {{ etiquetaDelRol(contacto.role) }}
+            </app-badge>
+
+            <p class="crud__alta">Alta {{ alta(contacto.createdAt) }}</p>
+
+            @if (porBorrar() === contacto.id) {
+              <div class="crud__confirmar">
+                <span class="crud__pregunta">¿Eliminar?</span>
+                <app-button variant="danger" size="sm" (click)="borrar(contacto)">
+                  Sí, eliminar<span class="crud__aparte"> a {{ contacto.name }}</span>
+                </app-button>
+                <app-button variant="ghost" size="sm" (click)="cancelarBorrado()">
+                  No<span class="crud__aparte">, conservar a {{ contacto.name }}</span>
+                </app-button>
+              </div>
+            } @else {
+              <div class="crud__acciones-fila">
+                <app-button variant="secondary" size="sm" (click)="editar(contacto)">
+                  Editar<span class="crud__aparte"> a {{ contacto.name }}</span>
+                </app-button>
+                <app-button variant="ghost" size="sm" (click)="pedirBorrado(contacto)">
+                  Eliminar<span class="crud__aparte"> a {{ contacto.name }}</span>
+                </app-button>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <app-confirm-dialog
+    heading="Hay cambios sin guardar"
+    detail="Si sales ahora se pierde lo que has escrito en el formulario."
+    confirmLabel="Descartar"
+    cancelLabel="Seguir editando"
+    variant="danger"
+    [open]="avisoDeDescarte()"
+    (confirmed)="descartar()"
+    (dismissed)="seguirEditando()"
+  />
+</div>

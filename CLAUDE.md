@@ -248,6 +248,36 @@ Decisiones que no son negociables sin leer esto:
 - **Esto es notificación local, no push.** El push de verdad —servidor → equipo con la app cerrada— está descartado y por qué se explica en §15. El patrón cuando haga falta es transporte propio (WebSocket/SSE, o un `emit` desde Rust) → `push()`.
 - **La pila de toasts es una región viva `aria-live="polite"` que existe desde el primer render**, por lo mismo que el aviso de rechazo del `FilePicker` (§11.3): insertar la región junto con su texto es la forma de que ningún lector de pantalla lo lea. **Polite y no assertive**, ni siquiera para el error: un aviso no interrumpe lo que se está leyendo, y el error además se queda en pantalla y en el panel.
 
+### 3.11 Contactos: el CRUD de ejemplo
+
+La pantalla vive en `features/contacts/`, ruta `/contacts`, y es el patrón que se copia para cualquier listado con alta, edición y baja. Donde el acceso (§3.9) enseña un formulario que llama una vez, éste enseña **estado que va y viene**: una lista que el backend posee y cuatro operaciones que la mueven. Las piezas, de fuera adentro:
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| `Contacts` | `features/contacts/` | La pantalla: buscador, lista, formulario de alta/edición y confirmación de borrado en la fila. |
+| `ContactStore` | `features/contacts/contact-store.ts` | El estado de la feature — la lista, el indicador de carga y las cuatro operaciones. `@Service({ autoProvided: false })`, provisto por el componente (§6.2). |
+| `contactApi` | `tauri/contact.api.ts` | El wrapper de §7. Relanza con prefijo y con `cause`, igual que `authApi`. |
+| `contact.rs` (comandos) | `src-tauri/src/commands/` | `list_contacts`, `create_contact`, `update_contact`, `delete_contact`. Sólo orquestan: validan el borrador y delegan. |
+| `ContactService` | `src-tauri/src/services/contact.rs` | El almacén: un `Vec` bajo `Mutex`, ids que no se reutilizan y el correo como clave única. |
+| `Contact` y compañía | `src-tauri/src/models/contact.rs` | Los newtypes del límite y los dos DTO: `ContactDraft` (lo que llega, todo texto) y `ContactInput` (lo ya validado). |
+
+Decisiones que no son negociables sin leer esto:
+
+- **La lista la posee Rust, y el frontend no inventa datos.** El `ContactStore` guarda lo que devuelve el backend, no una copia que evoluciona sola. Un almacén paralelo en TypeScript —aunque fuese sólo «para que se vea algo en `pnpm start`»— sería la misma lógica escrita dos veces en dos lenguajes, y el día que divergieran el error se vería en la app empaquetada y no en el navegador.
+- **El borrador viaja como texto plano y se valida entero al entrar.** `ContactDraft` es cuatro `String` en los dos lados; `ContactInput` es lo que sale de los newtypes. Por eso el rol es una cadena hasta el límite: un `enum` en el DTO haría que un valor vacío muriera en serde con un mensaje de librería, en vez de con «Elige un rol de la lista.».
+- **El correo es la clave que no se puede repetir**, y al editar el propio no cuenta. Es la única regla de negocio del ejemplo, y está donde tienen que estar todas: en el servicio, no en el formulario.
+- **Los ids no se reutilizan.** El contador sólo sube, aunque se borre el último. Reciclarlos haría que una vista con datos viejos editara al contacto equivocado, que es el bug que ninguna prueba manual encuentra.
+- **Crear y editar son el mismo formulario, y abrirlo limpia el estado de tocado.** `reset()` de Signal Forms (§6.8) devuelve `touched`/`dirty` a cero: sin eso, abrir el formulario para un contacto nuevo justo después de otro estrenaba los errores de campo obligatorio sobre campos vacíos que nadie había tocado (§11.3).
+- **Borrar pregunta en la propia fila, no en un diálogo.** Un modal es la respuesta de reflejo y aquí no cabe: no hay componente de diálogo en el sistema (§11.6 lo da por futuro) y montar uno a medias —sin trampa de foco ni capa superior— por una confirmación de dos botones sería peor que no tenerlo. La fila entra en modo pregunta, la columna de acciones **tiene ancho fijo** para que nada se mueva al pulsar, y el nombre del contacto va en el texto que sólo leen los lectores de pantalla.
+- **Las cuatro columnas de la fila son fijas, no `auto`.** Cada fila es su propia retícula, así que con columnas automáticas las etiquetas de rol y las fechas empezaban en una `x` distinta en cada fila: una lista de registros que no alinea sus campos se lee como tres tarjetas sueltas.
+- **La lista se recoloca en el frontend con lo que devuelve el backend, sin volver a pedirla.** El comando ya devuelve el registro guardado; pedir la lista otra vez sería un IPC de más y un parpadeo. El orden por nombre se aplica en los dos lados por lo mismo.
+- **Cada operación deja un aviso por `NotificationsService` (§3.10)**, que es lo que hace visible el resultado cuando el cambio ocurre fuera de la vista. Los fallos, no: ésos se quedan en la línea de error del formulario o de la lista, junto a lo que hay que corregir.
+- **La búsqueda filtra en memoria y no llama al backend.** Con una lista que cabe en la ventana, un comando de búsqueda sería latencia a cambio de nada. Cuando el listado deje de caber, eso es paginación en el servicio, no un `filter` más grande.
+- **No está detrás del `authGuard`.** El guard ya se ejerce en `tauri-demo`, y aquí sólo conseguiría que la pantalla de ejemplo fuese inalcanzable en `pnpm start`, donde el acceso tampoco funciona (§3.9).
+- **La lista de ejemplo son tres contactos sembrados al arrancar**, con el mismo constructor encadenado que la cuenta `demo` de §3.9 (`ContactService::seeded()`), y viven en memoria: se reinician al cerrar la app. Es el almacén provisional hasta que se decida la persistencia (§15); el resto del flujo no cambia cuando se decida.
+- **Salir del formulario con cambios sin guardar pregunta antes**, y ése es el único modal de la pantalla (§11.3). Cancelar, abrir otro contacto y crear uno nuevo pasan por la misma guarda, que sólo salta si el formulario está `dirty()`. Borrar una fila **no** abre modal: sigue preguntando en la fila, que es donde está el contacto.
+- **En `pnpm start` la pantalla se dibuja pero la lista no llega.** No hay backend, así que se ve el mensaje que relanza el wrapper —igual que en `tauri-demo`— y el hueco de lista vacía. El formulario, el filtro y la confirmación sí se pueden probar en el navegador; el ciclo completo, sólo en la ventana de Tauri.
+
 ---
 
 ## 4. Estructura de carpetas
@@ -264,8 +294,8 @@ demo/
 │   │   │   ├── ui/             # Design system (§11)
 │   │   │   ├── pipes/
 │   │   │   └── directives/
-│   │   ├── features/           # Una carpeta por feature, lazy-loaded (login, styleguide, tauri-demo)
-│   │   ├── models/             # Interfaces y types del dominio (session.model.ts, notification.model.ts)
+│   │   ├── features/           # Una carpeta por feature, lazy-loaded (contacts, login, styleguide, tauri-demo)
+│   │   ├── models/             # Interfaces y types del dominio (contact.model.ts, session.model.ts, …)
 │   │   ├── tauri/              # Wrappers tipados de invoke() y listeners (§7)
 │   │   ├── app.ts              # Componente raíz
 │   │   ├── app.config.ts
@@ -281,6 +311,7 @@ demo/
 │   │   ├── main.rs             # Entry point (delega en lib.rs)
 │   │   ├── lib.rs              # Builder de Tauri, registro de comandos
 │   │   ├── error.rs            # AppError + AppResult (§8.1)
+│   │   ├── clock.rs            # unix_millis(), compartido por los servicios
 │   │   ├── commands/           # Comandos invocables — sólo orquestan
 │   │   ├── services/           # Lógica de negocio
 │   │   └── models/             # Structs, newtypes validados
@@ -326,6 +357,8 @@ Angular 20 eliminó los sufijos de tipo de los **nombres de archivo**. Esto es l
 - `ThemeService`, `SettingsService` — servicios app-wide de `core/` donde el sustantivo solo es ambiguo.
 
 Un `Theme` sin colisión se queda como `Theme`. No añadir sufijos por costumbre.
+
+Cuando el sustantivo desnudo ya lo ocupa **un archivo** de la misma carpeta, el sufijo del rol pasa también al nombre del archivo: la feature `contacts` tiene `contacts.ts` (la pantalla) y `contact-store.ts` (`ContactStore`).
 
 | Otros elementos | Convención | Ejemplo |
 |---|---|---|
@@ -648,12 +681,14 @@ Reglas:
 3. Devuelve tipos del dominio (`src/app/models/`), nunca `any`.
 4. Los servicios/stores consumen el wrapper; los componentes consumen el servicio.
 5. Al añadir un wrapper nuevo → exportarlo en el barrel **y añadir su fila al inventario**.
+6. **El mensaje que lee el usuario sale de `cause`, no del `message`.** El prefijo del wrapper es para el log; la `cause` es el string plano de Rust. Esa lectura es `mensajeDelBackend()` (`tauri/backend-message.ts`), y la comparten `AuthService` y `ContactStore`: el tercero que la necesite la importa, no la vuelve a escribir.
 
 **Inventario actual**:
 
 | Wrapper | Comandos | Notas |
 |---|---|---|
 | `authApi` | `login` | Acceso (§3.9). Lo consume `AuthService`, nunca un componente. Relanza con prefijo y con `cause`: el string plano de Rust es el mensaje que ve el usuario. |
+| `contactApi` | `list_contacts`, `create_contact`, `update_contact`, `delete_contact` | El CRUD de ejemplo (§3.11). Lo consume `ContactStore`, nunca un componente. Relanza con prefijo y con `cause`, como `authApi`. |
 | `greetApi` | `greet` | Demo de IPC de la plantilla de Tauri. Lo consume `features/tauri-demo/`. |
 | `notificationApi` | `notify` | Notificación nativa del SO (§3.10). Lo consume `NotificationsService` cuando la ventana no tiene el foco, nunca un componente. Fuera de Tauri es no-op, así que en `pnpm start` esa rama no hace nada. |
 | `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, `window\|set_fullscreen`, `window\|is_fullscreen`, `window\|is_focused`, `window\|maximize`, `window\|unmaximize`, y los listeners `onWindowChanged` y `onFocusChanged` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op **salvo los tres de pantalla completa**, que caen a la Fullscreen API del navegador (§3.7). El resto es no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
@@ -774,7 +809,7 @@ Inventario vivo de `src-tauri/capabilities/default.json`. Estado actual de la ba
 | `core:window:allow-maximize` | Restaurar el maximizado al salir de pantalla completa (§3.7) | `FullscreenService` vía `windowApi.maximize` |
 | `core:window:allow-unmaximize` | Desmaximizar antes de entrar en pantalla completa (§3.7) | `FullscreenService` vía `windowApi.unmaximize` |
 
-**Los comandos propios no necesitan fila.** `greet`, `login` y `notify` se invocan con lo que ya concede `core:default`: registrar un comando en `generate_handler!` basta. Sólo los comandos de plugins y del core de Tauri pasan por esta tabla.
+**Los comandos propios no necesitan fila.** `greet`, `login`, `notify` y los cuatro de contactos (§3.11) se invocan con lo que ya concede `core:default`: registrar un comando en `generate_handler!` basta. Sólo los comandos de plugins y del core de Tauri pasan por esta tabla.
 
 Los ocho de ventana son los que **no** trae `core:window:default`. Lo que sí trae y por eso no aparece aquí: `is-maximized` (el icono de restaurar), **`is-fullscreen`** (con el que `FullscreenService` se resincroniza en cada `onWindowChanged`), **`is-focused`** (con el que `NotificationsService` elige canal, §3.10), `theme` e `internal-toggle-maximize` (el doble clic en la barra para maximizar).
 
@@ -937,7 +972,7 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 | `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (outline/tonal), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla. Ver abajo cuál usar. |
 | `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint`, `autocomplete`, `revealable` + el contrato de §6.8 | `FormValueControl<string>`. Expone `focus()`. `revealable` sólo actúa con `type="password"`: añade el ojo de mostrar/ocultar, que no roba el foco al campo. Todo campo de contraseña avisa de Bloq Mayús en la línea del `hint` mientras se escribe; el error del formulario le gana. |
 | `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
-| `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |
+| `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. El placeholder es una opción de valor vacío; ver abajo. |
 | `GestureButton` | `<app-gesture-button>` | `variant`, `size`, `disabled`, `fullWidth`, `gestures`, `longPressDelay`, `doubleTapDelay`, `longPressGrace` | Toque, doble toque y pulsado largo, con barra de progreso. Ver abajo. |
 | `FilePicker` | `<app-file-picker>` | `label`, `hint`, `sources` (drop/browse/paste), `accept`, `maxFiles`, `maxSize`, `preview` + el contrato de §6.8 | `FormValueControl<readonly File[]>`. Adjuntos por arrastre, explorador y portapapeles, con lista y miniatura. Ver abajo. |
 | `Toast` | `<app-toast>` | `variant` (neutral/success/warning/danger/info), `heading`, `detail`, `duration` | Aviso flotante que se retira solo. `duration: 0` lo deja hasta que lo cierren. Emite `expired` (se cumplió el tiempo) y `closed` (lo cerró alguien); el shell distingue las dos (§3.10). Ver abajo. |
@@ -1065,6 +1100,15 @@ no se declara ni se anuncia en el texto de la zona ni responde.
 - **La hora es relativa y se calcula al pintar** ("ahora", "hace 5 min", "hace 3 h", "hace 2 d"). No hay reloj que la refresque mientras el panel está abierto: se abre, se lee y se cierra en segundos. Cuando haga falta que envejezca sola, eso es un pipe con su propio tick, no un `setInterval` escondido aquí.
 - **El detalle se recorta a dos líneas.** Una fila que crece con el texto convierte la lista en un documento, y el panel tiene 440 px de alto como mucho.
 - **Es presentacional**: recibe `items` y emite `dismissed` / `cleared`. Importa `AppNotification` de `models/`, que es infraestructura y no dominio — la regla de esta sección prohíbe que un componente de `shared/ui/` sepa qué es un "ticket", no que conozca la forma de un aviso. Eso es lo que deja montarlo en la styleguide con cuatro avisos inventados.
+
+**Select — el placeholder es una opción de valor vacío, y quien manda es el `selected` de cada opción.** Las dos mitades son la misma trampa vista dos veces, y las dos se pagaron:
+
+- Un `<option disabled>` **no puede ser la selección inicial**: el HTML manda seleccionar la primera opción **no deshabilitada** cuando ninguna lo está, así que el control enseñaba la primera opción real mientras el modelo seguía en `""` — y al enviar respondía «elige un rol» sobre algo que se veía elegido.
+- Y el valor **no se escribe en el `<select>`**: cuando Angular aplica un `[value]` en el elemento padre, las `<option>` del `@for` todavía no existen y la asignación se pierde. Se nota justo al abrir un formulario con un registro ya cargado, que es el caso de editar.
+
+Por eso cada `<option>` lleva su propio `[selected]` —incluida la del placeholder— y el `<select>` no lleva `[value]`: es lo único que dice la verdad en el primer render y en los siguientes.
+
+**El texto que sólo leen los lectores de pantalla no puede ir `position: absolute`.** La receta de siempre —1 px, `overflow: hidden`, `clip-path: inset(50%)`— se escribe **sin sacarlo del flujo**: un `display: inline-block` de 1 px. Con `position: absolute` y sin ancestro posicionado, la caja cuelga del bloque contenedor inicial, así que su posición estática dentro de una lista larga **estira el área desplazable del documento** — y como el que desplaza de verdad es `.shell__content` (§3.7), salía **una segunda barra de scroll** junto a la suya. El `overflow: hidden` del contenedor no lo evita: no recorta a un absoluto cuyo bloque contenedor está por encima de él. Los que ya viven dentro de una capa posicionada —el panel de avisos, el toast, el `FilePicker`— no lo notan; cualquiera nuevo, sí.
 
 **ConfirmDialog — el único modal, y sólo para decidir.** Va sobre el `<dialog>` nativo con `showModal()`, que es quien pone la capa superior, la trampa de foco, el `inert` del resto y la vuelta del foco al disparador al cerrar. Lo que hay que saber para no romperlo:
 
@@ -1334,7 +1378,7 @@ Deliberadamente **fuera** de esta base. Cada proyecto derivado decide y lo docum
 | Tema | Estado |
 |---|---|
 | Croma del acento | Sin decidir, pero **medido** — comparativa en `/styleguide#croma`. Con la luminosidad constante que hace configurable el acento, el techo de los 72 tonos es **C 0.075**; lo ata el **gamut de sRGB**, no el contraste. Ese +25% **no vale la pena**: son ΔE 0.015 —un cuarto de un paso de hover, por debajo del listón con el que ya se descartó `--bg-surface-alt` como hover— y deja el sistema al 96% del punto de ruptura, sin margen. La decisión real es binaria. Para pasar de ahí hay que fijar el tono y ajustarle la luminosidad: a sage 158 eso da **C 0.120**, el doble. C 0.12 sólo admite 13 de 72 tonos con L constante, y 0.14 sólo 6. |
-| Persistencia (SQLite / `tauri-plugin-store` / `localStorage`) | Sin decidir. No hay BD ni store en la base. |
+| Persistencia (SQLite / `tauri-plugin-store` / `localStorage`) | Sin decidir. No hay BD ni store en la base: la lista de contactos (§3.11) y el almacén de usuarios (§3.9) viven en memoria dentro de Rust y mueren con la app. Los dos salen de ahí el día que se decida, y ninguno de los dos flujos cambia más allá del servicio. |
 | Almacén de usuarios y sesión | **Provisional**: una cuenta `demo` hardcodeada en `services/auth.rs`, hasheada con Argon2id al arrancar, y la sesión sólo en memoria (§3.9). Al decidir la persistencia, el almacén de usuarios sale de ahí y `AuthService::with_user` es el único punto de entrada. Recordar la sesión entre arranques es una decisión aparte. |
 | Push de servidor (WNS) | **Descartado por ahora, y medido.** Lo que hay es notificación **local** del SO (§3.10), que cubre «avisar con la app abierta y sin foco». El push de verdad —servidor → equipo con la app cerrada— exige Windows App SDK con `PushNotificationManager`, un registro en Microsoft Entra ID **multi-tenant**, y para entrega en segundo plano y activación COM, **identidad de paquete MSIX** con el Package Family Name mapeado al AppId de Azure por correo a Microsoft, que lo procesan semanalmente. Nada de eso existe en Tauri: sería FFI a WinRT y cambiar el bundle a MSIX. Si hace falta avisar desde el servidor, el patrón es transporte propio (WebSocket/SSE) → `NotificationsService.push()`. |
 | Logging (`tauri-plugin-log`) | Sin decidir. Hoy no hay plugin de log: `println!` sólo vale para depuración local, nunca en un commit. |

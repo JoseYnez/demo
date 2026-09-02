@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant};
 
 use argon2::password_hash::phc::PasswordHash;
 use argon2::password_hash::{PasswordHasher, PasswordVerifier};
 use argon2::Argon2;
 
+use crate::clock::unix_millis;
 use crate::error::{AppError, AppResult};
 use crate::models::{Password, Session, Username};
 
@@ -159,13 +160,6 @@ fn hash(hasher: &Argon2<'_>, password: &[u8]) -> AppResult<String> {
         .hash_password(password)
         .map(|h| h.to_string())
         .map_err(|e| AppError::Internal(format!("no se pudo derivar el hash: {e}")))
-}
-
-fn unix_millis() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or(0)
 }
 
 #[cfg(test)]

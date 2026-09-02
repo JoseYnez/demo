@@ -1,7 +1,7 @@
 import { computed, Service, signal } from "@angular/core";
 
 import type { Credentials, Session } from "../../models/session.model";
-import { authApi } from "../../tauri";
+import { authApi, mensajeDelBackend } from "../../tauri";
 
 @Service()
 export class AuthService {
@@ -24,11 +24,4 @@ export class AuthService {
   logout(): void {
     this.#session.set(null);
   }
-}
-
-function mensajeDelBackend(e: unknown): string {
-  if (e instanceof Error && typeof e.cause === "string") {
-    return e.cause;
-  }
-  return e instanceof Error ? e.message : String(e);
 }

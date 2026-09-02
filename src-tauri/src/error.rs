@@ -12,6 +12,9 @@ pub enum AppError {
     #[error("Demasiados intentos fallidos. Espera {0} s antes de volver a probar.")]
     Locked(u64),
 
+    #[error("{0} ya no existe.")]
+    NotFound(String),
+
     #[error("Error interno: {0}")]
     Internal(String),
 }
