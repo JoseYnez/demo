@@ -543,35 +543,126 @@
   </section>
 
   <section class="sg__section" id="notificaciones">
-    <h2 class="sg__title">Notificaciones de la barra</h2>
+    <h2 class="sg__title">Notificaciones</h2>
     <p class="sg__note selectable">
-      <code>NotificationsService</code> es la única fuente del contador rojo de
-      la campana, arriba a la derecha. El conteo se recorta en
-      <strong>9+</strong> para que la píldora no crezca y descuadre la barra, y
-      pulsar la campana marca todo como leído sin borrar nada. Todavía no hay
-      panel: llega cuando haya una lista que enseñar.
+      Un aviso tiene dos caras y una sola fuente,
+      <code>NotificationsService</code>. El <strong>toast</strong> es la cara
+      pasajera: cae bajo la campana y se va sola. El <strong>panel</strong> es
+      la permanente, y guarda los cincuenta últimos. Pulsar la campana abre el
+      panel y <strong>no</strong> da nada por leído: lo nuevo se distingue
+      mientras lo miras y se marca al cerrar, que es cuando de verdad lo has
+      visto.
     </p>
 
     <app-card variant="outlined">
       <div card-header>
         <span>Banco de pruebas</span>
-        <app-badge variant="neutral" size="sm">
-          {{ pendientes() }} sin leer
-        </app-badge>
+        <div class="sg__inline">
+          <app-badge [variant]="enPrimerPlano() ? 'success' : 'warning'" size="sm">
+            {{ enPrimerPlano() ? "ventana enfocada" : "ventana al fondo" }}
+          </app-badge>
+          <app-badge variant="neutral" size="sm">
+            {{ pendientes() }} sin leer
+          </app-badge>
+        </div>
       </div>
 
-      <div class="sg__inline">
-        <app-button variant="secondary" size="sm" (click)="avisar(1)">
-          Añadir una
-        </app-button>
-        <app-button variant="secondary" size="sm" (click)="avisar(10)">
-          Añadir diez
-        </app-button>
-        <app-button variant="ghost" size="sm" (click)="vaciarAvisos()">
-          Vaciar
-        </app-button>
+      <div class="sg__rows">
+        <div class="sg__inline">
+          @for (ejemplo of ejemplos; track ejemplo.variant) {
+            <app-button variant="secondary" size="sm" (click)="avisar(ejemplo)">
+              {{ ejemplo.variant }}
+            </app-button>
+          }
+        </div>
+
+        <div class="sg__inline">
+          <app-button variant="ghost" size="sm" (click)="avisarEnLote(10)">
+            Diez de golpe
+          </app-button>
+          <app-button variant="ghost" size="sm" (click)="avisarEnSilencio()">
+            Uno silencioso
+          </app-button>
+          <app-button variant="ghost" size="sm" (click)="avisarConRetraso()">
+            En 5 s (cambia de ventana)
+          </app-button>
+          <app-button variant="ghost" size="sm" (click)="vaciarAvisos()">
+            Vaciar
+          </app-button>
+        </div>
       </div>
     </app-card>
+
+    <h3 class="sg__subtitle">El toast</h3>
+    <p class="sg__note selectable">
+      Se retira solo a los 6 s y la barra del pie cuenta lo que le queda; el
+      puntero encima o el foco dentro la congelan, y sigue por donde iba al
+      salir. El <strong>error no se va solo</strong>: un aviso que desaparece
+      antes de leerse no avisó de nada. Cerrarlo con la aspa lo da por leído
+      —estabas delante—; que expire, no. Se apilan tres como mucho, los más
+      nuevos arriba: el resto no se pierde, está en el panel.
+    </p>
+    <p class="sg__note selectable">
+      La familia no se pinta de fondo: en oscuro el fondo tenue es
+      <em>más oscuro</em> que la superficie elevada y el aviso se hundía en vez
+      de flotar. El color va al filo de la izquierda y al icono, sobre la misma
+      superficie elevada que cualquier otra cosa que flote.
+    </p>
+
+    <div class="sg__toasts">
+      @for (ejemplo of ejemplos; track ejemplo.variant) {
+        <app-toast
+          [variant]="ejemplo.variant"
+          [heading]="ejemplo.title"
+          [detail]="ejemplo.detail"
+          [duration]="0"
+        />
+      }
+    </div>
+
+    <h3 class="sg__subtitle">La notificación del sistema</h3>
+    <p class="sg__note selectable">
+      La regla es una: <strong>ventana enfocada → el toast propio; ventana al
+      fondo → la del sistema</strong>. Nunca las dos, que sería el mismo aviso
+      contado dos veces. Pase lo que pase, la entrada al panel se crea siempre:
+      es lo único que no depende de que el SO colabore. El botón
+      <em>«En 5 s»</em> existe para poder ejercer la segunda rama — púlsalo y
+      cambia de ventana antes de que llegue.
+    </p>
+    <p class="sg__note selectable">
+      La manda un comando propio, no <code>tauri-plugin-notification</code>: el
+      plugin sólo declara el AppUserModelID cuando el ejecutable no está en
+      <code>target/</code>, así que en desarrollo el aviso salía rotulado
+      <strong>«Windows PowerShell»</strong> y no había forma de corregirlo desde
+      fuera. Ahora el identificador se registra al arrancar, con el nombre y el
+      icono de la app, y dev y producción se ven igual.
+    </p>
+    <p class="sg__note selectable">
+      Aun así <strong>no es un canal fiable</strong>: el Asistente de
+      concentración y el interruptor por app de Windows la silencian sin avisar.
+      El panel sí lo es, y por eso la entrada se crea siempre.
+    </p>
+
+    <h3 class="sg__subtitle">El panel</h3>
+    <p class="sg__note selectable">
+      Cuelga de la campana, cierra con <kbd>Esc</kbd> o pulsando fuera y le gana
+      el <kbd>Esc</kbd> a la pantalla completa mientras está abierto: es la pila
+      de atajos, no un caso especial. El punto de la izquierda dice de qué
+      familia es el aviso, y va <strong>relleno mientras esté sin leer</strong>
+      —la misma distinción entre trazo y relleno que separa las dos apariencias
+      del badge—.
+    </p>
+
+    <div class="sg__inline sg__inline--top">
+      <app-notification-panel
+        [items]="muestra()"
+        (dismissed)="quitarDeLaMuestra($event)"
+        (cleared)="vaciarMuestra()"
+      />
+      <app-button variant="ghost" size="sm" (click)="reponerMuestra()">
+        Reponer la muestra
+      </app-button>
+    </div>
   </section>
 
   <section class="sg__section">

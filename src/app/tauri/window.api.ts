@@ -86,6 +86,38 @@ export const windowApi = {
       throw new Error(`windowApi.isFullscreen: ${e}`);
     }
   },
+
+  isFocused: async (): Promise<boolean> => {
+    if (!enTauri) return document.hasFocus();
+    try {
+      return await getCurrentWindow().isFocused();
+    } catch (e) {
+      throw new Error(`windowApi.isFocused: ${e}`);
+    }
+  },
+
+  onFocusChanged: async (
+    handler: (focused: boolean) => void,
+  ): Promise<UnlistenFn> => {
+    if (!enTauri) {
+      const alEnfocar = () => handler(true);
+      const alPerderlo = () => handler(false);
+      window.addEventListener("focus", alEnfocar);
+      window.addEventListener("blur", alPerderlo);
+      return () => {
+        window.removeEventListener("focus", alEnfocar);
+        window.removeEventListener("blur", alPerderlo);
+      };
+    }
+    try {
+      return await getCurrentWindow().onFocusChanged(({ payload }) =>
+        handler(payload),
+      );
+    } catch (e) {
+      throw new Error(`windowApi.onFocusChanged: ${e}`);
+    }
+  },
+
   setTheme: async (theme: Theme): Promise<void> => {
     if (!enTauri) return;
     try {

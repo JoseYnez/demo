@@ -1,11 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   DestroyRef,
+  ElementRef,
+  computed,
   effect,
   inject,
   signal,
+  viewChild,
 } from "@angular/core";
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 
@@ -15,13 +17,20 @@ import { FullscreenService } from "./core/services/fullscreen";
 import { KeyboardService } from "./core/services/keyboard";
 import { NotificationsService } from "./core/services/notifications";
 import { ThemeService } from "./core/services/theme";
+import { NotificationPanel, Toast } from "./shared/ui";
 import { windowApi } from "./tauri";
 
 const TOPE_DEL_CONTADOR = 9;
 
 @Component({
   selector: "app-root",
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    NotificationPanel,
+    Toast,
+  ],
   templateUrl: "./app.html",
   styleUrl: "./app.css",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,9 +38,9 @@ const TOPE_DEL_CONTADOR = 9;
 export class App {
   private readonly destroyRef = inject(DestroyRef);
   private readonly teclado = inject(KeyboardService);
-  private readonly notificaciones = inject(NotificationsService);
   private readonly pantalla = inject(FullscreenService);
 
+  protected readonly notificaciones = inject(NotificationsService);
   protected readonly themes = inject(ThemeService);
   protected readonly auth = inject(AuthService);
 
@@ -50,7 +59,9 @@ export class App {
   protected readonly pendientes = this.notificaciones.unread;
   protected readonly contador = computed(() => {
     const pendientes = this.pendientes();
-    return pendientes > TOPE_DEL_CONTADOR ? `${TOPE_DEL_CONTADOR}+` : `${pendientes}`;
+    return pendientes > TOPE_DEL_CONTADOR
+      ? `${TOPE_DEL_CONTADOR}+`
+      : `${pendientes}`;
   });
   protected readonly etiquetaNotificaciones = computed(() => {
     const pendientes = this.pendientes();
@@ -59,6 +70,14 @@ export class App {
     }
     return `Notificaciones: ${pendientes} sin leer`;
   });
+
+  protected readonly panelAbierto = signal(false);
+
+  private readonly zonaDeLaCampana =
+    viewChild.required<ElementRef<HTMLElement>>("zonaDeLaCampana");
+  private readonly botonDeLaCampana =
+    viewChild.required<ElementRef<HTMLButtonElement>>("botonDeLaCampana");
+  private readonly panel = viewChild(NotificationPanel);
 
   constructor() {
     this.bloquearNavegacionAlSoltarArchivos();
@@ -77,10 +96,26 @@ export class App {
       () => this.pantalla.toggle(),
     );
     this.ofrecerEscapeEnPantallaCompleta();
+    this.cerrarElPanelDesdeFuera();
+    this.llevarElFocoAlPanel();
   }
 
-  protected abrirNotificaciones(): void {
+  protected alternarPanel(): void {
+    if (this.panelAbierto()) {
+      this.cerrarPanel();
+      return;
+    }
+    this.notificaciones.clearToasts();
+    this.panelAbierto.set(true);
+  }
+
+  protected cerrarPanel(devolverElFoco = true): void {
+    if (!this.panelAbierto()) return;
+    this.panelAbierto.set(false);
     this.notificaciones.markAllAsRead();
+    if (devolverElFoco) {
+      this.botonDeLaCampana().nativeElement.focus();
+    }
   }
 
   protected minimizar(): void {
@@ -123,6 +158,47 @@ export class App {
             this.destroyRef,
           )
         : undefined;
+    });
+  }
+
+  private cerrarElPanelDesdeFuera(): void {
+    let soltar: (() => void) | undefined;
+
+    effect(() => {
+      soltar?.();
+      soltar = undefined;
+      if (!this.panelAbierto()) return;
+
+      const bajaDelAtajo = this.teclado.register(
+        { key: "Escape", description: "Cerrar las notificaciones" },
+        () => this.cerrarPanel(),
+        this.destroyRef,
+      );
+      const alPulsarFuera = (event: PointerEvent) => {
+        const destino = event.target;
+        if (
+          destino instanceof Node &&
+          this.zonaDeLaCampana().nativeElement.contains(destino)
+        ) {
+          return;
+        }
+        this.cerrarPanel(false);
+      };
+      document.addEventListener("pointerdown", alPulsarFuera, true);
+
+      soltar = () => {
+        bajaDelAtajo();
+        document.removeEventListener("pointerdown", alPulsarFuera, true);
+      };
+    });
+
+    this.destroyRef.onDestroy(() => soltar?.());
+  }
+
+  private llevarElFocoAlPanel(): void {
+    effect(() => {
+      if (!this.panelAbierto()) return;
+      this.panel()?.focus();
     });
   }
 

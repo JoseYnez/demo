@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  signal,
+} from "@angular/core";
 import {
   email,
   form,
@@ -17,6 +23,10 @@ import {
   type RegisteredShortcut,
 } from "../../core/services/keyboard";
 import { NotificationsService } from "../../core/services/notifications";
+import type {
+  AppNotification,
+  NotificationVariant,
+} from "../../models/notification.model";
 import {
   Badge,
   Button,
@@ -24,8 +34,10 @@ import {
   FilePicker,
   GestureButton,
   Input,
+  NotificationPanel,
   Select,
   Textarea,
+  Toast,
 } from "../../shared/ui";
 import type {
   BadgeAppearance,
@@ -34,6 +46,8 @@ import type {
   RejectedFile,
   SelectOption,
 } from "../../shared/ui";
+
+const RETRASO_DE_PRUEBA = 5000;
 
 interface Alta {
   nombre: string;
@@ -52,8 +66,10 @@ interface Alta {
     FilePicker,
     GestureButton,
     Input,
+    NotificationPanel,
     Select,
     Textarea,
+    Toast,
     FormField,
     FormRoot,
   ],
@@ -65,10 +81,12 @@ export class Styleguide {
   protected readonly accents = inject(AccentService);
   protected readonly presets = ACCENT_PRESETS;
 
+  private readonly destroyRef = inject(DestroyRef);
   private readonly teclado = inject(KeyboardService);
   private readonly notificaciones = inject(NotificationsService);
 
   protected readonly pendientes = this.notificaciones.unread;
+  protected readonly enPrimerPlano = this.notificaciones.focused;
 
   protected readonly atajos = signal<readonly RegisteredShortcut[]>([]);
   protected readonly ultimoAtajo = signal("—");
@@ -95,16 +113,133 @@ export class Styleguide {
     );
 
     this.atajos.set(this.teclado.list());
+    this.reponerMuestra();
+
+    this.destroyRef.onDestroy(() => this.olvidarElRetraso());
   }
 
-  protected avisar(cuantas: number): void {
-    for (let i = 0; i < cuantas; i++) {
-      this.notificaciones.push({ title: "Aviso de prueba" });
+  protected readonly ejemplos: readonly {
+    variant: NotificationVariant;
+    title: string;
+    detail: string;
+  }[] = [
+    {
+      variant: "success",
+      title: "Cambios guardados",
+      detail: "El alta se registró sin incidencias.",
+    },
+    {
+      variant: "info",
+      title: "Hay una versión nueva",
+      detail: "Se instalará la próxima vez que cierres la app.",
+    },
+    {
+      variant: "warning",
+      title: "Queda poco espacio",
+      detail: "El disco de trabajo está al 92 %.",
+    },
+    {
+      variant: "danger",
+      title: "No se pudo guardar",
+      detail: "El backend rechazó la petición. Vuelve a intentarlo.",
+    },
+    {
+      variant: "neutral",
+      title: "Sincronización terminada",
+      detail: "42 registros revisados, ninguno cambió.",
+    },
+  ];
+
+  protected avisar(ejemplo: (typeof this.ejemplos)[number]): void {
+    this.notificaciones.push(ejemplo);
+  }
+
+  protected avisarEnLote(cuantas: number): void {
+    for (let i = 1; i <= cuantas; i++) {
+      this.notificaciones.push({
+        title: `Aviso ${i} de ${cuantas}`,
+        variant: "info",
+      });
     }
+  }
+
+  private retrasado: ReturnType<typeof setTimeout> | null = null;
+
+  protected avisarConRetraso(): void {
+    this.olvidarElRetraso();
+    this.retrasado = setTimeout(() => {
+      this.retrasado = null;
+      this.avisar(this.ejemplos[1]);
+    }, RETRASO_DE_PRUEBA);
+  }
+
+  private olvidarElRetraso(): void {
+    if (this.retrasado === null) return;
+    clearTimeout(this.retrasado);
+    this.retrasado = null;
+  }
+
+  protected avisarEnSilencio(): void {
+    this.notificaciones.push({
+      title: "Copia de seguridad hecha",
+      detail: "Sin toast: sólo suma al contador y al panel.",
+      variant: "success",
+      silent: true,
+    });
   }
 
   protected vaciarAvisos(): void {
     this.notificaciones.clear();
+  }
+
+  protected readonly muestra = signal<readonly AppNotification[]>([]);
+
+  protected reponerMuestra(): void {
+    const ahora = Date.now();
+    this.muestra.set([
+      {
+        id: "m1",
+        variant: "danger",
+        title: "No se pudo guardar",
+        detail: "El backend rechazó la petición. Vuelve a intentarlo.",
+        createdAt: ahora - 40_000,
+        duration: 0,
+        read: false,
+      },
+      {
+        id: "m2",
+        variant: "success",
+        title: "Cambios guardados",
+        createdAt: ahora - 9 * 60_000,
+        duration: 6000,
+        read: false,
+      },
+      {
+        id: "m3",
+        variant: "warning",
+        title: "Queda poco espacio",
+        detail: "El disco de trabajo está al 92 %.",
+        createdAt: ahora - 3 * 60 * 60_000,
+        duration: 6000,
+        read: true,
+      },
+      {
+        id: "m4",
+        variant: "neutral",
+        title: "Sincronización terminada",
+        createdAt: ahora - 2 * 24 * 60 * 60_000,
+        duration: 6000,
+        read: true,
+      },
+    ]);
+  }
+
+  protected quitarDeLaMuestra(id: string): void {
+    this.muestra.update((items) => items.filter((item) => item.id !== id));
+  }
+
+  protected vaciarMuestra(): void {
+    this.muestra.set([]);
   }
 
   protected combo(atajo: RegisteredShortcut): string {

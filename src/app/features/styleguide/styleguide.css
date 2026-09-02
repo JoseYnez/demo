@@ -99,6 +99,22 @@ kbd {
   align-items: flex-end;
 }
 
+.sg__inline--top {
+  align-items: flex-start;
+}
+
+.sg__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sg__toasts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-3);
+}
+
 .sg__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

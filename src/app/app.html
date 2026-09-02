@@ -76,34 +76,68 @@
       }
     </button>
 
-    <button
-      class="shell__action shell__action--campana"
-      type="button"
-      (click)="abrirNotificaciones()"
-      [attr.aria-label]="etiquetaNotificaciones()"
-    >
-      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-        <path
-          d="M6.4 10a5.6 5.6 0 0 1 11.2 0c0 3.1.7 4.8 1.4 5.8a.6.6 0 0 1-.5 1H5.5a.6.6 0 0 1-.5-1c.7-1 1.4-2.7 1.4-5.8Z"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linejoin="round"
-        />
-        <path
-          d="M9.9 19.2a2.1 2.1 0 0 0 4.2 0"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="round"
-        />
-      </svg>
+    <div class="shell__campana" #zonaDeLaCampana>
+      <button
+        class="shell__action shell__action--campana"
+        type="button"
+        #botonDeLaCampana
+        [attr.aria-controls]="panelAbierto() ? 'panel-de-notificaciones' : null"
+        [attr.aria-expanded]="panelAbierto()"
+        [attr.aria-label]="etiquetaNotificaciones()"
+        (click)="alternarPanel()"
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path
+            d="M6.4 10a5.6 5.6 0 0 1 11.2 0c0 3.1.7 4.8 1.4 5.8a.6.6 0 0 1-.5 1H5.5a.6.6 0 0 1-.5-1c.7-1 1.4-2.7 1.4-5.8Z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M9.9 19.2a2.1 2.1 0 0 0 4.2 0"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
 
-      @if (pendientes() > 0) {
-        <span class="shell__badge" aria-hidden="true">{{ contador() }}</span>
+        @if (pendientes() > 0) {
+          <span class="shell__badge" aria-hidden="true">{{ contador() }}</span>
+        }
+      </button>
+
+      @if (panelAbierto()) {
+        <app-notification-panel
+          id="panel-de-notificaciones"
+          class="shell__panel"
+          data-tauri-drag-region="false"
+          [items]="notificaciones.items()"
+          (dismissed)="notificaciones.dismiss($event)"
+          (cleared)="notificaciones.clear()"
+        />
       }
-    </button>
 
+      <div
+        class="shell__toasts"
+        aria-live="polite"
+        data-tauri-drag-region="false"
+      >
+        @if (!panelAbierto()) {
+          @for (aviso of notificaciones.toasts(); track aviso.id) {
+            <app-toast
+              [variant]="aviso.variant"
+              [heading]="aviso.title"
+              [detail]="aviso.detail ?? ''"
+              [duration]="aviso.duration"
+              (expired)="notificaciones.expireToast(aviso.id)"
+              (closed)="notificaciones.closeToast(aviso.id)"
+            />
+          }
+        }
+      </div>
+    </div>
   </div>
 
   @if (enTauri) {

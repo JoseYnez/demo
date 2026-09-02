@@ -1,5 +1,6 @@
-import { TestBed } from "@angular/core/testing";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "./app";
 import { routes } from "./app.routes";
@@ -18,14 +19,26 @@ describe("App", () => {
     return TestBed.createComponent(App);
   };
 
+  const campana = (fixture: ComponentFixture<App>): HTMLButtonElement =>
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      ".shell__action--campana",
+    )!;
+
+  const panel = (fixture: ComponentFixture<App>): Element | null =>
+    (fixture.nativeElement as HTMLElement).querySelector(
+      "app-notification-panel",
+    );
+
   afterEach(() => {
     Object.defineProperty(windowApi, "enTauri", {
       value: false,
       configurable: true,
     });
+    vi.restoreAllMocks();
   });
 
   beforeEach(async () => {
+    vi.spyOn(document, "hasFocus").mockReturnValue(true);
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [App],
@@ -108,7 +121,7 @@ describe("App", () => {
     ).toBe("Notificaciones: 12 sin leer");
   });
 
-  it("apaga el contador al pulsar la campana", async () => {
+  it("la campana abre el panel sin dar nada por leído", async () => {
     const notificaciones = TestBed.inject(NotificationsService);
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
@@ -116,12 +129,92 @@ describe("App", () => {
     notificaciones.push({ title: "Primera" });
     await fixture.whenStable();
 
-    const raiz = fixture.nativeElement as HTMLElement;
-    raiz.querySelector<HTMLButtonElement>(".shell__action--campana")?.click();
+    campana(fixture).click();
     await fixture.whenStable();
 
-    expect(raiz.querySelector(".shell__badge")).toBeNull();
+    expect(panel(fixture)).not.toBeNull();
+    expect(campana(fixture).getAttribute("aria-expanded")).toBe("true");
+    expect(notificaciones.unread()).toBe(1);
+  });
+
+  it("cerrar el panel marca todo como leído y devuelve el foco", async () => {
+    const notificaciones = TestBed.inject(NotificationsService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    notificaciones.push({ title: "Primera" });
+    await fixture.whenStable();
+
+    campana(fixture).click();
+    await fixture.whenStable();
+    campana(fixture).click();
+    await fixture.whenStable();
+
+    expect(panel(fixture)).toBeNull();
+    expect(notificaciones.unread()).toBe(0);
     expect(notificaciones.items()).toHaveLength(1);
+    expect(document.activeElement).toBe(campana(fixture));
+  });
+
+  it("el panel se cierra al pulsar fuera", async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    campana(fixture).click();
+    await fixture.whenStable();
+    expect(panel(fixture)).not.toBeNull();
+
+    document.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    await fixture.whenStable();
+
+    expect(panel(fixture)).toBeNull();
+  });
+
+  it("Esc cierra el panel antes que la pantalla completa", async () => {
+    const pantalla = TestBed.inject(FullscreenService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    pantalla.set(true);
+    await fixture.whenStable();
+    campana(fixture).click();
+    await fixture.whenStable();
+
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    await fixture.whenStable();
+
+    expect(panel(fixture)).toBeNull();
+    expect(pantalla.active()).toBe(true);
+  });
+
+  it("asoma el aviso como toast y lo retira al abrir el panel", async () => {
+    const notificaciones = TestBed.inject(NotificationsService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    notificaciones.push({ title: "Guardado", variant: "success" });
+    await fixture.whenStable();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelectorAll("app-toast")).toHaveLength(1);
+
+    campana(fixture).click();
+    await fixture.whenStable();
+
+    expect(raiz.querySelectorAll("app-toast")).toHaveLength(0);
+  });
+
+  it("un aviso silencioso cuenta pero no asoma", async () => {
+    const notificaciones = TestBed.inject(NotificationsService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    notificaciones.push({ title: "En segundo plano", silent: true });
+    await fixture.whenStable();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelectorAll("app-toast")).toHaveLength(0);
+    expect(raiz.querySelector(".shell__badge")?.textContent?.trim()).toBe("1");
   });
 
   it("registra F11 como atajo de pantalla completa", async () => {
