@@ -174,6 +174,34 @@ pnpm tauri icon src/assets/icon.svg
 
 **El tema de la ventana se sincroniza con el de la app.** `ThemeService.apply()` llama a `windowApi.setTheme()` además de escribir `data-theme`. Sin decoraciones queda poco nativo que teñir, pero el borde de Windows 11 y los menús del sistema salen de ahí, y sin la llamada se quedaban en claro con la app en oscuro.
 
+### 3.9 Acceso: usuario y contraseña
+
+La pantalla vive en `features/login/`, ruta `/login`, y es el primer flujo completo de la base: formulario → wrapper → comando Rust → sesión en un servicio. Las piezas, de fuera adentro:
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| `Login` | `features/login/` | Signal Forms con `required` + `minLength`; enfoca el usuario al abrirse; enseña el rechazo del backend en un `role="alert"` y lo retira solo al corregir. |
+| `AuthService` | `core/services/auth.ts` | La sesión (`session`, `authenticated`) con el patrón signal privado + `readonly`. `login()` relanza el mensaje del backend **limpio** para la UI; `logout()` la vacía. |
+| `authGuard` | `core/guards/auth-guard.ts` | Redirige a `/login?volver=<url>`; el login vuelve ahí al entrar. Hoy protege `tauri-demo`, que sin Tauri no sirve de nada igual. |
+| `authApi` | `tauri/auth.api.ts` | El wrapper de §7. Relanza con prefijo **y con `cause`**: el prefijo es para el log, la `cause` (el string plano de Rust) es lo que el usuario lee. |
+| `login` | `src-tauri/src/commands/auth.rs` | Sólo orquesta: newtypes `Username` / `Password` en el límite y `spawn_blocking` para que Argon2 no bloquee el hilo del runtime. |
+| `AuthService` (Rust) | `src-tauri/src/services/auth.rs` | Verifica contra hashes **Argon2id**, cuenta fallos por usuario y bloquea 30 s tras 5 seguidos. |
+
+Decisiones que no son negociables sin leer esto:
+
+- **La contraseña viaja al backend y se compara allí contra un hash.** Nunca se guarda ni se compara en claro, ni siquiera en la cuenta de demostración: se hashea al arrancar. `Password` redacta su `Debug`, así que no puede colarse en un log.
+- **Usuario inexistente y contraseña equivocada devuelven el mismo error**, y el inexistente se verifica contra un hash señuelo para que tarden parecido. Sin eso, el tiempo de respuesta enumera usuarios.
+- **El bloqueo va por usuario y avisa con los segundos que faltan.** Es lo mínimo contra fuerza bruta en una app de escritorio; un derivado con red además lo llevará al servidor.
+- **`Username` normaliza** (recorta y baja a minúsculas): `Ada` y `ada` son la misma cuenta. Sólo admite letras, números y `. _ - @`, de 3 a 64 caracteres. `Password` sólo exige no estar vacía y no pasar de 256 bytes —la política de fortaleza es del alta, no del acceso: rechazar aquí una contraseña legítima antigua deja al usuario fuera—.
+- **La cuenta `demo` / `demo1234` es el almacén provisional**, hardcodeada en `services/auth.rs` y anunciada en la propia pantalla. Un derivado la sustituye por su almacén real (§15) construyendo `AuthService::new(...).with_user(...)` desde ahí; nada más del flujo cambia.
+- **La sesión vive en memoria y muere con la app.** Es lo correcto en escritorio: no hay cookie que renovar ni token que caducar. Si un derivado necesita recordar la sesión, eso es una decisión de §15, no un `localStorage` colado en el servicio.
+- **El botón de enviar no se deshabilita con el formulario inválido.** `submit()` marca todo como tocado, así que pulsar con campos vacíos enseña qué falta en vez de un botón muerto sin explicación. Es la excepción deliberada al patrón de la styleguide.
+- **El destino de vuelta se valida**: sólo rutas internas (`/…` y no `//…`). Lo demás cae a `/`.
+- **En `pnpm start` el acceso no funciona**, igual que `greet`: no hay backend. La pantalla se prueba en el navegador —validación, ojo, Bloq Mayús, mensaje de error— y el flujo completo en la ventana de Tauri.
+- El shell enseña **«Acceso» en la navegación mientras no hay sesión y el botón de salir en las acciones cuando la hay**; el botón lleva el nombre de la cuenta en su `aria-label` y en su `title`.
+- **Ocupa la ventana entera, a dos columnas**: héroe decorado a la izquierda (marca, saludo, versión) y el formulario a la derecha sobre `--bg-surface`, los dos a toda altura. Por debajo de 720 px se apilan y el héroe se encoge a una franja. Es la única pantalla que no se centra en una columna estrecha: no hay nada más que enseñar y el vacío alrededor de una tarjeta de 400 px leía como pantalla a medio hacer.
+- **Es la única pantalla con decoración, y la decoración también sale de los tokens.** Tres halos desenfocados —`--accent`, `--accent-tonal`, `--accent-fg`— a baja opacidad sobre una retícula de `--border-default` que se desvanece con una máscara radial. Al ser tokens, rotan con el acento (§11.5) y sirven en los dos temas sin CSS condicional; no hay un color literal ni `color-mix()`/`oklch()` en el componente. La deriva de los halos se apaga con `prefers-reduced-motion` y su `animation` lleva duraciones literales, porque el shorthand no admite `--transition-*` (§6.9). El pie enseña sólo la versión; el commit sigue en el tooltip del icono (§3.6). Ninguna otra pantalla debe copiar el fondo: el resto del sistema es sobrio a propósito.
+
 ---
 
 ## 4. Estructura de carpetas
@@ -183,15 +211,15 @@ demo/
 ├── src/                        # Frontend Angular
 │   ├── app/
 │   │   ├── core/               # Singletons: servicios app-wide, guards, error handler
-│   │   │   ├── services/
-│   │   │   ├── guards/
+│   │   │   ├── services/       # ThemeService, AccentService, AuthService (§3.9), …
+│   │   │   ├── guards/         # authGuard (§3.9)
 │   │   │   └── build-info.ts   # Generado: versión y commit (§3.6, no se commitea)
 │   │   ├── shared/             # Reutilizable entre features
 │   │   │   ├── ui/             # Design system (§11)
 │   │   │   ├── pipes/
 │   │   │   └── directives/
-│   │   ├── features/           # Una carpeta por feature, lazy-loaded
-│   │   ├── models/             # Interfaces y types del dominio
+│   │   ├── features/           # Una carpeta por feature, lazy-loaded (login, styleguide, tauri-demo)
+│   │   ├── models/             # Interfaces y types del dominio (session.model.ts, notification.model.ts)
 │   │   ├── tauri/              # Wrappers tipados de invoke() y listeners (§7)
 │   │   ├── app.ts              # Componente raíz
 │   │   ├── app.config.ts
@@ -451,7 +479,7 @@ export const TICKETS_ROUTES: Routes = [
 { path: "tickets", loadChildren: () => import("./features/tickets/tickets.routes").then((m) => m.TICKETS_ROUTES) }
 ```
 
-Una feature de **una sola ruta** no necesita su propio `*.routes.ts`: basta un `loadComponent` directo en `app.routes.ts` (así están hoy `styleguide` y `tauri-demo`). El archivo de rutas se crea en cuanto aparece la segunda ruta.
+Una feature de **una sola ruta** no necesita su propio `*.routes.ts`: basta un `loadComponent` directo en `app.routes.ts` (así están hoy `login`, `styleguide` y `tauri-demo`). El archivo de rutas se crea en cuanto aparece la segunda ruta.
 
 ### 6.8 Formularios
 
@@ -579,6 +607,7 @@ Reglas:
 
 | Wrapper | Comandos | Notas |
 |---|---|---|
+| `authApi` | `login` | Acceso (§3.9). Lo consume `AuthService`, nunca un componente. Relanza con prefijo y con `cause`: el string plano de Rust es el mensaje que ve el usuario. |
 | `greetApi` | `greet` | Demo de IPC de la plantilla de Tauri. Lo consume `features/tauri-demo/`. |
 | `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, `window\|set_fullscreen`, `window\|is_fullscreen`, `window\|maximize`, `window\|unmaximize`, y el listener `onResized` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
 
@@ -590,25 +619,27 @@ Reglas:
 
 ### 8.1 Backend (Rust)
 
-En cuanto exista el primer comando con I/O, crear `src-tauri/src/error.rs`:
+Vive en `src-tauri/src/error.rs` y lo estrenó el acceso (§3.9):
 
 ```rust
 use serde::Serialize;
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, PartialEq, Eq)]
 pub enum AppError {
-    #[error("io: {0}")]
-    Io(#[from] std::io::Error),
-
-    #[error("validación: {0}")]
+    #[error("{0}")]
     Validation(String),
 
-    #[error("no encontrado")]
-    NotFound,
+    #[error("Usuario o contraseña incorrectos.")]
+    InvalidCredentials,
+
+    #[error("Demasiados intentos fallidos. Espera {0} s antes de volver a probar.")]
+    Locked(u64),
+
+    #[error("Error interno: {0}")]
+    Internal(String),
 }
 
-// El frontend recibe un string plano.
 impl Serialize for AppError {
     fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         s.serialize_str(&self.to_string())
@@ -619,7 +650,8 @@ pub type AppResult<T> = Result<T, AppError>;
 ```
 
 - Todo comando Tauri devuelve `AppResult<T>`.
-- Propagación con `?`; conversión automática con `#[from]`.
+- Propagación con `?`; al añadir I/O, la variante lleva `#[from]` (`Io(#[from] std::io::Error)`) para que convierta sola.
+- **Los mensajes de `#[error]` son texto de usuario**, en español y con punto final: el frontend los enseña tal cual (§3.9). Una variante que sólo sirva para el log va en `Internal`.
 - `unwrap()` / `expect()` **sólo** bajo `#[cfg(test)]`. La única excepción tolerada es el `.expect()` del arranque en `lib.rs`.
 
 ### 8.2 Frontend (Angular)
@@ -694,6 +726,8 @@ Inventario vivo de `src-tauri/capabilities/default.json`. Estado actual de la ba
 | `core:window:allow-set-fullscreen` | Pantalla completa con F11 (§3.7) | `FullscreenService` vía `windowApi.setFullscreen` |
 | `core:window:allow-maximize` | Restaurar el maximizado al salir de pantalla completa (§3.7) | `FullscreenService` vía `windowApi.maximize` |
 | `core:window:allow-unmaximize` | Desmaximizar antes de entrar en pantalla completa (§3.7) | `FullscreenService` vía `windowApi.unmaximize` |
+
+**Los comandos propios no necesitan fila.** `greet` y `login` se invocan con lo que ya concede `core:default`: registrar un comando en `generate_handler!` basta. Sólo los comandos de plugins y del core de Tauri pasan por esta tabla.
 
 Los ocho de ventana son los que **no** trae `core:window:default`. Lo que sí trae y por eso no aparece aquí: `is-maximized` (el icono de restaurar), **`is-fullscreen`** (con el que `FullscreenService` se resincroniza en cada `onResized`), `theme` e `internal-toggle-maximize` (el doble clic en la barra para maximizar).
 
@@ -853,7 +887,7 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 | `Button` | `<app-button>` | `variant` (primary/secondary/ghost/danger), `size` (sm/md/lg), `type`, `disabled`, `loading`, `fullWidth` | `loading` deshabilita y muestra spinner. |
 | `Card` | `<app-card>` | `variant` (elevated/outlined/flat), `padding` (none/sm/md/lg) | Slots opcionales `[card-header]` y `[card-footer]`; la zona sin contenido no se dibuja. |
 | `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (outline/tonal), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla. Ver abajo cuál usar. |
-| `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint` + el contrato de §6.8 | `FormValueControl<string>`. |
+| `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint`, `autocomplete`, `revealable` + el contrato de §6.8 | `FormValueControl<string>`. Expone `focus()`. `revealable` sólo actúa con `type="password"`: añade el ojo de mostrar/ocultar, que no roba el foco al campo. Todo campo de contraseña avisa de Bloq Mayús en la línea del `hint` mientras se escribe; el error del formulario le gana. |
 | `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
 | `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. |
 | `GestureButton` | `<app-gesture-button>` | `variant`, `size`, `disabled`, `fullWidth`, `gestures`, `longPressDelay`, `doubleTapDelay`, `longPressGrace` | Toque, doble toque y pulsado largo, con barra de progreso. Ver abajo. |
@@ -1211,6 +1245,7 @@ Deliberadamente **fuera** de esta base. Cada proyecto derivado decide y lo docum
 |---|---|
 | Croma del acento | Sin decidir, pero **medido** — comparativa en `/styleguide#croma`. Con la luminosidad constante que hace configurable el acento, el techo de los 72 tonos es **C 0.075**; lo ata el **gamut de sRGB**, no el contraste. Ese +25% **no vale la pena**: son ΔE 0.015 —un cuarto de un paso de hover, por debajo del listón con el que ya se descartó `--bg-surface-alt` como hover— y deja el sistema al 96% del punto de ruptura, sin margen. La decisión real es binaria. Para pasar de ahí hay que fijar el tono y ajustarle la luminosidad: a sage 158 eso da **C 0.120**, el doble. C 0.12 sólo admite 13 de 72 tonos con L constante, y 0.14 sólo 6. |
 | Persistencia (SQLite / `tauri-plugin-store` / `localStorage`) | Sin decidir. No hay BD ni store en la base. |
+| Almacén de usuarios y sesión | **Provisional**: una cuenta `demo` hardcodeada en `services/auth.rs`, hasheada con Argon2id al arrancar, y la sesión sólo en memoria (§3.9). Al decidir la persistencia, el almacén de usuarios sale de ahí y `AuthService::with_user` es el único punto de entrada. Recordar la sesión entre arranques es una decisión aparte. |
 | Logging (`tauri-plugin-log`) | Sin decidir. Hoy no hay plugin de log: `println!` sólo vale para depuración local, nunca en un commit. |
 | Barra de título custom vs. nativa | **Cerrada: propia** (`decorations: false`). Ver §3.7. |
 | Versionado sincronizado `package.json` ↔ `tauri.conf.json` | Manual. No hay script de sync. |
