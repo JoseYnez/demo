@@ -54,6 +54,20 @@ describe("KeyboardService", () => {
     expect(veces).toBe(0);
   });
 
+  it("se calla mientras hay un diálogo modal abierto", () => {
+    let veces = 0;
+    teclado.register({ key: "Escape" }, () => veces++, destroyRef);
+    const modal = document.createElement("dialog");
+    modal.setAttribute("open", "");
+    document.body.append(modal);
+
+    pulsar({ key: "Escape" });
+    modal.remove();
+    pulsar({ key: "Escape" });
+
+    expect(veces).toBe(1);
+  });
+
   it("ignora los eventos nacidos en un campo editable", () => {
     let veces = 0;
     teclado.register({ key: "/" }, () => veces++, destroyRef);

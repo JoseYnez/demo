@@ -1,0 +1,33 @@
+<dialog
+  class="cd"
+  #caja
+  [attr.aria-labelledby]="id + '-titulo'"
+  [attr.aria-describedby]="detail() ? id + '-detalle' : null"
+  (cancel)="alPedirCierre($event)"
+  (keydown)="alTeclear($event)"
+>
+  <h2 class="cd__titulo" [id]="id + '-titulo'">{{ heading() }}</h2>
+
+  @if (detail()) {
+    <p class="cd__detalle selectable" [id]="id + '-detalle'">{{ detail() }}</p>
+  }
+
+  <div class="cd__acciones" #acciones>
+    <app-button
+      class="cd__confirmar"
+      [variant]="variant()"
+      [loading]="busy()"
+      (click)="confirmar()"
+    >
+      {{ confirmLabel() }}
+    </app-button>
+    <app-button
+      class="cd__cancelar"
+      variant="ghost"
+      [disabled]="busy()"
+      (click)="cancelar()"
+    >
+      {{ cancelLabel() }}
+    </app-button>
+  </div>
+</dialog>

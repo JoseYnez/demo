@@ -1,0 +1,55 @@
+:host {
+  display: contents;
+}
+
+.cd {
+  margin: auto;
+  width: min(420px, calc(100vw - var(--space-8)));
+  padding: var(--space-6);
+  color: var(--text-primary);
+  background-color: var(--bg-surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl), var(--edge-raised);
+}
+
+.cd::backdrop {
+  background-color: var(--backdrop, rgb(0 0 0 / 45%));
+}
+
+.cd[open] {
+  animation-name: cd-entrar;
+  animation-duration: 120ms;
+  animation-timing-function: ease-out;
+}
+
+.cd__titulo {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+.cd__detalle {
+  margin-top: var(--space-2);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.cd__acciones {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+@keyframes cd-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd[open] {
+    animation-name: none;
+  }
+}

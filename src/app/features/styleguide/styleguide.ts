@@ -4,6 +4,7 @@ import {
   DestroyRef,
   inject,
   signal,
+  type WritableSignal,
 } from "@angular/core";
 import {
   email,
@@ -31,6 +32,7 @@ import {
   Badge,
   Button,
   Card,
+  ConfirmDialog,
   FilePicker,
   GestureButton,
   Input,
@@ -48,6 +50,7 @@ import type {
 } from "../../shared/ui";
 
 const RETRASO_DE_PRUEBA = 5000;
+const TRABAJO_DE_PRUEBA = 1500;
 
 interface Alta {
   nombre: string;
@@ -63,6 +66,7 @@ interface Alta {
     Badge,
     Button,
     Card,
+    ConfirmDialog,
     FilePicker,
     GestureButton,
     Input,
@@ -397,6 +401,33 @@ export class Styleguide {
   });
 
   protected readonly enviado = signal("");
+
+  protected readonly confirmaSimple = signal(false);
+  protected readonly confirmaDestructiva = signal(false);
+  protected readonly confirmaLenta = signal(false);
+  protected readonly trabajando = signal(false);
+  protected readonly ultimaDecision = signal("—");
+
+  protected pedirConfirmacion(cual: "simple" | "destructiva" | "lenta"): void {
+    this.ultimaDecision.set("…");
+    if (cual === "simple") this.confirmaSimple.set(true);
+    if (cual === "destructiva") this.confirmaDestructiva.set(true);
+    if (cual === "lenta") this.confirmaLenta.set(true);
+  }
+
+  protected decidir(que: string, abierto: WritableSignal<boolean>): void {
+    this.ultimaDecision.set(que);
+    abierto.set(false);
+  }
+
+  protected trabajarYCerrar(): void {
+    this.trabajando.set(true);
+    setTimeout(() => {
+      this.trabajando.set(false);
+      this.confirmaLenta.set(false);
+      this.ultimaDecision.set("hecho tras 1,5 s");
+    }, TRABAJO_DE_PRUEBA);
+  }
 
   protected anotarRechazos(lote: readonly RejectedFile[]): void {
     this.rechazos.set(lote.map((r) => `${r.file.name} → ${r.reason}`));

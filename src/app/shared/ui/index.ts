@@ -7,6 +7,9 @@ export type { ButtonSize, ButtonType, ButtonVariant } from "./button/button";
 export { Card } from "./card/card";
 export type { CardPadding, CardVariant } from "./card/card";
 
+export { ConfirmDialog } from "./confirm-dialog/confirm-dialog";
+export type { ConfirmVariant } from "./confirm-dialog/confirm-dialog";
+
 export { GestureButton } from "./gesture-button/gesture-button";
 export type { Gesture } from "./gesture-button/gesture-button";
 

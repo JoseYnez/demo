@@ -59,6 +59,7 @@
 
   --overlay-hover: rgb(0 0 0 / 8%);
   --overlay-active: rgb(0 0 0 / 14%);
+  --backdrop: rgb(0 0 0 / 45%);
 
   --text-primary: #1a201c;
   --text-secondary: #4e5852;
@@ -138,6 +139,7 @@
 
   --overlay-hover: rgb(255 255 255 / 7%);
   --overlay-active: rgb(255 255 255 / 13%);
+  --backdrop: rgb(0 0 0 / 62%);
 
   --text-primary: #e8eeea;
   --text-secondary: #bbbfbc;
@@ -214,6 +216,7 @@
 
     --overlay-hover: rgb(255 255 255 / 7%);
     --overlay-active: rgb(255 255 255 / 13%);
+    --backdrop: rgb(0 0 0 / 62%);
 
     --text-primary: #e8eeea;
     --text-secondary: #bbbfbc;

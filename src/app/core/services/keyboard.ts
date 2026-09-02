@@ -56,6 +56,9 @@ export class KeyboardService {
   }
 
   private despachar(event: KeyboardEvent): void {
+    if (this.hayDialogoAbierto()) {
+      return;
+    }
     if (this.puedeEscribir(event) && this.esCampoEditable(event.target)) {
       return;
     }
@@ -69,6 +72,10 @@ export class KeyboardService {
         return;
       }
     }
+  }
+
+  private hayDialogoAbierto(): boolean {
+    return document.querySelector("dialog[open]") !== null;
   }
 
   private coincide(binding: Binding, event: KeyboardEvent): boolean {

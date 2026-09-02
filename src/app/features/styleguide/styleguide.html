@@ -803,6 +803,72 @@
     }
   </section>
 
+  <section class="sg__section" id="confirmacion">
+    <h2 class="sg__title">Confirmación</h2>
+    <p class="sg__note selectable">
+      El único modal del sistema, y sólo para <strong>decidir</strong>: bloquea
+      la ventana hasta que confirmes o canceles. Va sobre el
+      <code>&lt;dialog&gt;</code> nativo, así que la capa superior, la trampa de
+      foco y el velo los pone el motor. Lo que <strong>no</strong> hace: cerrarse
+      al pulsar el fondo —perder por accidente lo que ibas a confirmar es el peor
+      final— y sostener nada que tarde. Para editar un registro está el panel de
+      la propia pantalla, no un modal.
+    </p>
+
+    <app-card variant="outlined">
+      <div card-header><span>Banco de pruebas</span></div>
+
+      <div class="sg__inline">
+        <app-button variant="secondary" (click)="pedirConfirmacion('simple')">
+          Confirmación normal
+        </app-button>
+        <app-button variant="danger" (click)="pedirConfirmacion('destructiva')">
+          Confirmación destructiva
+        </app-button>
+        <app-button variant="ghost" (click)="pedirConfirmacion('lenta')">
+          Con acción en marcha
+        </app-button>
+      </div>
+
+      <p class="sg__note selectable">
+        Última decisión: <code>{{ ultimaDecision() }}</code>
+      </p>
+      <p class="sg__note selectable">
+        En la destructiva el foco arranca en <strong>Cancelar</strong>, no en el
+        botón rojo: con <kbd>Enter</kbd> no se borra nada sin querer.
+      </p>
+    </app-card>
+
+    <app-confirm-dialog
+      heading="¿Publicar los cambios?"
+      detail="Se harán visibles para el resto del equipo."
+      confirmLabel="Publicar"
+      [open]="confirmaSimple()"
+      (confirmed)="decidir('publicado', confirmaSimple)"
+      (dismissed)="decidir('cancelado', confirmaSimple)"
+    />
+
+    <app-confirm-dialog
+      heading="¿Eliminar los 12 contactos?"
+      detail="Esta acción no se puede deshacer."
+      confirmLabel="Eliminar"
+      variant="danger"
+      [open]="confirmaDestructiva()"
+      (confirmed)="decidir('eliminado', confirmaDestructiva)"
+      (dismissed)="decidir('cancelado', confirmaDestructiva)"
+    />
+
+    <app-confirm-dialog
+      heading="¿Sincronizar ahora?"
+      detail="Tarda un segundo y medio: mientras trabaja, el diálogo no se puede cerrar."
+      confirmLabel="Sincronizar"
+      [open]="confirmaLenta()"
+      [busy]="trabajando()"
+      (confirmed)="trabajarYCerrar()"
+      (dismissed)="decidir('cancelado', confirmaLenta)"
+    />
+  </section>
+
   <section class="sg__section" id="comparativa">
     <h2 class="sg__title">Comparativa: dónde va la etiqueta</h2>
     <p class="sg__note selectable">
