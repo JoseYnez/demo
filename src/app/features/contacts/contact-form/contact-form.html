@@ -9,7 +9,7 @@
 
   @if (sinLista()) {
     <div class="ficha__hueco">
-      <p class="ficha__error selectable" role="alert">{{ errorDeCarga() }}</p>
+      <p class="ui-alert selectable" role="alert">{{ errorDeCarga() }}</p>
       <p class="ficha__nota">
         Sin la lista no se puede saber qué contacto estás editando.
       </p>
@@ -64,7 +64,7 @@
         />
 
         @if (error()) {
-          <p class="ficha__error selectable" role="alert">{{ error() }}</p>
+          <p class="ui-alert selectable" role="alert">{{ error() }}</p>
         }
 
         <div class="ficha__botones">

@@ -31,7 +31,7 @@
   </div>
 
   @if (error()) {
-    <p class="crud__error selectable" role="alert">{{ error() }}</p>
+    <p class="ui-alert selectable" role="alert">{{ error() }}</p>
   }
 
   <section class="crud__resultado" aria-label="Lista de contactos">
@@ -72,7 +72,6 @@
 
             <app-badge
               class="crud__rol"
-              appearance="tonal"
               size="sm"
               [variant]="varianteDelRol(contacto.role)"
             >
@@ -94,7 +93,7 @@
                   [loading]="borrando() === contacto.id"
                   (click)="borrar(contacto)"
                 >
-                  Sí, eliminar<span class="crud__aparte"> a {{ contacto.name }}</span>
+                  Sí, eliminar<span class="sr-only"> a {{ contacto.name }}</span>
                 </app-button>
                 <app-button
                   [id]="'cancelar-' + contacto.id"
@@ -103,7 +102,7 @@
                   [disabled]="borrando() !== null"
                   (click)="cancelarBorrado(contacto.id)"
                 >
-                  No<span class="crud__aparte">, conservar a {{ contacto.name }}</span>
+                  No<span class="sr-only">, conservar a {{ contacto.name }}</span>
                 </app-button>
               </div>
             } @else {
@@ -112,7 +111,7 @@
                   class="btn btn--secondary btn--sm"
                   [routerLink]="['/contacts', contacto.id]"
                 >
-                  Editar<span class="crud__aparte"> a {{ contacto.name }}</span>
+                  Editar<span class="sr-only"> a {{ contacto.name }}</span>
                 </a>
                 <app-button
                   [id]="'borrar-' + contacto.id"
@@ -120,7 +119,7 @@
                   size="sm"
                   (click)="pedirBorrado(contacto)"
                 >
-                  Eliminar<span class="crud__aparte"> a {{ contacto.name }}</span>
+                  Eliminar<span class="sr-only"> a {{ contacto.name }}</span>
                 </app-button>
               </div>
             }

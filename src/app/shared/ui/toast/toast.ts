@@ -7,20 +7,12 @@ import {
   output,
 } from "@angular/core";
 
-export type ToastVariant =
-  | "neutral"
-  | "success"
-  | "warning"
-  | "danger"
-  | "info";
+import {
+  ETIQUETA_DE_VARIANTE,
+  type NotificationVariant,
+} from "../../../models/notification.model";
 
-const FAMILIA: Record<ToastVariant, string> = {
-  neutral: "Aviso",
-  success: "Correcto",
-  warning: "Atención",
-  danger: "Error",
-  info: "Información",
-};
+export type ToastVariant = NotificationVariant;
 
 @Component({
   selector: "app-toast",
@@ -44,7 +36,9 @@ export class Toast {
   readonly closed = output<void>();
 
   protected readonly classes = computed(() => `toast toast--${this.variant()}`);
-  protected readonly familia = computed(() => FAMILIA[this.variant()]);
+  protected readonly familia = computed(
+    () => ETIQUETA_DE_VARIANTE[this.variant()],
+  );
   protected readonly cuentaAtras = computed(() => this.duration() > 0);
 
   #temporizador: ReturnType<typeof setTimeout> | null = null;

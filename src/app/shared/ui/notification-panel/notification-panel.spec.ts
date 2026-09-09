@@ -59,7 +59,7 @@ describe("NotificationPanel", () => {
   it("anuncia la familia y el estado a quien no ve el punto", async () => {
     await montar([aviso({ variant: "danger", title: "Falló" })]);
 
-    expect(caja().querySelector(".np__familia")?.textContent).toBe(
+    expect(caja().querySelector(".sr-only")?.textContent).toBe(
       "Error, sin leer:",
     );
   });

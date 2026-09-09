@@ -168,4 +168,18 @@ describe("ContactList", () => {
     const aviso = raizDe(fixture).querySelector('[role="alert"]');
     expect(aviso?.textContent).toContain("Error interno: qué mal.");
   });
+
+  it("el filtro no tropieza con los acentos", async () => {
+    const jose = {
+      ...ADA,
+      id: 7,
+      name: "José Núñez",
+      email: "jose@example.com",
+    };
+    const fixture = await montar([jose, ZOE]);
+
+    await buscar(fixture, "nunez");
+
+    expect(nombres(fixture)).toEqual(["José Núñez"]);
+  });
 });

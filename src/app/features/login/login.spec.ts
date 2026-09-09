@@ -98,13 +98,13 @@ describe("Login", () => {
     escribir(raiz, 1, "mal");
     await enviar(fixture);
 
-    const aviso = raiz.querySelector(".login__error");
+    const aviso = raiz.querySelector(".ui-alert");
     expect(aviso?.getAttribute("role")).toBe("alert");
     expect(aviso?.textContent?.trim()).toBe("Usuario o contraseña incorrectos.");
 
     escribir(raiz, 1, "malo");
     await fixture.whenStable();
-    expect(raiz.querySelector(".login__error")).toBeNull();
+    expect(raiz.querySelector(".ui-alert")).toBeNull();
   });
 
   it("entra, guarda la sesión y vuelve a donde se quería ir", async () => {

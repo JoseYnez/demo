@@ -15,6 +15,7 @@ import {
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
+import { idDeControl } from "../field-shell/control-state";
 import { FieldShell } from "../field-shell/field-shell";
 
 export type FileSource = "drop" | "browse" | "paste";
@@ -24,8 +25,6 @@ export interface RejectedFile {
   readonly file: File;
   readonly reason: RejectionReason;
 }
-
-let nextId = 0;
 
 @Component({
   selector: "app-file-picker",
@@ -57,7 +56,7 @@ export class FilePicker implements FormValueControl<readonly File[]> {
   readonly touch = output<void>();
   readonly rejected = output<readonly RejectedFile[]>();
 
-  protected readonly id = `app-file-picker-${nextId++}`;
+  protected readonly id = idDeControl("app-file-picker");
 
   private readonly campo = viewChild.required<ElementRef<HTMLInputElement>>("campo");
   private readonly zona = viewChild.required<ElementRef<HTMLElement>>("zona");

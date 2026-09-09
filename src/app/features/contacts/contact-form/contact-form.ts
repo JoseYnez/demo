@@ -7,6 +7,7 @@ import {
   input,
   linkedSignal,
   signal,
+  untracked,
   viewChild,
 } from "@angular/core";
 import {
@@ -82,8 +83,10 @@ export class ContactForm implements PuedeSalir {
   protected readonly editando = computed(() => this.id() !== undefined);
 
   protected readonly contacto = computed(() => {
-    const id = Number(this.id());
-    return Number.isFinite(id) ? (this.store.byId(id) ?? null) : null;
+    const id = this.id();
+    return id !== undefined && /^\d+$/.test(id)
+      ? (this.store.byId(Number(id)) ?? null)
+      : null;
   });
 
   protected readonly sinLista = computed(
@@ -130,6 +133,11 @@ export class ContactForm implements PuedeSalir {
 
   constructor() {
     void this.cargar();
+
+    effect(() => {
+      this.id();
+      untracked(() => this.ficha().reset());
+    });
 
     effect(() => {
       if (this.cargando() || this.noEncontrado() || this.sinLista()) return;

@@ -55,7 +55,7 @@
           />
 
           @if (fallo()) {
-            <p class="login__error" role="alert">{{ fallo() }}</p>
+            <p class="ui-alert" role="alert">{{ fallo() }}</p>
           }
 
           <app-button type="submit" size="lg" [fullWidth]="true" [loading]="acceso().submitting()">

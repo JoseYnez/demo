@@ -10,6 +10,7 @@ import {
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
+import { idDeControl, idDelMensaje, primerError } from "../field-shell/control-state";
 import { FieldShell, LabelMode } from "../field-shell/field-shell";
 
 export interface SelectOption {
@@ -17,8 +18,6 @@ export interface SelectOption {
   readonly label: string;
   readonly disabled?: boolean;
 }
-
-let nextId = 0;
 
 @Component({
   selector: "app-select",
@@ -48,7 +47,7 @@ export class Select implements FormValueControl<string> {
   private readonly control =
     viewChild.required<ElementRef<HTMLSelectElement>>("control");
 
-  protected readonly id = `app-select-${nextId++}`;
+  protected readonly id = idDeControl("app-select");
 
   protected readonly bloqueado = computed(
     () => this.disabled() || this.readonly(),
@@ -57,7 +56,7 @@ export class Select implements FormValueControl<string> {
   protected readonly floated = computed(() => this.labelMode() === "float");
 
   protected readonly error = computed(() =>
-    this.touched() ? this.errors()[0]?.message : undefined,
+    primerError(this.touched(), this.errors()),
   );
 
   focus(): void {
@@ -65,6 +64,6 @@ export class Select implements FormValueControl<string> {
   }
 
   protected readonly describedBy = computed(() =>
-    this.error() || this.hint() ? `${this.id}-msg` : null,
+    idDelMensaje(this.id, !!this.error() || !!this.hint()),
   );
 }

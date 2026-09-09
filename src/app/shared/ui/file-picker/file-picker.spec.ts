@@ -300,7 +300,7 @@ describe("FilePicker", () => {
 
   it("anuncia el rechazo en una región viva que ya existía", async () => {
     await montar({ maxSize: 1 });
-    const anuncio = raiz().querySelector(".fp__anuncio")!;
+    const anuncio = raiz().querySelector('.sr-only[role="status"]')!;
     expect(anuncio.getAttribute("role")).toBe("status");
     expect(anuncio.textContent?.trim()).toBe("");
 

@@ -46,15 +46,15 @@ export class ContactList {
   protected readonly error = signal("");
 
   protected readonly visibles = computed(() => {
-    const aguja = this.busqueda().trim().toLowerCase();
+    const aguja = sinAcentos(this.busqueda().trim());
     const contactos = this.contactos();
     if (!aguja) {
       return contactos;
     }
     return contactos.filter(
       (contacto) =>
-        contacto.name.toLowerCase().includes(aguja) ||
-        contacto.email.includes(aguja),
+        sinAcentos(contacto.name).includes(aguja) ||
+        sinAcentos(contacto.email).includes(aguja),
     );
   });
 
@@ -127,4 +127,11 @@ export class ContactList {
       this.error.set(e instanceof Error ? e.message : String(e));
     }
   }
+}
+
+function sinAcentos(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase();
 }

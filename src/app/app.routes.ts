@@ -29,4 +29,5 @@ export const routes: Routes = [
     loadComponent: () =>
       import("./features/tauri-demo/tauri-demo").then((m) => m.TauriDemo),
   },
+  { path: "**", redirectTo: "" },
 ];

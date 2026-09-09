@@ -2,18 +2,6 @@
   display: block;
 }
 
-.ui-control {
-  height: 34px;
-}
-
-.ui-control.is-floating {
-  height: 40px;
-}
-
-.ui-control.is-inset {
-  height: 52px;
-}
-
 .ui-control.has-reveal {
   padding-right: calc(var(--space-3) + 28px);
 }

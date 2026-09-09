@@ -11,13 +11,17 @@ import {
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
+import {
+  idDeControl,
+  idDelMensaje,
+  placeholderVisible,
+  primerError,
+} from "../field-shell/control-state";
 import { FieldShell, LabelMode } from "../field-shell/field-shell";
 
 export type InputType = "text" | "email" | "password" | "search" | "tel" | "url";
 
 const AVISO_BLOQ_MAYUS = "Bloq Mayús está activado.";
-
-let nextId = 0;
 
 @Component({
   selector: "app-input",
@@ -48,7 +52,7 @@ export class Input implements FormValueControl<string> {
 
   private readonly control = viewChild.required<ElementRef<HTMLInputElement>>("control");
 
-  protected readonly id = `app-input-${nextId++}`;
+  protected readonly id = idDeControl("app-input");
   protected readonly focused = signal(false);
   protected readonly revealed = signal(false);
   protected readonly capsLock = signal(false);
@@ -56,11 +60,11 @@ export class Input implements FormValueControl<string> {
   protected readonly floated = computed(() => this.focused() || this.value() !== "");
 
   protected readonly visiblePlaceholder = computed(() =>
-    this.labelMode() === "float" && !this.floated() ? "" : this.placeholder(),
+    placeholderVisible(this.labelMode(), this.floated(), this.placeholder()),
   );
 
   protected readonly error = computed(() =>
-    this.touched() ? this.errors()[0]?.message : undefined,
+    primerError(this.touched(), this.errors()),
   );
 
   protected readonly isPassword = computed(() => this.type() === "password");
@@ -76,7 +80,7 @@ export class Input implements FormValueControl<string> {
   );
 
   protected readonly describedBy = computed(() =>
-    this.error() || this.help() ? `${this.id}-msg` : null,
+    idDelMensaje(this.id, !!this.error() || !!this.help()),
   );
 
   focus(): void {

@@ -11,9 +11,13 @@ import {
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
+import {
+  idDeControl,
+  idDelMensaje,
+  placeholderVisible,
+  primerError,
+} from "../field-shell/control-state";
 import { FieldShell, LabelMode } from "../field-shell/field-shell";
-
-let nextId = 0;
 
 @Component({
   selector: "app-textarea",
@@ -43,21 +47,21 @@ export class Textarea implements FormValueControl<string> {
   private readonly control =
     viewChild.required<ElementRef<HTMLTextAreaElement>>("control");
 
-  protected readonly id = `app-textarea-${nextId++}`;
+  protected readonly id = idDeControl("app-textarea");
   protected readonly focused = signal(false);
 
   protected readonly floated = computed(() => this.focused() || this.value() !== "");
 
   protected readonly visiblePlaceholder = computed(() =>
-    this.labelMode() === "float" && !this.floated() ? "" : this.placeholder(),
+    placeholderVisible(this.labelMode(), this.floated(), this.placeholder()),
   );
 
   protected readonly error = computed(() =>
-    this.touched() ? this.errors()[0]?.message : undefined,
+    primerError(this.touched(), this.errors()),
   );
 
   protected readonly describedBy = computed(() =>
-    this.error() || this.hint() ? `${this.id}-msg` : null,
+    idDelMensaje(this.id, !!this.error() || !!this.hint()),
   );
 
   focus(): void {

@@ -80,7 +80,16 @@
   box-shadow: none;
 }
 
+.ui-control {
+  height: var(--control-h);
+}
+
+.ui-control.is-floating {
+  height: var(--control-h-float);
+}
+
 .ui-control.is-inset {
+  height: var(--control-h-inset);
   padding-top: var(--space-5);
   background-color: var(--bg-surface-alt);
 }
@@ -101,4 +110,13 @@
 
 .ui-msg--error {
   color: var(--color-danger-fg);
+}
+
+.ui-alert {
+  padding: var(--space-3);
+  background-color: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  color: var(--color-danger-fg);
+  font-size: var(--font-size-sm);
 }

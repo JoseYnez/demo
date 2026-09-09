@@ -54,7 +54,7 @@ impl NotificationService {
         }
         toast
             .show()
-            .map_err(|e| crate::error::AppError::Internal(format!("{e:?}")))
+            .map_err(|e| crate::error::AppError::Internal(e.to_string()))
     }
 
     fn aumid_del_toast(&self) -> &str {

@@ -3,6 +3,7 @@
 }
 
 .ui-control {
+  height: auto;
   padding-block: var(--space-2);
   line-height: var(--line-height-normal);
   resize: vertical;
@@ -10,9 +11,11 @@
 }
 
 .ui-control.is-floating {
+  height: auto;
   padding-block-start: var(--space-3);
 }
 
 .ui-control.is-inset {
+  height: auto;
   min-height: 78px;
 }

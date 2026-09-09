@@ -176,6 +176,19 @@ describe("ContactStore", () => {
     expect(store.loaded()).toBe(false);
   });
 
+  it("ordena los acentos donde el castellano los pone", async () => {
+    const alvaro = { ...ADA, id: 9, name: "Álvaro Ruiz", email: "a@x.com" };
+    vi.mocked(invoke).mockResolvedValue([ZOE, alvaro, BEA]);
+
+    await store.load();
+
+    expect(store.items().map((c) => c.name)).toEqual([
+      "Álvaro Ruiz",
+      BEA.name,
+      ZOE.name,
+    ]);
+  });
+
   it("ensureLoaded no vuelve a pedir la lista una vez cargada", async () => {
     vi.mocked(invoke).mockResolvedValue([ADA]);
     await store.ensureLoaded();

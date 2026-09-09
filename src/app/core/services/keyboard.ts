@@ -80,11 +80,18 @@ export class KeyboardService {
 
   private coincide(binding: Binding, event: KeyboardEvent): boolean {
     return (
-      event.key.toLowerCase() === binding.key.toLowerCase() &&
+      this.mismaTecla(binding.key, event) &&
       (event.ctrlKey || event.metaKey) === !!binding.ctrl &&
       event.shiftKey === !!binding.shift &&
       event.altKey === !!binding.alt
     );
+  }
+
+  private mismaTecla(key: string, event: KeyboardEvent): boolean {
+    if (event.key.toLowerCase() === key.toLowerCase()) {
+      return true;
+    }
+    return /^[a-z]$/i.test(key) && event.code === `Key${key.toUpperCase()}`;
   }
 
   private puedeEscribir(event: KeyboardEvent): boolean {

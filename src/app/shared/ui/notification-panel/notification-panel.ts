@@ -8,22 +8,14 @@ import {
   viewChild,
 } from "@angular/core";
 
-import type {
-  AppNotification,
-  NotificationVariant,
+import {
+  ETIQUETA_DE_VARIANTE,
+  type AppNotification,
 } from "../../../models/notification.model";
 
 const MINUTO = 60_000;
 const HORA = 60 * MINUTO;
 const DIA = 24 * HORA;
-
-const FAMILIA: Record<NotificationVariant, string> = {
-  neutral: "Aviso",
-  success: "Correcto",
-  warning: "Atención",
-  danger: "Error",
-  info: "Información",
-};
 
 @Component({
   selector: "app-notification-panel",
@@ -46,7 +38,7 @@ export class NotificationPanel {
   }
 
   protected estado(aviso: AppNotification): string {
-    const familia = FAMILIA[aviso.variant];
+    const familia = ETIQUETA_DE_VARIANTE[aviso.variant];
     return aviso.read ? `${familia}:` : `${familia}, sin leer:`;
   }
 

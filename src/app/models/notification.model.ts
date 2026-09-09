@@ -22,3 +22,11 @@ export interface NewNotification {
   readonly duration?: number;
   readonly silent?: boolean;
 }
+
+export const ETIQUETA_DE_VARIANTE: Record<NotificationVariant, string> = {
+  neutral: "Aviso",
+  success: "Correcto",
+  warning: "Atención",
+  danger: "Error",
+  info: "Información",
+};

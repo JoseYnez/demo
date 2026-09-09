@@ -5,7 +5,7 @@ export const greetApi = {
     try {
       return await invoke<string>("greet", { name });
     } catch (e) {
-      throw new Error(`greetApi.greet: ${e}`);
+      throw new Error(`greetApi.greet: ${e}`, { cause: e });
     }
   },
 };

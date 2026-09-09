@@ -218,4 +218,23 @@ describe("KeyboardService", () => {
 
     expect(disparos).toEqual(["encima", "base"]);
   });
+
+  it("reconoce la letra por su tecla física cuando Alt cambia el carácter", () => {
+    const teclado = TestBed.inject(KeyboardService);
+    let veces = 0;
+    TestBed.runInInjectionContext(() =>
+      teclado.register({ key: "t", ctrl: true, alt: true }, () => veces++),
+    );
+
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "†",
+        code: "KeyT",
+        ctrlKey: true,
+        altKey: true,
+      }),
+    );
+
+    expect(veces).toBe(1);
+  });
 });

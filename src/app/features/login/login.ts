@@ -66,10 +66,11 @@ export class Login {
     await submit(this.acceso, async () => {
       try {
         await this.auth.login(this.modelo());
-        await this.router.navigateByUrl(this.destino());
       } catch (e) {
         this.fallo.set(e instanceof Error ? e.message : String(e));
+        return undefined;
       }
+      await this.router.navigateByUrl(this.destino());
       return undefined;
     });
   }
@@ -77,6 +78,7 @@ export class Login {
   protected salir(): void {
     this.auth.logout();
     this.modelo.set({ username: "", password: "" });
+    this.acceso().reset();
   }
 
   private destino(): string {

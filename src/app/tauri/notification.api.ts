@@ -18,7 +18,7 @@ export const notificationApi = {
         body: notification.body,
       });
     } catch (e) {
-      throw new Error(`notificationApi.send: ${e}`);
+      throw new Error(`notificationApi.send: ${e}`, { cause: e });
     }
   },
 };

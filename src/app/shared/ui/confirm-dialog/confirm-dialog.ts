@@ -8,11 +8,10 @@ import {
   viewChild,
 } from "@angular/core";
 
+import { idDeControl } from "../field-shell/control-state";
 import { Button } from "../button/button";
 
 export type ConfirmVariant = "primary" | "danger";
-
-let nextId = 0;
 
 @Component({
   selector: "app-confirm-dialog",
@@ -38,7 +37,7 @@ export class ConfirmDialog {
   private readonly acciones =
     viewChild.required<ElementRef<HTMLElement>>("acciones");
 
-  protected readonly id = `app-confirm-${nextId++}`;
+  protected readonly id = idDeControl("app-confirm");
 
   constructor() {
     effect(() => {
