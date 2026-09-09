@@ -86,12 +86,16 @@ export class ContactForm implements PuedeSalir {
     return Number.isFinite(id) ? (this.store.byId(id) ?? null) : null;
   });
 
+  protected readonly sinLista = computed(
+    () => this.editando() && this.errorDeCarga() !== "",
+  );
+
   protected readonly cargando = computed(
     () =>
       this.editando() &&
       !this.store.loaded() &&
       !this.contacto() &&
-      !this.errorDeCarga(),
+      !this.sinLista(),
   );
 
   protected readonly noEncontrado = computed(
@@ -128,7 +132,7 @@ export class ContactForm implements PuedeSalir {
     void this.cargar();
 
     effect(() => {
-      if (this.cargando() || this.noEncontrado()) return;
+      if (this.cargando() || this.noEncontrado() || this.sinLista()) return;
       this.campoDelNombre()?.focus();
     });
   }
@@ -156,6 +160,10 @@ export class ContactForm implements PuedeSalir {
   protected async guardar(): Promise<void> {
     await submit(this.ficha, async () => {
       const enEdicion = this.contacto();
+      if (this.editando() && !enEdicion) {
+        this.error.set("Ese contacto ya no está en la lista.");
+        return undefined;
+      }
       try {
         const guardado = enEdicion
           ? await this.store.update(enEdicion.id, this.modelo())

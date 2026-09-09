@@ -82,12 +82,27 @@
             <p class="crud__alta">Alta {{ alta(contacto.createdAt) }}</p>
 
             @if (porBorrar() === contacto.id) {
-              <div class="crud__confirmar">
-                <span class="crud__pregunta">¿Eliminar?</span>
-                <app-button variant="danger" size="sm" (click)="borrar(contacto)">
+              <div
+                class="crud__confirmar"
+                role="group"
+                [attr.aria-label]="'¿Eliminar a ' + contacto.name + '?'"
+              >
+                <span class="crud__pregunta" aria-hidden="true">¿Eliminar?</span>
+                <app-button
+                  variant="danger"
+                  size="sm"
+                  [loading]="borrando() === contacto.id"
+                  (click)="borrar(contacto)"
+                >
                   Sí, eliminar<span class="crud__aparte"> a {{ contacto.name }}</span>
                 </app-button>
-                <app-button variant="ghost" size="sm" (click)="cancelarBorrado()">
+                <app-button
+                  [id]="'cancelar-' + contacto.id"
+                  variant="ghost"
+                  size="sm"
+                  [disabled]="borrando() !== null"
+                  (click)="cancelarBorrado(contacto.id)"
+                >
                   No<span class="crud__aparte">, conservar a {{ contacto.name }}</span>
                 </app-button>
               </div>
@@ -99,7 +114,12 @@
                 >
                   Editar<span class="crud__aparte"> a {{ contacto.name }}</span>
                 </a>
-                <app-button variant="ghost" size="sm" (click)="pedirBorrado(contacto)">
+                <app-button
+                  [id]="'borrar-' + contacto.id"
+                  variant="ghost"
+                  size="sm"
+                  (click)="pedirBorrado(contacto)"
+                >
                   Eliminar<span class="crud__aparte"> a {{ contacto.name }}</span>
                 </app-button>
               </div>

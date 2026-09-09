@@ -1,7 +1,10 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
+  Injector,
   inject,
   signal,
 } from "@angular/core";
@@ -30,6 +33,8 @@ const FECHA = new Intl.DateTimeFormat("es", {
 export class ContactList {
   private readonly store = inject(ContactStore);
   private readonly avisos = inject(NotificationsService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   protected readonly contactos = this.store.items;
   protected readonly cargando = this.store.loading;
@@ -37,6 +42,7 @@ export class ContactList {
 
   protected readonly busqueda = signal("");
   protected readonly porBorrar = signal<number | null>(null);
+  protected readonly borrando = signal<number | null>(null);
   protected readonly error = signal("");
 
   protected readonly visibles = computed(() => {
@@ -62,13 +68,19 @@ export class ContactList {
 
   protected pedirBorrado(contacto: Contact): void {
     this.porBorrar.set(contacto.id);
+    this.enfocar(`#cancelar-${contacto.id}`);
   }
 
-  protected cancelarBorrado(): void {
+  protected cancelarBorrado(id: number): void {
     this.porBorrar.set(null);
+    this.enfocar(`#borrar-${id}`);
   }
 
   protected async borrar(contacto: Contact): Promise<void> {
+    if (this.borrando() !== null) {
+      return;
+    }
+    this.borrando.set(contacto.id);
     this.error.set("");
     try {
       await this.store.remove(contacto.id);
@@ -80,6 +92,7 @@ export class ContactList {
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : String(e));
     } finally {
+      this.borrando.set(null);
       this.porBorrar.set(null);
     }
   }
@@ -94,6 +107,16 @@ export class ContactList {
 
   protected alta(createdAt: number): string {
     return FECHA.format(createdAt);
+  }
+
+  private enfocar(selector: string): void {
+    afterNextRender(
+      () =>
+        this.host.nativeElement
+          .querySelector<HTMLButtonElement>(`${selector} button`)
+          ?.focus(),
+      { injector: this.injector },
+    );
   }
 
   private async cargar(accion: () => Promise<void>): Promise<void> {

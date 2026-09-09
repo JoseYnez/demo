@@ -21,8 +21,15 @@ const ADA: Contact = {
   createdAt: 1_700_000_000_000,
 };
 
-async function montar(id?: string): Promise<ComponentFixture<ContactForm>> {
-  vi.mocked(invoke).mockResolvedValue([ADA]);
+async function montar(
+  id?: string,
+  lista: "ok" | "rota" = "ok",
+): Promise<ComponentFixture<ContactForm>> {
+  if (lista === "rota") {
+    vi.mocked(invoke).mockRejectedValue("Error interno: sin backend.");
+  } else {
+    vi.mocked(invoke).mockResolvedValue([ADA]);
+  }
   TestBed.resetTestingModule();
   await TestBed.configureTestingModule({
     imports: [ContactForm],
@@ -55,6 +62,40 @@ async function escribirNombre(
   const campo = raizDe(fixture).querySelector<HTMLInputElement>("form input")!;
   campo.value = texto;
   campo.dispatchEvent(new Event("input"));
+  await fixture.whenStable();
+}
+
+async function rellenar(
+  fixture: ComponentFixture<ContactForm>,
+  nombre: string,
+  correo: string,
+  rol: string,
+): Promise<void> {
+  const campos = raizDe(fixture).querySelectorAll<HTMLInputElement>(
+    "form input",
+  );
+  campos[0].value = nombre;
+  campos[0].dispatchEvent(new Event("input"));
+  campos[1].value = correo;
+  campos[1].dispatchEvent(new Event("input"));
+  const rolSelect = raizDe(fixture).querySelector<HTMLSelectElement>(
+    "form select",
+  )!;
+  rolSelect.value = rol;
+  rolSelect.dispatchEvent(new Event("change"));
+  await fixture.whenStable();
+}
+
+async function pulsar(
+  fixture: ComponentFixture<ContactForm>,
+  texto: string,
+): Promise<void> {
+  const boton = Array.from(raizDe(fixture).querySelectorAll("button")).find(
+    (candidato) => candidato.textContent?.includes(texto),
+  )!;
+  boton.click();
+  await fixture.whenStable();
+  await new Promise((resolve) => setTimeout(resolve));
   await fixture.whenStable();
 }
 
@@ -146,5 +187,64 @@ describe("ContactForm", () => {
     });
     expect(navegar).toHaveBeenCalledWith(["/contacts"]);
     expect(fixture.componentInstance.puedeSalir()).toBe(true);
+  });
+
+  it("da de alta desde la ruta nueva con create_contact", async () => {
+    const fixture = await montar();
+    await rellenar(fixture, "Bea Ruiz", "bea@example.com", "editor");
+
+    const navegar = vi.spyOn(TestBed.inject(Router), "navigate");
+    vi.mocked(invoke).mockResolvedValue({
+      id: 2,
+      name: "Bea Ruiz",
+      email: "bea@example.com",
+      role: "editor",
+      notes: "",
+      createdAt: 1_700_000_000_002,
+    });
+
+    await pulsar(fixture, "Crear contacto");
+
+    expect(invoke).toHaveBeenLastCalledWith("create_contact", {
+      draft: {
+        name: "Bea Ruiz",
+        email: "bea@example.com",
+        role: "editor",
+        notes: "",
+      },
+    });
+    expect(navegar).toHaveBeenCalledWith(["/contacts"]);
+  });
+
+  it("enseña el rechazo del backend y deja volver a enviar", async () => {
+    const fixture = await montar("1");
+    await escribirNombre(fixture, "Ada L.");
+
+    vi.mocked(invoke).mockRejectedValue("Ya hay un contacto con ese correo.");
+    await pulsar(fixture, "Guardar cambios");
+
+    const alerta = raizDe(fixture).querySelector('form [role="alert"]');
+    expect(alerta?.textContent).toContain("Ya hay un contacto con ese correo.");
+    expect(
+      raizDe(fixture).querySelector<HTMLButtonElement>('button[type="submit"]')
+        ?.disabled,
+    ).toBe(false);
+  });
+
+  it("no ofrece formulario de edición cuando la lista no llega", async () => {
+    const fixture = await montar("1", "rota");
+
+    expect(raizDe(fixture).querySelector("form")).toBeNull();
+    expect(raizDe(fixture).querySelector('[role="alert"]')?.textContent).toContain(
+      "Error interno: sin backend.",
+    );
+    expect(raizDe(fixture).textContent).toContain("Volver a la lista");
+  });
+
+  it("da de alta igual aunque la lista no llegue", async () => {
+    const fixture = await montar(undefined, "rota");
+
+    expect(raizDe(fixture).querySelector("form")).not.toBeNull();
+    expect(raizDe(fixture).querySelector('[role="alert"]')).toBeNull();
   });
 });

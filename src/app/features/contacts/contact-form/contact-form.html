@@ -7,11 +7,17 @@
     <h1>{{ titulo() }}</h1>
   </header>
 
-  @if (editando() && errorDeCarga()) {
-    <p class="ficha__error selectable" role="alert">{{ errorDeCarga() }}</p>
-  }
-
-  @if (cargando()) {
+  @if (sinLista()) {
+    <div class="ficha__hueco">
+      <p class="ficha__error selectable" role="alert">{{ errorDeCarga() }}</p>
+      <p class="ficha__nota">
+        Sin la lista no se puede saber qué contacto estás editando.
+      </p>
+      <a class="btn btn--secondary btn--md" routerLink="/contacts">
+        Volver a la lista
+      </a>
+    </div>
+  } @else if (cargando()) {
     <p class="ficha__nota">Cargando contacto…</p>
   } @else if (noEncontrado()) {
     <div class="ficha__hueco">

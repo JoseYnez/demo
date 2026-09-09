@@ -8,6 +8,7 @@ export class ContactStore {
   readonly #items = signal<readonly Contact[]>([]);
   readonly #loading = signal(false);
   readonly #loaded = signal(false);
+  #enVuelo: Promise<void> | null = null;
 
   readonly items = this.#items.asReadonly();
   readonly loading = this.#loading.asReadonly();
@@ -19,13 +20,22 @@ export class ContactStore {
   }
 
   async ensureLoaded(): Promise<void> {
-    if (this.#loaded() || this.#loading()) {
+    if (this.#loaded()) {
       return;
     }
     await this.load();
   }
 
   async load(): Promise<void> {
+    this.#enVuelo ??= this.traer();
+    try {
+      await this.#enVuelo;
+    } finally {
+      this.#enVuelo = null;
+    }
+  }
+
+  private async traer(): Promise<void> {
     this.#loading.set(true);
     try {
       this.#items.set(ordenados(await contactApi.list()));

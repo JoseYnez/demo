@@ -141,4 +141,47 @@ describe("ContactStore", () => {
 
     expect(store.loading()).toBe(false);
   });
+
+  it("dos ensureLoaded a la vez comparten una sola carga", async () => {
+    let entregar!: (contactos: Contact[]) => void;
+    vi.mocked(invoke).mockReturnValue(
+      new Promise((resolve) => {
+        entregar = resolve;
+      }),
+    );
+
+    const primera = store.ensureLoaded();
+    const segunda = store.ensureLoaded();
+    entregar([ADA, ZOE]);
+    await Promise.all([primera, segunda]);
+
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(store.items().map((c) => c.name)).toEqual([ADA.name, ZOE.name]);
+  });
+
+  it("el fallo de la carga en vuelo llega a quien no la lanzó", async () => {
+    let romper!: (razon: unknown) => void;
+    vi.mocked(invoke).mockReturnValue(
+      new Promise((_, reject) => {
+        romper = reject;
+      }),
+    );
+
+    const primera = store.ensureLoaded();
+    const segunda = store.ensureLoaded();
+    romper("Error interno: qué mal.");
+
+    await expect(primera).rejects.toThrow("Error interno: qué mal.");
+    await expect(segunda).rejects.toThrow("Error interno: qué mal.");
+    expect(store.loaded()).toBe(false);
+  });
+
+  it("ensureLoaded no vuelve a pedir la lista una vez cargada", async () => {
+    vi.mocked(invoke).mockResolvedValue([ADA]);
+    await store.ensureLoaded();
+
+    await store.ensureLoaded();
+
+    expect(invoke).toHaveBeenCalledTimes(1);
+  });
 });
