@@ -448,3 +448,24 @@ kbd {
   display: flex;
   max-width: 220px;
 }
+
+.sg__code {
+  overflow-x: auto;
+  padding: var(--space-3);
+  background-color: var(--bg-surface-alt);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-relaxed);
+  color: var(--text-secondary);
+}
+
+.sg__code code {
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: inherit;
+  color: inherit;
+  white-space: pre;
+}

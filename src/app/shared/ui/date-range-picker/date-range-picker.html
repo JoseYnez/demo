@@ -1,0 +1,134 @@
+<app-field-shell
+  [labelMode]="labelMode()"
+  [label]="label()"
+  [controlId]="id"
+  [floated]="floated()"
+  [required]="required()"
+  [disabled]="disabled()"
+  [hint]="hint()"
+  [error]="error()"
+>
+  <div
+    class="drp"
+    (keydown)="alPulsarTecla($event)"
+    (focusout)="alSalirElFoco($event)"
+  >
+    <button
+      #disparador
+      type="button"
+      class="ui-control drp__trigger"
+      [class.is-floating]="labelMode() === 'float'"
+      [class.is-inset]="labelMode() === 'inset'"
+      [class.is-invalid]="!!error()"
+      [id]="id"
+      [attr.name]="name() || null"
+      [disabled]="bloqueado()"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="abierto()"
+      [attr.aria-readonly]="readonly() || null"
+      [attr.aria-invalid]="!!error()"
+      [attr.aria-describedby]="describedBy()"
+      (click)="alternar()"
+    >
+      <span class="drp__texto" [class.is-placeholder]="vacio()">
+        {{ etiqueta() }}
+      </span>
+      <svg
+        class="drp__icono"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        aria-hidden="true"
+      >
+        <rect
+          x="3.5"
+          y="5"
+          width="17"
+          height="15"
+          rx="2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+        />
+        <path
+          d="M3.5 9.5h17M8 3.5v3M16 3.5v3"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
+    </button>
+
+    @if (abierto()) {
+      <div
+        #panel
+        class="drp__panel"
+        [class.is-arriba]="arriba()"
+        [class.is-derecha]="aLaDerecha()"
+        role="dialog"
+        aria-label="Elegir un rango de fechas"
+        tabindex="-1"
+      >
+        @if (opciones().length) {
+          <div class="drp__presets" role="group" aria-label="Rangos habituales">
+            @for (opcion of opciones(); track opcion.preset.id) {
+              <button
+                type="button"
+                class="drp__preset"
+                [disabled]="!opcion.disponible"
+                [attr.aria-pressed]="esActivo(opcion.preset)"
+                (click)="elegir(opcion)"
+              >
+                {{ opcion.preset.label }}
+              </button>
+            }
+          </div>
+        }
+
+        <div class="drp__custom">
+          <div class="drp__fechas">
+            <label class="drp__campo">
+              <span class="drp__campo-label">Desde</span>
+              <input
+                #campoDesde
+                type="date"
+                class="ui-control drp__fecha"
+                [value]="desde()"
+                [attr.min]="minDate() || null"
+                [attr.max]="hasta() || maxDate() || null"
+                (input)="desde.set(campoDesde.value)"
+              />
+            </label>
+
+            <label class="drp__campo">
+              <span class="drp__campo-label">Hasta</span>
+              <input
+                #campoHasta
+                type="date"
+                class="ui-control drp__fecha"
+                [value]="hasta()"
+                [attr.min]="desde() || minDate() || null"
+                [attr.max]="maxDate() || null"
+                (input)="hasta.set(campoHasta.value)"
+              />
+            </label>
+          </div>
+
+          @if (aviso()) {
+            <p class="drp__aviso" role="alert">{{ aviso() }}</p>
+          }
+
+          <div class="drp__acciones">
+            <app-button variant="ghost" size="sm" (click)="limpiar()">
+              Limpiar
+            </app-button>
+            <app-button variant="primary" size="sm" (click)="aplicar()">
+              Aplicar
+            </app-button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</app-field-shell>

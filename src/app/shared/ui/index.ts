@@ -10,6 +10,28 @@ export type { CardPadding, CardVariant } from "./card/card";
 export { ConfirmDialog } from "./confirm-dialog/confirm-dialog";
 export type { ConfirmVariant } from "./confirm-dialog/confirm-dialog";
 
+export { DateRangePicker } from "./date-range-picker/date-range-picker";
+export {
+  esISO,
+  esRangoValido,
+  finDeAno,
+  finDeMes,
+  finDeSemana,
+  formatearRango,
+  hoyISO,
+  inicioDeAno,
+  inicioDeMes,
+  inicioDeSemana,
+  RANGOS_HABITUALES,
+  sumarDias,
+  sumarMeses,
+} from "./date-range-picker/date-range";
+export type {
+  DateRange,
+  DateRangePreset,
+  DateSpan,
+} from "./date-range-picker/date-range";
+
 export { GestureButton } from "./gesture-button/gesture-button";
 export type { Gesture } from "./gesture-button/gesture-button";
 

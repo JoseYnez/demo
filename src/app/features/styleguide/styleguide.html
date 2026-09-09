@@ -869,6 +869,126 @@
     />
   </section>
 
+  <section class="sg__section" id="rango-de-fechas">
+    <h2 class="sg__title">Rango de fechas</h2>
+    <p class="sg__note selectable">
+      Un solo campo con dos caras: el <strong>botón</strong> dice el periodo
+      elegido, y el panel que abre lleva los rangos habituales arriba y el
+      rango escrito abajo. Un preset es un click, así que
+      <strong>aplica y cierra al instante</strong>; dos fechas a medio escribir
+      no son una decisión, así que el rango personalizado espera a
+      <em>Aplicar</em>. Cerrar sin aplicar no toca el valor.
+    </p>
+
+    <div class="sg__cols">
+      <div class="sg__rows">
+        <app-date-range-picker
+          label="Periodo"
+          hint="Los ocho rangos de fábrica."
+          [(value)]="periodo"
+        />
+        <p class="sg__note selectable">
+          <code>{{ comoJson(periodo()) }}</code>
+        </p>
+      </div>
+
+      <div class="sg__rows">
+        <app-date-range-picker
+          label="Periodo del informe"
+          hint="Tres rangos propios, ninguno de fábrica."
+          [presets]="rangosDeInforme"
+          [(value)]="periodoPropio"
+        />
+        <p class="sg__note selectable">
+          <code>{{ comoJson(periodoPropio()) }}</code>
+        </p>
+      </div>
+    </div>
+
+    <h3 class="sg__subtitle">Los rangos los eliges tú</h3>
+    <p class="sg__note selectable">
+      <code>presets</code> no es una lista cerrada de nombres: es un array de
+      <code>DateRangePreset</code>, y cada uno trae su
+      <code>resolve(hoy)</code>. Por eso «Ejercicio fiscal» —que empieza en
+      abril y no es asunto del design system— vive en la pantalla que lo
+      necesita y no aquí dentro. El módulo exporta la aritmética
+      (<code>sumarDias</code>, <code>inicioDeMes</code>,
+      <code>sumarMeses</code>…) para que escribir uno sean tres líneas y no
+      otra implementación de fechas.
+    </p>
+
+    <app-card variant="outlined">
+      <div card-header><span>Un preset propio</span></div>
+      <pre class="sg__code selectable"><code>{{ ejemploDePreset }}</code></pre>
+    </app-card>
+
+    <h3 class="sg__subtitle">Variantes</h3>
+    <div class="sg__grid">
+      <app-date-range-picker
+        label="Sólo rango escrito"
+        hint="presets: [] deja el panel con las dos fechas."
+        [presets]="sinPresets"
+        [(value)]="periodoLibre"
+      />
+      <app-date-range-picker
+        label="Acotado al último mes"
+        [hint]="
+          'Entre ' + haceUnMes + ' y ' + hoy + '; lo que se sale se deshabilita.'
+        "
+        [minDate]="haceUnMes"
+        [maxDate]="hoy"
+        [(value)]="periodoAcotado"
+      />
+      <app-date-range-picker
+        label="Deshabilitado"
+        hint="No abre."
+        [disabled]="true"
+      />
+      <app-date-range-picker
+        label="Obligatorio y sin tocar"
+        [required]="true"
+        [touched]="true"
+        [errors]="errorDePeriodo"
+      />
+    </div>
+
+    <h3 class="sg__subtitle">Los tres modos de etiqueta</h3>
+    <div class="sg__compare">
+      <div class="sg__compare-col">
+        <p class="sg__compare-head selectable"><code>top</code> · 34 px</p>
+        <app-date-range-picker label="Periodo" [(value)]="periodoTop" />
+      </div>
+      <div class="sg__compare-col">
+        <p class="sg__compare-head selectable"><code>float</code> · 40 px</p>
+        <app-date-range-picker
+          label="Periodo"
+          labelMode="float"
+          [(value)]="periodoFloat"
+        />
+        <p class="sg__note selectable">
+          Nace flotada y no baja nunca, como el <code>select</code>: el botón
+          siempre muestra algo, el placeholder o el rango.
+        </p>
+      </div>
+      <div class="sg__compare-col">
+        <p class="sg__compare-head selectable"><code>inset</code> · 52 px</p>
+        <app-date-range-picker
+          label="Periodo"
+          labelMode="inset"
+          [(value)]="periodoInset"
+        />
+      </div>
+    </div>
+
+    <p class="sg__note selectable">
+      El <kbd>Esc</kbd> lo pone el propio componente y no la pila de atajos: la
+      pila ignora a propósito lo que nace dentro de un campo, y aquí el foco
+      suele estar justo ahí. Pulsar fuera o sacar el foco con
+      <kbd>Tab</kbd> también cierra, y el panel se voltea hacia arriba si no
+      cabe debajo.
+    </p>
+  </section>
+
   <section class="sg__section" id="comparativa">
     <h2 class="sg__title">Comparativa: dónde va la etiqueta</h2>
     <p class="sg__note selectable">

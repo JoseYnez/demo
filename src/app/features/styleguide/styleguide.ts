@@ -33,11 +33,14 @@ import {
   Button,
   Card,
   ConfirmDialog,
+  DateRangePicker,
   FilePicker,
   GestureButton,
+  hoyISO,
   Input,
   NotificationPanel,
   Select,
+  sumarDias,
   Textarea,
   Toast,
 } from "../../shared/ui";
@@ -45,12 +48,41 @@ import type {
   BadgeAppearance,
   BadgeVariant,
   ButtonVariant,
+  DateRange,
+  DateRangePreset,
   RejectedFile,
   SelectOption,
 } from "../../shared/ui";
 
 const RETRASO_DE_PRUEBA = 5000;
 const TRABAJO_DE_PRUEBA = 1500;
+
+const SIN_PRESETS: readonly DateRangePreset[] = [];
+
+const RANGOS_DE_INFORME: readonly DateRangePreset[] = [
+  {
+    id: "quarter",
+    label: "Este trimestre",
+    resolve: (hoy) => {
+      const mes = Number(hoy.slice(5, 7));
+      const primero = String(mes - ((mes - 1) % 3)).padStart(2, "0");
+      return { from: `${hoy.slice(0, 4)}-${primero}-01`, to: hoy };
+    },
+  },
+  {
+    id: "last90",
+    label: "Últimos 90 días",
+    resolve: (hoy) => ({ from: sumarDias(hoy, -89), to: hoy }),
+  },
+  {
+    id: "fiscal",
+    label: "Ejercicio fiscal",
+    resolve: (hoy) => {
+      const ano = Number(hoy.slice(0, 4)) - (hoy.slice(5) < "04-01" ? 1 : 0);
+      return { from: `${ano}-04-01`, to: hoy };
+    },
+  },
+];
 
 interface Alta {
   nombre: string;
@@ -67,6 +99,7 @@ interface Alta {
     Button,
     Card,
     ConfirmDialog,
+    DateRangePicker,
     FilePicker,
     GestureButton,
     Input,
@@ -356,6 +389,38 @@ export class Styleguide {
   protected readonly sueltoTexto = signal("");
   protected readonly sueltoArea = signal("");
   protected readonly sueltoNotas = signal("");
+
+  protected readonly rangosDeInforme = RANGOS_DE_INFORME;
+  protected readonly sinPresets = SIN_PRESETS;
+
+  protected readonly periodo = signal<DateRange | null>(null);
+  protected readonly periodoPropio = signal<DateRange | null>(null);
+  protected readonly periodoLibre = signal<DateRange | null>(null);
+  protected readonly periodoAcotado = signal<DateRange | null>(null);
+  protected readonly periodoTop = signal<DateRange | null>(null);
+  protected readonly periodoFloat = signal<DateRange | null>(null);
+  protected readonly periodoInset = signal<DateRange | null>(null);
+
+  protected readonly haceUnMes = sumarDias(hoyISO(), -30);
+  protected readonly hoy = hoyISO();
+
+  protected readonly errorDePeriodo = [
+    requiredError({ message: "Elige un periodo." }),
+  ];
+
+  protected readonly ejemploDePreset = [
+    "const RANGOS_DE_INFORME: readonly DateRangePreset[] = [",
+    "  {",
+    '    id: "last90",',
+    '    label: "Últimos 90 días",',
+    "    resolve: (hoy) => ({ from: sumarDias(hoy, -89), to: hoy }),",
+    "  },",
+    "];",
+  ].join("\n");
+
+  protected comoJson(valor: DateRange | null): string {
+    return valor === null ? "null" : JSON.stringify(valor);
+  }
 
   protected readonly cmpTop = signal("Ada Lovelace");
   protected readonly cmpTopSel = signal("back");
