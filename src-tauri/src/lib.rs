@@ -16,7 +16,6 @@ pub fn run() {
     let contacts = ContactService::seeded().expect("no se pudo preparar la lista de contactos");
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
         .manage(auth)
         .manage(contacts)
         .setup(|app| {
