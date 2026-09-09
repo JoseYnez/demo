@@ -9,6 +9,7 @@
   [error]="error()"
 >
   <textarea
+    #control
     class="ui-control"
     [class.is-floating]="labelMode() === 'float'"
     [class.is-inset]="labelMode() === 'inset'"
@@ -23,7 +24,7 @@
     [attr.aria-invalid]="!!error()"
     [attr.aria-describedby]="describedBy()"
     [value]="value()"
-    (input)="value.set($any($event.target).value)"
+    (input)="value.set(control.value)"
     (focus)="focused.set(true)"
     (blur)="onBlur()"
   ></textarea>

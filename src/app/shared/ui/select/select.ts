@@ -2,9 +2,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   input,
   model,
   output,
+  viewChild,
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
@@ -36,19 +38,31 @@ export class Select implements FormValueControl<string> {
 
   readonly errors = input<readonly ValidationError.WithOptionalFieldTree[]>([]);
   readonly disabled = input(false);
+  readonly readonly = input(false);
   readonly required = input(false);
   readonly touched = input(false);
   readonly name = input("");
 
   readonly touch = output<void>();
 
+  private readonly control =
+    viewChild.required<ElementRef<HTMLSelectElement>>("control");
+
   protected readonly id = `app-select-${nextId++}`;
+
+  protected readonly bloqueado = computed(
+    () => this.disabled() || this.readonly(),
+  );
 
   protected readonly floated = computed(() => this.labelMode() === "float");
 
   protected readonly error = computed(() =>
     this.touched() ? this.errors()[0]?.message : undefined,
   );
+
+  focus(): void {
+    this.control().nativeElement.focus();
+  }
 
   protected readonly describedBy = computed(() =>
     this.error() || this.hint() ? `${this.id}-msg` : null,

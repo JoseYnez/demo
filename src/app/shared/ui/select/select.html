@@ -10,17 +10,19 @@
 >
   <div class="select">
     <select
+      #control
       class="ui-control"
       [class.is-floating]="labelMode() === 'float'"
       [class.is-inset]="labelMode() === 'inset'"
       [class.is-invalid]="!!error()"
       [id]="id"
       [attr.name]="name() || null"
-      [disabled]="disabled()"
+      [disabled]="bloqueado()"
       [required]="required()"
+      [attr.aria-readonly]="readonly() || null"
       [attr.aria-invalid]="!!error()"
       [attr.aria-describedby]="describedBy()"
-      (change)="value.set($any($event.target).value)"
+      (change)="value.set(control.value)"
       (blur)="touch.emit()"
     >
       @if (placeholder()) {

@@ -149,7 +149,7 @@ describe("Input", () => {
       expect(el.querySelector("input")?.type).toBe("password");
     });
 
-    it("alterna entre ocultar y mostrar y lo anuncia", async () => {
+    it("alterna el tipo y lo anuncia sólo con aria-pressed", async () => {
       const fixture = await montar(true);
       const el = fixture.nativeElement as HTMLElement;
       const ojo = el.querySelector<HTMLButtonElement>(".reveal");
@@ -161,7 +161,7 @@ describe("Input", () => {
       ojo?.click();
       await fixture.whenStable();
       expect(control.type).toBe("text");
-      expect(ojo?.getAttribute("aria-label")).toBe("Ocultar contraseña");
+      expect(ojo?.getAttribute("aria-label")).toBe("Mostrar contraseña");
       expect(ojo?.getAttribute("aria-pressed")).toBe("true");
 
       ojo?.click();

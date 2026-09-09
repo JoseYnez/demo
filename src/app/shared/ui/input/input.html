@@ -26,7 +26,7 @@
     [attr.aria-invalid]="!!error()"
     [attr.aria-describedby]="describedBy()"
     [value]="value()"
-    (input)="value.set($any($event.target).value)"
+    (input)="value.set(control.value)"
     (keydown)="onKey($event)"
     (keyup)="onKey($event)"
     (focus)="focused.set(true)"
@@ -37,7 +37,7 @@
     <button
       class="reveal"
       type="button"
-      [attr.aria-label]="revealed() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+      aria-label="Mostrar contraseña"
       [attr.aria-pressed]="revealed()"
       [disabled]="disabled()"
       (mousedown)="$event.preventDefault()"

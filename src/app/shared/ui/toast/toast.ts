@@ -61,7 +61,7 @@ export class Toast {
       if (ms <= 0) return;
       this.#restante = ms;
       this.#terminado = false;
-      this.#arrancar();
+      this.#sincronizar();
     });
   }
 

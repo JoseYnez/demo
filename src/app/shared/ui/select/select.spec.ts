@@ -54,4 +54,18 @@ describe("Select", () => {
 
     expect(control().value).toBe("admin");
   });
+
+  it("enfoca el control nativo con focus()", () => {
+    fixture.componentInstance.focus();
+
+    expect(document.activeElement).toBe(control());
+  });
+
+  it("readonly bloquea el control y lo anuncia", async () => {
+    fixture.componentRef.setInput("readonly", true);
+    await fixture.whenStable();
+
+    expect(control().disabled).toBe(true);
+    expect(control().getAttribute("aria-readonly")).toBe("true");
+  });
 });

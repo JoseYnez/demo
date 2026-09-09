@@ -2,10 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   input,
   model,
   output,
   signal,
+  viewChild,
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
@@ -38,6 +40,9 @@ export class Textarea implements FormValueControl<string> {
 
   readonly touch = output<void>();
 
+  private readonly control =
+    viewChild.required<ElementRef<HTMLTextAreaElement>>("control");
+
   protected readonly id = `app-textarea-${nextId++}`;
   protected readonly focused = signal(false);
 
@@ -54,6 +59,10 @@ export class Textarea implements FormValueControl<string> {
   protected readonly describedBy = computed(() =>
     this.error() || this.hint() ? `${this.id}-msg` : null,
   );
+
+  focus(): void {
+    this.control().nativeElement.focus();
+  }
 
   protected onBlur(): void {
     this.focused.set(false);

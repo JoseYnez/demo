@@ -1,9 +1,11 @@
 <dialog
   class="cd"
   #caja
+  tabindex="-1"
   [attr.aria-labelledby]="id + '-titulo'"
   [attr.aria-describedby]="detail() ? id + '-detalle' : null"
   (cancel)="alPedirCierre($event)"
+  (close)="alCerrarse()"
   (keydown)="alTeclear($event)"
 >
   <h2 class="cd__titulo" [id]="id + '-titulo'">{{ heading() }}</h2>

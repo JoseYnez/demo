@@ -52,6 +52,21 @@ export class ConfirmDialog {
         this.ocultar(dialogo);
       }
     });
+
+    effect(() => {
+      if (this.busy() && this.open()) {
+        this.caja().nativeElement.focus();
+      }
+    });
+  }
+
+  protected alCerrarse(): void {
+    if (!this.open()) return;
+    if (this.busy()) {
+      this.mostrar(this.caja().nativeElement);
+      return;
+    }
+    this.dismissed.emit();
   }
 
   protected confirmar(): void {

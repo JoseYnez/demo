@@ -126,4 +126,39 @@ describe("ConfirmDialog", () => {
 
     expect(document.activeElement).toBe(boton("cd__confirmar"));
   });
+
+  it("avisa si el motor cierra el diálogo por su cuenta", async () => {
+    await abrir();
+
+    dialogo().dispatchEvent(new Event("close"));
+    await fixture.whenStable();
+
+    expect(emitidos).toEqual(["dismissed"]);
+  });
+
+  it("no avisa si el cierre viene de que ya estaba cerrado", async () => {
+    dialogo().dispatchEvent(new Event("close"));
+    await fixture.whenStable();
+
+    expect(emitidos).toEqual([]);
+  });
+
+  it("mientras la acción trabaja, un cierre ajeno lo vuelve a abrir", async () => {
+    await montar({ busy: true });
+    await abrir();
+
+    dialogo().removeAttribute("open");
+    dialogo().dispatchEvent(new Event("close"));
+    await fixture.whenStable();
+
+    expect(emitidos).toEqual([]);
+    expect(dialogo().hasAttribute("open")).toBe(true);
+  });
+
+  it("mientras la acción trabaja el foco se queda dentro del diálogo", async () => {
+    await montar({ busy: true });
+    await abrir();
+
+    expect(document.activeElement).toBe(dialogo());
+  });
 });

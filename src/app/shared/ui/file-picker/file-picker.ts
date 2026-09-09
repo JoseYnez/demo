@@ -60,6 +60,7 @@ export class FilePicker implements FormValueControl<readonly File[]> {
   protected readonly id = `app-file-picker-${nextId++}`;
 
   private readonly campo = viewChild.required<ElementRef<HTMLInputElement>>("campo");
+  private readonly zona = viewChild.required<ElementRef<HTMLElement>>("zona");
 
   protected readonly admiteSoltar = computed(() => this.sources().includes("drop"));
   protected readonly admiteExplorar = computed(() => this.sources().includes("browse"));
@@ -121,6 +122,10 @@ export class FilePicker implements FormValueControl<readonly File[]> {
     return partes.join(" · ");
   });
 
+  focus(): void {
+    this.zona().nativeElement.focus();
+  }
+
   protected readonly etiquetaAccesible = computed(() =>
     [this.label(), this.texto(), this.textoPegar(), this.limites()]
       .filter(Boolean)
@@ -136,7 +141,7 @@ export class FilePicker implements FormValueControl<readonly File[]> {
       const siguientes = new Map<File, string>();
       for (const file of archivos) {
         const previa = previas.get(file);
-        if (previa !== undefined) {
+        if (previa !== undefined && conMiniatura) {
           siguientes.set(file, previa);
           continue;
         }
