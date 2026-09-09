@@ -51,6 +51,10 @@ export class Textarea implements FormValueControl<string> {
     this.touched() ? this.errors()[0]?.message : undefined,
   );
 
+  protected readonly describedBy = computed(() =>
+    this.error() || this.hint() ? `${this.id}-msg` : null,
+  );
+
   protected onBlur(): void {
     this.focused.set(false);
     this.touch.emit();

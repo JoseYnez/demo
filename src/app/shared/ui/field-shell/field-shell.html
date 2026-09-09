@@ -44,8 +44,8 @@
   </div>
 
   @if (error()) {
-    <p class="ui-msg ui-msg--error">{{ error() }}</p>
+    <p class="ui-msg ui-msg--error" [id]="controlId() + '-msg'">{{ error() }}</p>
   } @else if (hint()) {
-    <p class="ui-msg">{{ hint() }}</p>
+    <p class="ui-msg" [id]="controlId() + '-msg'">{{ hint() }}</p>
   }
 </div>

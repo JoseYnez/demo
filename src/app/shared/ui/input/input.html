@@ -24,6 +24,7 @@
     [readOnly]="readonly()"
     [required]="required()"
     [attr.aria-invalid]="!!error()"
+    [attr.aria-describedby]="describedBy()"
     [value]="value()"
     (input)="value.set($any($event.target).value)"
     (keydown)="onKey($event)"

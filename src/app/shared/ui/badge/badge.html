@@ -1,4 +1,8 @@
-<span [class]="classes()" [attr.aria-label]="label() || null">
+<span
+  [class]="classes()"
+  [attr.role]="label() ? 'img' : null"
+  [attr.aria-label]="label() || null"
+>
   @if (dot()) {
     <span class="badge__dot" aria-hidden="true"></span>
   }

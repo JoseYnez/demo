@@ -16,6 +16,10 @@
 }
 
 .btn:disabled {
+  cursor: not-allowed;
+}
+
+.btn:disabled:where(:not([aria-busy="true"])) {
   opacity: 0.5;
 }
 
@@ -95,8 +99,14 @@
 }
 
 .btn:focus-visible {
-  outline: none;
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
   box-shadow: var(--ring-focus);
+}
+
+.btn--danger:focus-visible {
+  outline-color: var(--color-danger-fg);
+  box-shadow: var(--ring-danger);
 }
 
 .btn__spinner {

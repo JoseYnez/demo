@@ -75,6 +75,10 @@ export class Input implements FormValueControl<string> {
     this.isPassword() && this.capsLock() ? AVISO_BLOQ_MAYUS : this.hint(),
   );
 
+  protected readonly describedBy = computed(() =>
+    this.error() || this.help() ? `${this.id}-msg` : null,
+  );
+
   focus(): void {
     this.control().nativeElement.focus();
   }

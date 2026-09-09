@@ -49,4 +49,8 @@ export class Select implements FormValueControl<string> {
   protected readonly error = computed(() =>
     this.touched() ? this.errors()[0]?.message : undefined,
   );
+
+  protected readonly describedBy = computed(() =>
+    this.error() || this.hint() ? `${this.id}-msg` : null,
+  );
 }

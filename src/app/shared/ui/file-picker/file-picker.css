@@ -36,7 +36,8 @@
 }
 
 .fp__zone:focus-visible {
-  outline: none;
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
   border-color: var(--accent-fg);
   box-shadow: var(--ring-focus);
 }
@@ -192,7 +193,8 @@
 }
 
 .fp__remove:focus-visible {
-  outline: none;
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
   box-shadow: var(--ring-focus);
 }
 

@@ -82,6 +82,8 @@
 }
 
 .fs--float:focus-within .fs__outline {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
   border-color: var(--accent-fg);
   box-shadow: var(--ring-focus);
 }
@@ -90,17 +92,20 @@
   color: var(--text-primary);
 }
 
-.fs--float:not(:focus-within) .fs__box:hover .fs__outline {
+.fs--float:where(:not(:focus-within, .is-invalid, .is-disabled))
+  .fs__box:hover
+  .fs__outline {
   border-color: var(--text-muted);
 }
 
 .fs--float.is-invalid .fs__outline {
-  border-color: var(--color-danger-solid);
+  border-color: var(--color-danger-fg);
 }
 
 .fs--float.is-invalid:focus-within .fs__outline {
-  border-color: var(--color-danger-solid);
-  box-shadow: 0 0 0 3px var(--color-danger-bg);
+  outline-color: var(--color-danger-fg);
+  border-color: var(--color-danger-fg);
+  box-shadow: var(--ring-danger);
 }
 
 .fs--float.is-invalid.is-floated .fs__label,

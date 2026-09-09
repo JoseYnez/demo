@@ -116,11 +116,10 @@ const PARES_SEMANTICOS: readonly Par[] = [
   { fg: "--color-danger-on-solid", bg: "--color-danger-solid-hover", min: 4.5 },
 ];
 
-const PARES_BORDE: readonly Par[] = SURFACES.map((bg) => ({
-  fg: "--border-strong",
-  bg,
-  min: 3.0,
-}));
+const PARES_BORDE: readonly Par[] = SURFACES.flatMap((bg) => [
+  { fg: "--border-strong", bg, min: 3.0 },
+  { fg: "--border-focus", bg, min: 3.0 },
+]);
 
 const RELLENOS_ESTADO = ["--bg-surface-hover", "--bg-surface-active"];
 
