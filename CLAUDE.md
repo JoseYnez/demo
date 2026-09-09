@@ -234,11 +234,11 @@ Decisiones que no son negociables sin leer esto:
 - **El panel cierra con Esc por la pila de `KeyboardService` (§11.6), no con un listener propio.** Mientras está abierto le gana el Esc a la pantalla completa y al cerrarse se lo devuelve: es exactamente el caso que §11.6 prometía, y el primero que lo ejerce. Pulsar fuera lo cierra con un `pointerdown` en `document` en fase de captura, dado de baja por el mismo `effect` que registró el atajo.
 - **No se usa la Popover API del navegador**, que daría cierre por luz, Esc y capa superior gratis. Pide WebKitGTK 2.42 y su fallo sería mudo —el panel se queda pegado a la barra o no abre—, mientras que la pila de atajos ya existe y está probada. Es el mismo listón con el que §11.2 descartó `light-dark()`.
 - **El foco entra al panel al abrirlo y vuelve a la campana al cerrarlo, y no hay trampa de foco.** No es un diálogo modal: `Tab` tiene que poder salir.
-- **Ventana enfocada → el toast propio; ventana al fondo → la del sistema.** Nunca las dos: sería el mismo aviso contado dos veces, una en un sitio que no estás mirando. El foco lo da `windowApi` —`isFocused()` al arrancar y `onFocusChanged` después—, **no `document.hasFocus()`**: dentro de Tauri la respuesta autoritativa es la de la ventana, y apostar a que el webview la refleje era apostar sobre algo que sólo se puede comprobar en la app empaquetada. Fuera de Tauri el wrapper cae al DOM (`document.hasFocus()` y `focus`/`blur` de `window`), así que la regla se puede ejercer igual en `pnpm start`. No cuesta un permiso nuevo: `is-focused` ya viene en `core:window:default` (§10).
+- **Ventana enfocada → el toast propio; ventana al fondo → la del sistema.** Nunca las dos: sería el mismo aviso contado dos veces, una en un sitio que no estás mirando. El foco lo da `windowApi` —`isFocused()` al arrancar y `onFocusChanged` después—, y **`document.hasFocus()` sólo siembra el primer valor** mientras esa respuesta llega: dentro de Tauri la respuesta autoritativa es la de la ventana, y apostar a que el webview la refleje era apostar sobre algo que sólo se puede comprobar en la app empaquetada. Fuera de Tauri el wrapper cae al DOM (`document.hasFocus()` y `focus`/`blur` de `window`), así que la regla se puede ejercer igual en `pnpm start`. No cuesta un permiso nuevo: `is-focused` ya viene en `core:window:default` (§10).
 - **La entrada al panel se crea siempre, la enseñe quien la enseñe.** Es la única de las tres capas que no depende de que colabore nadie más.
 - **La notificación nativa la manda un comando propio, y `tauri-plugin-notification` se retiró.** El plugin se instaló, se probó y se quitó: pone el AppUserModelID **sólo si el ejecutable no vive en `target/`** —una condición escrita a mano en su `desktop.rs`— y sin AUMID `notify-rust` cae a `Toast::POWERSHELL_APP_ID`, así que en desarrollo el aviso salía rotulado **«Windows PowerShell»** con su icono. Desde fuera no había arreglo: `NotificationData` no expone el app id. De paso se fueron sus tres permisos y su paquete npm, y la comprobación de permiso, que en escritorio devolvía `PermissionState::Granted` a pelo en las tres plataformas — dos IPC para que siempre dijeran que sí.
 - **El AUMID se declara siempre y se registra al arrancar.** `NotificationService` escribe `HKCU\Software\Classes\AppUserModelId\<identifier>` con `DisplayName` (el `productName`) e `IconUri`. Es el mecanismo documentado para una app de escritorio sin empaquetar y, a diferencia del acceso directo del menú Inicio que crea el instalador, **funciona también en `pnpm tauri dev`**. El instalador NSIS de Tauri sigue estampando el mismo identificador en su acceso directo (`SetLnkAppUserModelId` con `${BUNDLEID}`), así que las dos vías dicen lo mismo y no se pelean. **Registrar es un paso aparte de construir** (`new(...).register(...)`) y sólo lo da el `setup` de [lib.rs](src-tauri/src/lib.rs): los tests construyen el servicio sin registrarlo, o cada `cargo test` dejaría en el registro del desarrollador un `com.ejemplo.demo` con un `IconUri` hacia una carpeta temporal ya borrada.
-- **El icono se escribe a disco al arrancar**, porque `IconUri` quiere un archivo y el `.ico` de la app va empotrado en el ejecutable. Sale de un `include_bytes!` de `icons/128x128.png` hacia `%LOCALAPPDATA%\<identifier>aviso.png`, y sólo si falta o no coincide byte a byte con el empotrado: un icono nuevo llega a los avisos del SO en el siguiente arranque en vez de quedarse el viejo para siempre. Efecto lateral bueno: `include_bytes!` **sí** hace que cargo recompile al cambiar el icono, que es justo lo que §3.8 avisa que no ocurre con `icons/`.
+- **El icono se escribe a disco al arrancar**, porque `IconUri` quiere un archivo y el `.ico` de la app va empotrado en el ejecutable. Sale de un `include_bytes!` de `icons/128x128.png` hacia `%LOCALAPPDATA%\<identifier>viso.png`, y sólo si falta o no coincide byte a byte con el empotrado: un icono nuevo llega a los avisos del SO en el siguiente arranque en vez de quedarse el viejo para siempre. Efecto lateral bueno: `include_bytes!` **sí** hace que cargo recompile al cambiar el icono, que es justo lo que §3.8 avisa que no ocurre con `icons/`.
 - **Registrar es hacer lo posible, no una precondición.** Si la clave del registro o el icono fallan, la app arranca igual y el aviso sale peor rotulado. Que el arranque dependiera de una escritura en el registro sería cambiar un problema cosmético por uno grave.
 - **Si el AUMID no se pudo registrar, el aviso sale con el de PowerShell.** Mejor un aviso mal rotulado que ningún aviso. La decisión se toma al registrar, no al enseñar: un AUMID sin registrar **no hace fallar** a `show()` —WinRT lo acepta y simplemente no pinta nada—, así que reintentar «al fallar» no cubría nada. `register()` devuelve el servicio ya decidido y `show()` sólo lee la decisión.
 - **Windows va por `tauri-winrt-notification` y el resto por `notify-rust`.** Los dos estaban ya en el árbol. La rama de Windows es directa porque `notify-rust` no expone el `icon()` de logo del toast —sólo la imagen grande—, y ese logo es la mitad visible del problema.
@@ -274,12 +274,14 @@ Decisiones que no son negociables sin leer esto:
 - **Crear y editar son el mismo componente en dos rutas, y el modelo deriva del contacto.** `linkedSignal` (§6.4) rellena el borrador con lo que haya en el store y admite que el usuario lo pise; en `/contacts/nuevo` el origen es nulo y sale vacío. Al cambiar de ruta el componente se monta de nuevo, así que `touched`/`dirty` nacen a cero sin tener que acordarse de un `reset()`, y nadie estrena los errores de campo obligatorio sobre campos que no ha tocado (§11.3).
 - **Borrar pregunta en la propia fila, no en un diálogo**, aunque el `ConfirmDialog` exista (§11.3). Un modal para una confirmación de dos botones aleja la pregunta de la fila que la provocó y obliga a repetir el nombre del contacto para decir de cuál se hablaba. La fila entra en modo pregunta, la columna de acciones **tiene ancho fijo** para que nada se mueva al pulsar, y el nombre del contacto va en el texto que sólo leen los lectores de pantalla.
 - **Las cuatro columnas de la fila son fijas, no `auto`.** Cada fila es su propia retícula, así que con columnas automáticas las etiquetas de rol y las fechas empezaban en una `x` distinta en cada fila: una lista de registros que no alinea sus campos se lee como tres tarjetas sueltas.
-- **La lista se recoloca en el frontend con lo que devuelve el backend, sin volver a pedirla.** El comando ya devuelve el registro guardado; pedir la lista otra vez sería un IPC de más y un parpadeo. El orden por nombre se aplica en los dos lados por lo mismo.
+- **La lista se recoloca en el frontend con lo que devuelve el backend, sin volver a pedirla.** El comando ya devuelve el registro guardado; pedir la lista otra vez sería un IPC de más y un parpadeo. El orden por nombre lo aplican los dos, pero **manda el frontend**: Rust ordena por bytes en minúsculas, que pone «Álvaro» detrás de «Zoe», y el store reordena con `localeCompare("es")`, que lo pone donde el castellano lo espera. El de Rust existe para que `list()` sea determinista, no para que coincidan.
 - **Cada operación deja un aviso por `NotificationsService` (§3.10)**, que es lo que hace visible el resultado cuando el cambio ocurre fuera de la vista. Los fallos, no: ésos se quedan en la línea de error del formulario o de la lista, junto a lo que hay que corregir.
 - **La búsqueda filtra en memoria y no llama al backend.** Con una lista que cabe en la ventana, un comando de búsqueda sería latencia a cambio de nada. Cuando el listado deje de caber, eso es paginación en el servicio, no un `filter` más grande.
 - **No está detrás del `authGuard`.** El guard ya se ejerce en `tauri-demo`, y aquí sólo conseguiría que la pantalla de ejemplo fuese inalcanzable en `pnpm start`, donde el acceso tampoco funciona (§3.9).
 - **La lista de ejemplo son veinte contactos sembrados al arrancar**, y viven en memoria: se reinician al cerrar la app. Salen de la constante `SEMILLA` de `services/contact.rs`, que `seeded()` recorre con el mismo `with_contact` encadenado que usa la cuenta `demo` de §3.9 — con veinte filas, encadenar veinte llamadas a mano era la versión ilegible de lo mismo. Son veinte y no tres porque **con tres no se puede juzgar una lista**: ni el desbordamiento, ni el filtro, ni el punto de ruptura de §11.8 se ejercen con lo que cabe en tres filas. Todos comparten la fecha de alta, que es la del arranque; variarla exigiría una API de creación con fecha inyectada, y eso es ensuciar el servicio por los datos de ejemplo. Es el almacén provisional hasta que se decida la persistencia (§15); el resto del flujo no cambia cuando se decida.
 - **Salir de la ficha con cambios sin guardar pregunta antes**, y ése es el único modal de la feature (§11.3). No lo gobierna el componente sino `unsavedChangesGuard` sobre la ruta (§11.8), y por eso lo cubre **todo**: el enlace de vuelta, Cancelar y cualquier enlace de la barra de navegación. Sólo salta si el formulario está `dirty()`, y guardar hace `reset()` antes de navegar para no preguntar por lo que se acaba de escribir en el backend. Borrar una fila **no** abre modal: sigue preguntando en la fila, que es donde está el contacto.
+- **Sin lista no hay ficha de edición, y por eso la ficha tiene cuatro estados.** Si la carga falla, `/contacts/:id` enseña el error y el camino de vuelta; no un formulario vacío. Es literal: con tres estados, la ficha caía al formulario y `guardar()` —que decidía por si había encontrado el contacto— llamaba a `create()`, así que la URL de editar daba de alta. Ahora decide por `editando()`.
+- **La carga en vuelo se comparte.** `ensureLoaded()` devolvía una promesa ya resuelta si otra pantalla estaba cargando, así que el fallo se quedaba en el `catch` de quien la lanzó: la ficha se quedaba en «Cargando contacto…» para siempre y la lista decía que no había contactos.
 - **En `pnpm start` la pantalla se dibuja pero la lista no llega.** No hay backend, así que se ve el mensaje que relanza el wrapper —igual que en `tauri-demo`— y el hueco de lista vacía. `/contacts/nuevo` **no** enseña ese error: dar de alta no necesita la lista, y un fallo de carga ahí sería ruido sobre un formulario que funciona. `/contacts/:id` sí lo enseña, porque sin lista no hay contacto que editar. El formulario, el filtro, la confirmación y el aviso de cambios sin guardar se prueban en el navegador; el ciclo completo, sólo en la ventana de Tauri.
 
 ---
@@ -293,21 +295,23 @@ demo/
 │   │   ├── core/               # Singletons: servicios app-wide, guards, error handler
 │   │   │   ├── services/       # ThemeService, AccentService, AuthService (§3.9), …
 │   │   │   ├── guards/         # authGuard (§3.9), unsavedChangesGuard (§11.8)
+│   │   │   ├── error-handler.ts # GlobalErrorHandler (§8.2)
 │   │   │   └── build-info.ts   # Generado: versión y commit (§3.6, no se commitea)
 │   │   ├── shared/             # Reutilizable entre features
-│   │   │   ├── ui/             # Design system (§11)
-│   │   │   ├── pipes/
-│   │   │   └── directives/
+│   │   │   └── ui/             # Design system (§11)
 │   │   ├── features/           # Una carpeta por feature, lazy-loaded (contacts, login, styleguide, tauri-demo)
-│   │   ├── models/             # Interfaces y types del dominio (contact.model.ts, session.model.ts, …)
+│   │   ├── models/             # Interfaces y types del dominio (contact, session, notification)
 │   │   ├── tauri/              # Wrappers tipados de invoke() y listeners (§7)
 │   │   ├── app.ts              # Componente raíz
+│   │   ├── app.css
 │   │   ├── app.config.ts
 │   │   └── app.routes.ts
 │   ├── assets/
-│   │   └── fonts/              # .woff2 de IBM Plex (ver §11.2)
-│   ├── styles/                 # tokens.css, reset.css, forms.css, buttons.css, testing/
+│   │   ├── icon.svg            # Fuente única del icono (§3.8)
+│   │   └── fonts/              # .woff2 de IBM Plex (ver §11.1)
+│   ├── styles/                 # fonts, tokens, reset, forms, buttons + testing/
 │   ├── styles.css              # Entrada global (importa styles/)
+│   ├── csp.spec.ts             # Vigila la política y el hash del script (§11.5)
 │   ├── index.html
 │   └── main.ts
 ├── src-tauri/                  # Backend Rust
@@ -318,8 +322,9 @@ demo/
 │   │   ├── clock.rs            # unix_millis(), compartido por los servicios
 │   │   ├── commands/           # Comandos invocables — sólo orquestan
 │   │   ├── services/           # Lógica de negocio
-│   │   └── models/             # Structs, newtypes validados
+│   │   └── models/             # contact, credentials, notification, session
 │   ├── capabilities/default.json
+│   ├── build.rs
 │   ├── tauri.conf.json
 │   └── Cargo.toml
 ├── scripts/
@@ -362,7 +367,7 @@ Angular 20 eliminó los sufijos de tipo de los **nombres de archivo**. Esto es l
 
 Un `Theme` sin colisión se queda como `Theme`. No añadir sufijos por costumbre.
 
-Cuando el sustantivo desnudo ya lo ocupa **un archivo** de la misma carpeta, el sufijo del rol pasa también al nombre del archivo: la feature `contacts` tiene `contacts.ts` (la pantalla) y `contact-store.ts` (`ContactStore`).
+Cuando el sustantivo desnudo ya lo ocupa **un archivo** de la misma carpeta, el sufijo del rol pasa también al nombre del archivo: la feature `contacts` tiene `contact-list/contact-list.ts` (la pantalla) y `contact-store.ts` (`ContactStore`).
 
 | Otros elementos | Convención | Ejemplo |
 |---|---|---|
@@ -607,7 +612,7 @@ protected readonly alta = form(this.modelo, (path) => {
 - `[formRoot]` en el `<form>` intercepta el submit; `[formField]` liga cada control a su campo.
 - Envío con `submit(alta, action)`.
 
-**Controles propios**: implementar `FormValueControl<T>` (o `FormCheckboxControl` para booleanos). El único requisito es un `model()` llamado `value`; el resto son opcionales que Angular **sincroniza solo** si los declaras — `errors`, `touched`, `dirty`, `disabled`, `readonly`, `required`, `invalid`, `minLength`, `maxLength`, `pattern`, y el output `touch`.
+**Controles propios**: implementar `FormValueControl<T>` (o `FormCheckboxControl` para booleanos). El único requisito es un `model()` llamado `value`; el resto son opcionales que Angular **sincroniza solo** si los declaras — `errors`, `touched`, `dirty`, `disabled`, `readonly`, `required`, `invalid`, `name`, `minLength`, `maxLength`, `pattern`, y el output `touch`. Los cuatro controles de la base declaran `errors`, `disabled`, `required`, `touched`, `name` y `touch`; `readonly` lo llevan los tres de texto y el `Select`, que lo mapea a deshabilitado más `aria-readonly` porque el elemento nativo no lo admite.
 
 ```typescript
 export class Input implements FormValueControl<string> {
@@ -683,14 +688,14 @@ export const ticketApi = {
     try {
       return await invoke<Ticket[]>("get_all_tickets");
     } catch (e) {
-      throw new Error(`ticketApi.getAll: ${e}`);
+      throw new Error(`ticketApi.getAll: ${e}`, { cause: e });
     }
   },
   getById: async (id: string): Promise<Ticket> => {
     try {
       return await invoke<Ticket>("get_ticket_by_id", { id });
     } catch (e) {
-      throw new Error(`ticketApi.getById: ${e}`);
+      throw new Error(`ticketApi.getById: ${e}`, { cause: e });
     }
   },
 };
@@ -713,7 +718,7 @@ Reglas:
 | `contactApi` | `list_contacts`, `create_contact`, `update_contact`, `delete_contact` | El CRUD de ejemplo (§3.11). Lo consume `ContactStore`, nunca un componente. Relanza con prefijo y con `cause`, como `authApi`. |
 | `greetApi` | `greet` | Demo de IPC de la plantilla de Tauri. Lo consume `features/tauri-demo/`. |
 | `notificationApi` | `notify` | Notificación nativa del SO (§3.10). Lo consume `NotificationsService` cuando la ventana no tiene el foco, nunca un componente. Fuera de Tauri es no-op, así que en `pnpm start` esa rama no hace nada. |
-| `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, `window\|set_fullscreen`, `window\|is_fullscreen`, `window\|is_focused`, `window\|maximize`, `window\|unmaximize`, y los listeners `onWindowChanged` y `onFocusChanged` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op **salvo los tres de pantalla completa**, que caen a la Fullscreen API del navegador (§3.7). El resto es no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
+| `windowApi` | `window\|minimize`, `window\|toggle_maximize`, `window\|close`, `window\|is_maximized`, `window\|set_theme`, `window\|set_fullscreen`, `window\|is_fullscreen`, `window\|is_focused`, `window\|maximize`, `window\|unmaximize`, y los listeners `onWindowChanged` y `onFocusChanged` | Barra de título propia (§3.7). Expone `enTauri`; fuera de Tauri —`pnpm start`, tests— los métodos son no-op **salvo seis**: los tres de pantalla completa caen a la Fullscreen API del navegador (§3.7), `isFocused` y `onFocusChanged` caen a `document.hasFocus()` y a `focus`/`blur` de `window` (§3.10), y `onWindowChanged` a `fullscreenchange`. El resto es no-op para que el shell y el `ThemeService` funcionen igual en el navegador. |
 
 **Nada emite eventos desde Rust todavía**, pero ya hay dos listeners de la propia ventana. El primero es el `onWindowChanged` de `windowApi`, que mantiene el icono de maximizar/restaurar/salir en su sitio. Se llama así y no `onResized` porque el evento no es el mismo en los dos sitios —`onResized` de Tauri en la ventana, `fullscreenchange` del DOM en el navegador— y quien lo consume no debe tener que saber cuál le toca. Su `unlisten` va registrado en `destroyRef.onDestroy` en [app.ts](src/app/app.ts) — el patrón de §6.6. El segundo es `onFocusChanged`, con el que `NotificationsService` decide si el aviso sale como toast propio o como notificación del sistema (§3.10), y que abstrae la misma clase de diferencia: el evento de foco de Tauri en la ventana, `focus`/`blur` de `window` en el navegador. Los permisos de eventos ya están concedidos (`core:default` incluye `core:event:default` → `allow-listen`, `allow-unlisten`, `allow-emit`, `allow-emit-to`), así que añadir listeners no requiere tocar `capabilities/`.
 
@@ -740,6 +745,9 @@ pub enum AppError {
     #[error("Demasiados intentos fallidos. Espera {0} s antes de volver a probar.")]
     Locked(u64),
 
+    #[error("{0} ya no existe.")]
+    NotFound(String),
+
     #[error("Error interno: {0}")]
     Internal(String),
 }
@@ -756,7 +764,7 @@ pub type AppResult<T> = Result<T, AppError>;
 - Todo comando Tauri devuelve `AppResult<T>`.
 - Propagación con `?`; al añadir I/O, la variante lleva `#[from]` (`Io(#[from] std::io::Error)`) para que convierta sola.
 - **Los mensajes de `#[error]` son texto de usuario**, en español y con punto final: el frontend los enseña tal cual (§3.9). Una variante que sólo sirva para el log va en `Internal`.
-- `unwrap()` / `expect()` **sólo** bajo `#[cfg(test)]`. La única excepción tolerada es el `.expect()` del arranque en `lib.rs`.
+- `unwrap()` / `expect()` **sólo** bajo `#[cfg(test)]`. La única excepción tolerada son los tres `.expect()` del arranque en `lib.rs`: preparar la autenticación, sembrar los contactos y arrancar Tauri. Si alguno falla no hay app que salvar.
 
 ### 8.2 Frontend (Angular)
 
@@ -765,10 +773,23 @@ Handler global en `src/app/core/error-handler.ts`, registrado en `app.config.ts`
 ```typescript
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
+  private readonly injector = inject(Injector);
+  #avisando = false;
+
   handleError(error: unknown): void {
-    const msg = error instanceof Error ? error.message : String(error);
+    const mensaje = error instanceof Error ? error.message : String(error);
     console.error("[GlobalError]", error);
-    // notificar al usuario
+    if (this.#avisando || mensaje.startsWith("notificationApi.send")) return;
+    this.#avisando = true;
+    try {
+      this.injector.get(NotificationsService).push({
+        variant: "danger",
+        title: "Algo ha fallado",
+        detail: mensaje,
+      });
+    } finally {
+      this.#avisando = false;
+    }
   }
 }
 ```
@@ -777,11 +798,16 @@ export class GlobalErrorHandler implements ErrorHandler {
 providers: [
   provideBrowserGlobalErrorListeners(),
   { provide: ErrorHandler, useClass: GlobalErrorHandler },
-  provideRouter(routes),
+  provideRouter(routes, withComponentInputBinding()),
 ]
 ```
 
-`provideBrowserGlobalErrorListeners()` ya viene en `app.config.ts` de la base: captura `unhandledrejection` y `error` de `window` y los enruta al `ErrorHandler`. **No quitarlo** — bajo zoneless es la red de seguridad para las promesas de `invoke()` que nadie esperó.
+Decisiones que no son negociables sin leer esto:
+
+- **El fallo se ve, no sólo se registra.** Sin él, los `void windowApi.*`, el aviso del sistema y las promesas de `invoke()` que nadie espera morían en el `console.error` del handler por defecto, que en la app empaquetada no ve nadie. Sale como `danger`, que según §3.10 no desaparece solo.
+- **`NotificationsService` se resuelve tarde, con `Injector`.** Inyectarlo en el constructor ataría el `ErrorHandler` —que Angular construye de los primeros— a un servicio que escucha el foco de la ventana.
+- **Dos guardas contra el bucle.** Una reentrante mientras se está avisando, y otra que descarta los fallos del propio `notificationApi.send`: un aviso sobre un aviso es exactamente lo que §3.10 prohíbe, y ése llega tarde y asíncrono, así que la guarda reentrante no lo cubriría.
+- `provideBrowserGlobalErrorListeners()` ya viene en `app.config.ts` de la base: captura `unhandledrejection` y `error` de `window` y los enruta al `ErrorHandler`. **No quitarlo** — bajo zoneless es la red de seguridad para las promesas de `invoke()` que nadie esperó.
 
 ---
 
@@ -821,7 +847,6 @@ Inventario vivo de `src-tauri/capabilities/default.json`. Estado actual de la ba
 | Permiso | Para qué | Quién lo usa |
 |---|---|---|
 | `core:default` | Set mínimo del core (eventos, webview, path) | runtime |
-| `opener:default` | Abrir URLs externas con la app por defecto del SO | `tauri-plugin-opener` |
 | `core:window:allow-start-dragging` | Arrastrar la ventana desde la barra propia (§3.7) | El `data-tauri-drag-region` de [app.html](src/app/app.html) |
 | `core:window:allow-minimize` | Botón de minimizar | `windowApi.minimize` |
 | `core:window:allow-toggle-maximize` | Botón de maximizar/restaurar | `windowApi.toggleMaximize` |
@@ -845,15 +870,15 @@ Sistema propio: **tokens CSS + componentes Angular standalone**. Sin Tailwind, s
 
 ### 11.1 Tokens
 
-La capa global son tres hojas, importadas por `src/styles.css` en este orden:
+La capa global son cinco hojas, importadas por `src/styles.css` en este orden — fuentes, tokens, reset, formularios y botones:
 
 | Hoja | Qué contiene |
 |---|---|
 | `styles/fonts.css` | Los tres `@font-face` de IBM Plex. Sólo declara familias; ni un color ni una medida. |
 | `styles/tokens.css` | Las variables. Único sitio donde se escribe un color o una medida literal. |
-| `styles/reset.css` | Normalización y estilos base de `body`, títulos, enlaces y foco. |
+| `styles/reset.css` | Normalización y estilos base de `body`, títulos, enlaces, `code` y foco, más la utilidad `.sr-only`. Las dos últimas estaban copiadas cuatro veces cada una; la de `.sr-only` además con `position: absolute`, que es lo que §11.3 prohíbe. |
 | `styles/buttons.css` | Base compartida de los botones: `.btn`, sus tamaños y sus variantes. Está en la capa global por la misma razón que `forms.css`: la comparten `Button` y `GestureButton`, y la encapsulación no deja compartirla desde un componente. Cada uno añade sólo lo suyo — el `:host` y, en el gestual, la capa de progreso. La usan también los **enlaces que se ven como un botón** (§11.8), y por eso la hoja neutraliza ahí el subrayado que el reset da a `a:hover`. |
-| `styles/forms.css` | Base compartida de los controles: `.ui-field`, `.ui-label`, `.ui-control`, `.ui-msg`. Vive en la capa global porque la encapsulación de Angular impide compartir estos estilos entre `input`, `textarea` y `select` sin duplicarlos tres veces. Los componentes consumen esas clases y añaden sólo lo suyo (alto, `resize`, la flecha del select). Todos los controles son **outlined**: fondo transparente, el borde los define. |
+| `styles/forms.css` | Base compartida de los controles: `.ui-field`, `.ui-label`, `.ui-control`, `.ui-msg` y `.ui-alert` —la caja de error de pantalla, que estaba copiada en cuatro features—. Vive en la capa global porque la encapsulación de Angular impide compartir estos estilos entre `input`, `textarea` y `select` sin duplicarlos tres veces. Los componentes consumen esas clases y añaden sólo lo suyo (alto, `resize`, la flecha del select). Todos los controles son **outlined**: fondo transparente, el borde los define. |
 
 Roles que los tokens cubren:
 
@@ -866,6 +891,8 @@ Roles que los tokens cubren:
 - **Relleno sólido**: `--color-danger-solid` + su `-on-solid` y `-solid-hover`. Es el *fondo* del botón destructivo, con su propio color de texto encima. **Sólo existe para `danger`**: es la única familia que necesita un relleno pleno hoy. Si un proyecto derivado necesita otro, se añade con su `-on-*` y su fila en el spec, no se improvisa.
 - **Rellenos tonales**: `--color-{neutral,success,warning,danger,info}-tonal` + su `-on-tonal`, y `--accent-tonal` / `--accent-on-tonal`. El peldaño intermedio entre el fondo tenue y el relleno pleno — ver abajo.
 - **Velo**: `--backdrop`, el negro translúcido que el modal echa sobre la ventana (§11.3).
+- **Foco**: `--ring-focus` es el halo del acento, y `--border-focus` el trazo sólido que va encima; `--ring-danger` es el halo cuando el control ya está en rojo, donde el del acento mentiría. El anillo **no rota** con el semántico: `--ring-danger` es estático como el resto de la familia (§11.5 regla 1).
+- **Altura de los controles**: `--control-h`, `--control-h-float` y `--control-h-inset` (34/40/52 px). Están en la capa global y no en cada componente porque los tres modos de etiqueta valen para los tres controles.
 - **Escalas**: espaciado `--space-0..16` (base 4px), tipografía `--font-size-2xs..3xl`, radios `--radius-sm..full`, sombras `--shadow-sm..xl`, `--edge-raised`, transiciones `--transition-fast|normal|slow`.
   `--font-size-2xs` (10 px) **no es texto de lectura**: existe para los conteos que van dentro de un glifo —hoy sólo el de la campana (§3.7)—, donde el `xs` de 12 px tapaba el dibujo entero. No usarlo para una etiqueta, una ayuda ni un mensaje.
 
@@ -908,14 +935,14 @@ La regla: **fondo y color de `option` se declaran siempre juntos**, para que no 
 
 **El modo oscuro copia la rampa de ChatGPT.** Es una referencia deliberada: grises neutros y planos, sin bordes marcados, elevación por tono. Las anclas son las suyas (sidebar `#171717`, chat `#212121`, hover `#2f2f2f`, texto `#ececec`) y la rampa de aquí queda a menos de un punto de L\* de cada una. La diferencia es un croma de 0.005 en las superficies: se leen grises, pero no del todo neutras. **El verde vive en el acento, no en el mobiliario** — si se sube el croma de las superficies, se pierde el parecido.
 
-**El texto oscuro también sigue a ChatGPT, no sólo las superficies.** Su secundario (`#b4b4b4`, L .77) y su terciario (`#9b9b9b`, L .69) marcan los escalones: aquí van a L .80 y L .70, con el primario en L .94. La primera paleta los tenía en L .86 y L .79, forzados por unos umbrales APCA de Lc 74 y Lc 58 contra la superficie más clara, y la jerarquía quedaba con la mitad de profundidad que en claro (0.155 de L frente a 0.297): placeholder, ayuda, valor deshabilitado y valor escrito se veían iguales. Los umbrales que quedan son Lc 62 secundario y Lc 45 apagado, y AA sigue sobrando sobre `--bg-surface-raised` (7.07:1 y 4.92:1).
+**El texto oscuro también sigue a ChatGPT, no sólo las superficies.** Su secundario (`#b4b4b4`, L .77) y su terciario (`#9b9b9b`, L .69) marcan los escalones: aquí van a L .80 y L .705, con el primario en L .94. La primera paleta los tenía en L .86 y L .79, forzados por unos umbrales APCA de Lc 74 y Lc 58 contra la superficie más clara, y la jerarquía quedaba con la mitad de profundidad que en claro (0.155 de L frente a 0.297): placeholder, ayuda, valor deshabilitado y valor escrito se veían iguales. Los umbrales que quedan son Lc 62 secundario y Lc 45 apagado; el apagado está en L .705 y no en L .70 porque a L .70 se quedaba en Lc 44,75 sobre `--bg-surface-raised`. AA sigue sobrando en las cuatro superficies.
 
 **La paleta se calcula, no se elige a ojo.** Los dos temas se generaron igualando el contraste **perceptual (APCA)**, no la ratio de WCAG 2. Importa porque WCAG 2 subestima el contraste sobre fondos oscuros: la paleta anterior daba 7.88:1 para `--text-secondary` en oscuro contra 7.40:1 en claro — aparentemente mejor — mientras APCA medía Lc 58.8 contra Lc 85.7. El modo oscuro estaba muy por debajo y WCAG 2 lo ocultaba.
 
 Criterios que cumple la paleta, y que verifica [tokens.spec.ts](src/styles/tokens.spec.ts) en cada `pnpm test`:
 
 - WCAG 2.1 AA (4.5:1 texto, 3:1 componentes) — es el estándar legal, es el suelo.
-- Umbrales APCA: Lc 90 primario, Lc 62 secundario, Lc 45 apagado, contra **todas** las superficies. En claro sobran (Lc 99 / 81 / 71); los fija el oscuro. Se miden a mano al tocar un token: el spec verifica WCAG y el barrido de tonos.
+- Umbrales APCA: Lc 90 primario, Lc 62 secundario, Lc 45 apagado, contra **todas** las superficies. En claro sobran; los fija el oscuro. **Los mide el spec**, no la mano: `apcaContrast()` vive en [color.ts](src/styles/testing/color.ts) y [tokens.spec.ts](src/styles/tokens.spec.ts) exige los tres umbrales en los dos temas. Al escribirlo salió que el apagado oscuro se quedaba en Lc 44,75 sobre la superficie elevada, y por eso está en L .705 y no en L .70.
 - Los pares dependientes del acento, además, en 72 tonos: el acento es configurable (§11.5) y ningún tono elegible puede romper AA.
 
 Al tocar un color hay que revalidar; el test falla si el contraste baja o si los dos bloques oscuros divergen.
@@ -923,6 +950,10 @@ Al tocar un color hay que revalidar; el test falla si el contraste baja o si los
 **El relleno tonal se sitúa en el punto medio de L\*, y por eso necesita texto propio.** Es el peldaño que faltaba entre el fondo tenue y el relleno sólido: en claro va de L .95 a L .72 con el sólido en L .48; en oscuro, de L .29 a L .41 con el sólido en L .52. Ese punto medio es exactamente donde **ningún texto existente sirve**: con el `-fg` del aviso tenue el relleno sólo podría bajar a L .90 —un peldaño invisible— y con el `-on-solid` (blanco) se queda en 2:1. De ahí el par nuevo `-tonal` / `-on-tonal`, con el texto en L .30 (claro) y L .92 (oscuro). El peor par de los 72 tonos da **5.46:1**, así que sobra margen sobre el 4.5 de AA. Los cuatro semánticos son hex estático —no rotan, §11.5 regla 1—; el acento y el neutro sí rotan y van en el `@supports`.
 
 **Los controles son outlined, no rellenos.** Sin fondo: el borde los define. Viene impuesto por la etiqueta flotante (§11.3) —cruza la línea del borde, y un relleno le partiría el fondo en dos colores a mitad del texto— y se extiende a todos los controles para no tener medio sistema relleno y medio no. Consecuencia: `--border-strong` es el único indicador del control, así que cumple **3:1 contra las cuatro superficies**, no sólo contra la principal. [tokens.spec.ts](src/styles/tokens.spec.ts) lo verifica par a par.
+
+**El foco es trazo sólido más halo, no sólo halo.** `--ring-focus` es el acento al 25%: compuesto sobre las superficies da 1,37-1,39:1 en claro y 1,71-1,74:1 en oscuro, muy por debajo del 3:1 que piden WCAG 2.4.7 y 1.4.11, y durante un tiempo fue el **único** indicador de los botones y de los controles en modo `top`. La forma correcta es la que ya usaba el reset: `outline: 2px solid var(--border-focus)` con `outline-offset`, y el halo alrededor. Un control inválido enfocado cambia el trazo a `--color-danger-fg` y el halo a `--ring-danger`, porque su borde ya era rojo y sin eso el foco no se distinguía del reposo. [tokens.spec.ts](src/styles/tokens.spec.ts) ancla `--border-focus` a 3:1 contra las cuatro superficies, en los dos temas y en los 72 tonos.
+
+**El borde de error es `--color-danger-fg`, no `--color-danger-solid`.** En claro son el mismo hex, así que no se nota; en oscuro el sólido daba 2,58:1 sobre `--bg-surface-raised` —una `Card`, que es donde viven los formularios— y el `-fg` da 8,57:1. Es la distinción de arriba vista al revés: `solid` es un relleno y sólo se le exige contraste con el texto que lleva encima; como trazo no cumplía.
 
 **Los estados de interacción se miden, no se ajustan a ojo.** La referencia es
 la misma rampa de ChatGPT: su hover salta **0.057 de L\***, y todo hover del
@@ -977,7 +1008,7 @@ en este repo hay que **sumar siempre un atributo** al selector escrito.
 
 ### 11.3 Componentes en `shared/ui/`
 
-Cada uno en su carpeta, con `.ts` + `.html` + `.css`, exportado desde el barrel `src/app/shared/ui/index.ts`:
+Cada uno en su carpeta, con `.ts` + `.html` + `.css`, exportado desde el barrel `src/app/shared/ui/index.ts`. `field-shell/control-state.ts` es la excepción: no es un componente sino lo que los cuatro controles comparten —el contador de identificadores, el primer error, el placeholder visible y el id del mensaje—, que estaba escrito cuatro veces.
 
 ```typescript
 import { Button, Card, Input } from "../../shared/ui";
@@ -991,12 +1022,12 @@ Todos: `OnPush`, signal inputs, sin dependencias externas y sin lógica de domin
 |---|---|---|---|
 | `Button` | `<app-button>` | `variant` (primary/secondary/ghost/danger), `size` (sm/md/lg), `type`, `disabled`, `loading`, `fullWidth` | `loading` deshabilita y muestra spinner. |
 | `Card` | `<app-card>` | `variant` (elevated/outlined/flat), `padding` (none/sm/md/lg) | Slots opcionales `[card-header]` y `[card-footer]`; la zona sin contenido no se dibuja. |
-| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (outline/tonal), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla. Ver abajo cuál usar. |
+| `Badge` | `<app-badge>` | `variant` (neutral/primary/success/warning/danger/info), `appearance` (outline/tonal), `size` (sm/md/lg), `dot`, `label` | Sólo presentación. `variant` dice qué comunica; `appearance`, cuánto pesa. Recorta con elipsis en vez de desbordar; `label` da el texto entero al lector de pantalla, y con él el badge declara `role="img"`, sin el cual ARIA prohíbe nombrar el rol genérico y los lectores lo ignoran. Ver abajo cuál usar. |
 | `Input` | `<app-input>` | `label`, `labelMode`, `placeholder`, `type`, `hint`, `autocomplete`, `revealable` + el contrato de §6.8 | `FormValueControl<string>`. Expone `focus()`. `revealable` sólo actúa con `type="password"`: añade el ojo de mostrar/ocultar, que no roba el foco al campo. Todo campo de contraseña avisa de Bloq Mayús en la línea del `hint` mientras se escribe; el error del formulario le gana. |
-| `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. |
-| `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. El placeholder es una opción de valor vacío; ver abajo. |
+| `Textarea` | `<app-textarea>` | `label`, `labelMode`, `placeholder`, `rows`, `hint` + contrato | `FormValueControl<string>`. Expone `focus()`. |
+| `Select` | `<app-select>` | `label`, `labelMode`, `options` (`SelectOption[]`, requerido), `placeholder`, `hint` + contrato | `FormValueControl<string>`. Expone `focus()`. Separador + chevron propios: con los controles en outlined, un select y un input son la misma caja, y esa es la única pista de que abre una lista. No adelgazarla. El placeholder es una opción de valor vacío; ver abajo. |
 | `GestureButton` | `<app-gesture-button>` | `variant`, `size`, `disabled`, `fullWidth`, `gestures`, `longPressDelay`, `doubleTapDelay`, `longPressGrace` | Toque, doble toque y pulsado largo, con barra de progreso. Ver abajo. |
-| `FilePicker` | `<app-file-picker>` | `label`, `hint`, `sources` (drop/browse/paste), `accept`, `maxFiles`, `maxSize`, `preview` + el contrato de §6.8 | `FormValueControl<readonly File[]>`. Adjuntos por arrastre, explorador y portapapeles, con lista y miniatura. Ver abajo. |
+| `FilePicker` | `<app-file-picker>` | `label`, `hint`, `sources` (drop/browse/paste), `accept`, `maxFiles`, `maxSize`, `preview` + el contrato de §6.8 | `FormValueControl<readonly File[]>`. Adjuntos por arrastre, explorador y portapapeles, con lista y miniatura. Expone `focus()`. Ver abajo. |
 | `Toast` | `<app-toast>` | `variant` (neutral/success/warning/danger/info), `heading`, `detail`, `duration` | Aviso flotante que se retira solo. `duration: 0` lo deja hasta que lo cierren. Emite `expired` (se cumplió el tiempo) y `closed` (lo cerró alguien); el shell distingue las dos (§3.10). Ver abajo. |
 | `NotificationPanel` | `<app-notification-panel>` | `items` (`AppNotification[]`) | Lista de avisos con estado de leído, tiempo relativo y hueco propio cuando está vacía. Emite `dismissed` y `cleared`, expone `focus()`. Ver abajo. |
 | `ConfirmDialog` | `<app-confirm-dialog>` | `open`, `heading`, `detail`, `confirmLabel`, `cancelLabel`, `variant` (primary/danger), `busy` | El único modal del sistema, y sólo para confirmar. Emite `confirmed` y `dismissed`; quien lo abre decide cuándo se cierra. Ver abajo. |
@@ -1147,6 +1178,12 @@ Por eso cada `<option>` lleva su propio `[selected]` —incluida la del placehol
 
 Los tres controles de formulario gatean el mensaje de error tras `touched`: enseñar "requerido" en un formulario recién abierto es hostil.
 
+**Los cuatro controles implementan `focus()` y asocian su mensaje.** El `focus()` no es opcional: el contrato de Signal Forms dice que, si falta, intentará enfocar el elemento anfitrión, y los anfitriones aquí son `display: block` sin `tabindex`, así que enfocar el primer campo inválido desde la API fallaba en silencio. El mensaje —error o ayuda— lleva el id `<control>-msg` y el nativo lo apunta con `aria-describedby`; sin eso el lector de pantalla decía «inválido» sin decir por qué, y el `hint` no se leía nunca.
+
+**`ConfirmDialog` atiende también `close`.** El `cancel` cubre el Esc, pero el motor puede cerrar el diálogo por su cuenta —`requestClose()`, un `form method="dialog"`, o el segundo Esc que Chromium deja de poder cancelar—, y entonces el elemento queda cerrado con `open()` todavía en `true`: nadie emitía `dismissed` y la promesa de `puedeSalir()` se quedaba colgada. Ahora ese cierre emite `dismissed`, o vuelve a abrir si hay un `busy` en marcha. Y en `busy` el foco pasa al propio `<dialog>` (que lleva `tabindex="-1"`), porque deshabilitar el botón de confirmar lo mandaba al `body` y el Esc dejaba de llegar.
+
+**La `Card` usa `div`, no `header` ni `footer`.** Fuera de un `article`, `aside`, `main`, `nav` o `section`, esos dos elementos se mapean a los landmarks `banner` y `contentinfo`, así que una card colocada fuera del `<main>` del shell inventaba dos landmarks que no son suyos.
+
 **`labelMode`** decide dónde vive la etiqueta. Hay tres modos conviviendo **a la espera de que se elija uno**; cuando se decida, el sistema se unifica a ése y los otros se retiran. Comparativa viva en `/styleguide`, sección "Comparativa: dónde va la etiqueta".
 
 | Modo | Alto | Etiqueta | Relleno |
@@ -1199,8 +1236,15 @@ Piezas:
   Expone `supported` para ocultar la UI donde no haya `oklch()`, y los presets
   en `ACCENT_PRESETS`.
 - **Script inline en `index.html`**: aplica tema y tono guardados antes del
-  bootstrap (anti-destello). Si algún día se activa un CSP en
-  `tauri.conf.json`, necesitará su hash.
+  bootstrap (anti-destello). Va autorizado por su hash en la CSP de producción
+  (`app.security.csp` de [tauri.conf.json](src-tauri/tauri.conf.json)), así que
+  **editarlo obliga a regenerar el hash**; no hay que acordarse, porque
+  [csp.spec.ts](src/csp.spec.ts) lo recalcula y falla si no coinciden. El
+  entorno de desarrollo se queda sin política a propósito: con ella habría que
+  abrirle hueco al websocket de Vite y a los sourcemaps. Dos permisos que la
+  política sí concede y no son opcionales: `blob:` en `img-src`, del que viven
+  las miniaturas del `FilePicker`, y `'unsafe-inline'` en `style-src`, que un
+  nonce no puede sustituir porque los bindings `[style.*]` son atributos.
 - **Selector en `/styleguide`**: presets, tono libre y restaurar.
 
 **El tono inicial y el candado se declaran en `<html>`, no en `environment.ts`.**
@@ -1214,7 +1258,7 @@ Los dos atributos son opcionales: sin ellos, la app se comporta como la base (de
 - **Por qué no `environment.ts`**: el script anti-destello escribe `--accent-hue` como estilo inline en `<html>` **antes** del bootstrap, y un estilo inline gana a cualquier hoja. Si el tono viviera sólo en `environment.ts`, una instalación nueva arrancaría en 158 y Angular lo corregiría después —destello—, y una app bloqueada aplicaría el tono guardado del usuario durante un frame. El script y `AccentService` tienen que leer **la misma fuente**, y la única que existe antes del bootstrap es el propio HTML. Si algún día hace falta por configuración, `angular.json` admite un `index` distinto por configuración.
 - **Precedencia**: bloqueado → el del entorno; libre → el guardado, y si no hay, el del entorno; y si tampoco, el defecto de `tokens.css`. Un atributo ilegible cae al defecto en vez de romper.
 - **`reset()` vuelve a `baseHue`, no a 158.** Con un tono de entorno, hacer sólo `removeProperty` caería al defecto de `tokens.css` y devolvería el tono equivocado.
-- **El candado ignora lo guardado, no lo borra.** Si algún día se abre, vuelve la preferencia del usuario. Borrarlo es irreversible.
+- **El candado ignora lo guardado, no lo borra**, y eso vale también para `reset()`: con el candado puesto vuelve al tono del entorno sin tocar `localStorage`. Si algún día se abre, vuelve la preferencia del usuario. Borrarlo es irreversible.
 - **La styleguide es la única exenta**: usa `previewHue()`, que aplica sin persistir, o dejaría de servir para lo que sirve. `setHue()` sí respeta el candado.
 - **El candado no cambia la receta de color todavía**: bloquear da consistencia (todos ven el mismo tono), no identidad — el acento sigue en C 0.060 en claro y C 0.080 en oscuro. Subirlo a la paleta afinada del tono elegido es la decisión pendiente de §15, y cuando se tome, `locked` es el interruptor que ya está puesto.
 
@@ -1253,6 +1297,7 @@ this.teclado.register(
 ```
 
 - **`ctrl` cubre Ctrl y Cmd.** Un solo registro sirve en Windows, Linux y macOS.
+- **Una letra se reconoce por `event.key` o por `event.code`.** En macOS, Option compone otro carácter —Alt+T produce «†»—, así que comparar sólo `key` dejaba muertos los tres atajos con Alt en ese sistema, que es justo lo que la regla de arriba promete que no pasa.
 - **El alcance lo decide dónde se registra**: en `app.ts` vive mientras viva la app; en un componente de feature, sólo mientras esa pantalla está montada. La baja es automática contra el `DestroyRef` de quien registró — por eso `register()` hay que llamarlo en contexto de inyección (constructor o inicializador de campo), o pasarle un `DestroyRef` explícito.
 - **Con la misma combinación gana el último registrado**, y al darse de baja el control vuelve al anterior. Nada se sobrescribe: los dos conviven en la pila, sólo cambia cuál responde. Es lo que hace que el panel de notificaciones (§3.10) se quede el `Esc` mientras está abierto y se lo devuelva a la pantalla completa al cerrarse, sin que ninguno de los dos sepa del otro.
 - **`register()` devuelve su propia baja**, además de la automática contra el `DestroyRef`. Es lo que permite registrar un atajo que va y viene sin montar y desmontar un componente: hoy lo usan el Esc de la pantalla completa (§3.7) y el del panel de notificaciones (§3.10), cada uno desde un `effect()` que lo da de alta al abrirse y de baja al cerrarse. La baja es idempotente y retira también el `onDestroy`, para que alternar mil veces no acumule mil callbacks muertos.
@@ -1315,6 +1360,12 @@ cd src-tauri && cargo test
 
 Sin umbral de cobertura forzado. Un PR debe traer tests de la lógica que toca.
 
+Dos specs no cuelgan de ningún componente y conviene saber que existen:
+[csp.spec.ts](src/csp.spec.ts) recalcula el hash del script anti-destello y lo
+compara con la política de `tauri.conf.json` (§11.5), y
+[tokens.spec.ts](src/styles/tokens.spec.ts) es quien sostiene todo lo que §11.2
+afirma sobre contraste, APCA incluido.
+
 ### Zoneless en tests
 
 `fixture.detectChanges()` no basta: hay que esperar la estabilización.
@@ -1335,7 +1386,7 @@ Los tests que ejerciten un wrapper de `tauri/` deben mockear `@tauri-apps/api/co
 
 **El aviso que se ve de verdad se prueba a mano.** `el_aumid_propio_saca_el_aviso_sin_caer_al_de_powershell` va `#[ignore]` porque es el único test que escribe en el registro y pinta un toast en la pantalla: se lanza con `cargo test --lib -- --ignored`. Existe porque un AUMID sin registrar no hace fallar a `show()` (§3.10): que el registro coló sólo se distingue viendo el aviso rotulado como la app. Usa la misma carpeta de datos que la app (`%LOCALAPPDATA%\<identifier>`) para no dejar en el registro un `IconUri` hacia una carpeta temporal.
 
-**`vi.mock` no funciona en este runner.** `@angular/build:unit-test` lo bloquea para imports relativos —«Please use Angular TestBed for mocking dependencies»—, así que para sustituir un wrapper de `tauri/` se espía el objeto exportado: `vi.spyOn(notificationApi, "send")`. Funciona porque los wrappers de §7 son objetos literales con métodos, y es una razón más para que lo sigan siendo.
+**`vi.mock` sólo vale para paquetes, no para imports relativos.** `@angular/build:unit-test` bloquea los segundos —«Please use Angular TestBed for mocking dependencies»—, así que `vi.mock("@tauri-apps/api/core", …)` sí funciona y es lo que usan los specs de contactos y de acceso, mientras que para sustituir un wrapper propio de `tauri/` hay que espiar el objeto exportado: `vi.spyOn(notificationApi, "send")`. Funciona porque los wrappers de §7 son objetos literales con métodos, y es una razón más para que lo sigan siendo.
 
 **En jsdom el documento no tiene el foco.** `document.hasFocus()` devuelve `false`, y fuera de Tauri es ahí donde cae `windowApi.isFocused()`, así que un spec que espere el toast propio tiene que declarar que la ventana está enfocada (`vi.spyOn(document, "hasFocus").mockReturnValue(true)`); si no, `NotificationsService` toma la rama de la notificación del sistema (§3.10). No es una rareza del test: es exactamente la misma bifurcación que en la app real, y por eso el spec del servicio la ejerce en los dos sentidos.
 
@@ -1351,7 +1402,7 @@ El jsdom de este runner **no implementa** `DataTransfer`, `DragEvent`, `Clipboar
 
 ### Branches
 
-- `master` — única rama de larga vida: producción **e** integración. Es la base de toda rama de trabajo y la que reciben los PR.
+- `master` — única rama de larga vida: producción **e** integración. Es la base de toda rama de trabajo y la que reciben los PR. Si `origin/HEAD` apunta a otra cosa, eso es deriva que hay que corregir en el remoto, no una excepción.
 - `feature/*`, `fix/*`, `refactor/*`, `chore/*` — se abren desde `master` y mueren al fusionarse.
 
 No hay `develop`: con un solo mantenedor, una rama de integración añade una fusión por cambio y no aporta nada que el PR no dé ya. Si algún día hay varias personas publicando a la vez, ése es el momento de introducirla, no antes.
@@ -1425,7 +1476,9 @@ Deliberadamente **fuera** de esta base. Cada proyecto derivado decide y lo docum
 | Persistencia (SQLite / `tauri-plugin-store` / `localStorage`) | Sin decidir. No hay BD ni store en la base: la lista de contactos (§3.11) y el almacén de usuarios (§3.9) viven en memoria dentro de Rust y mueren con la app. Los dos salen de ahí el día que se decida, y ninguno de los dos flujos cambia más allá del servicio. |
 | Almacén de usuarios y sesión | **Provisional**: una cuenta `demo` hardcodeada en `services/auth.rs`, hasheada con Argon2id al arrancar, y la sesión sólo en memoria (§3.9). Al decidir la persistencia, el almacén de usuarios sale de ahí y `AuthService::with_user` es el único punto de entrada. Recordar la sesión entre arranques es una decisión aparte. |
 | Push de servidor (WNS) | **Descartado por ahora, y medido.** Lo que hay es notificación **local** del SO (§3.10), que cubre «avisar con la app abierta y sin foco». El push de verdad —servidor → equipo con la app cerrada— exige Windows App SDK con `PushNotificationManager`, un registro en Microsoft Entra ID **multi-tenant**, y para entrega en segundo plano y activación COM, **identidad de paquete MSIX** con el Package Family Name mapeado al AppId de Azure por correo a Microsoft, que lo procesan semanalmente. Nada de eso existe en Tauri: sería FFI a WinRT y cambiar el bundle a MSIX. Si hace falta avisar desde el servidor, el patrón es transporte propio (WebSocket/SSE) → `NotificationsService.push()`. |
-| Logging (`tauri-plugin-log`) | Sin decidir. Hoy no hay plugin de log: `println!` sólo vale para depuración local, nunca en un commit. |
+| Logging (`tauri-plugin-log`) | Sin decidir. Hoy no hay plugin de log: `println!` sólo vale para depuración local, nunca en un commit. Mientras tanto el `GlobalErrorHandler` (§8.2) es lo único que hace visible un fallo, y sólo mientras la app está abierta. |
+| CSP | **Cerrada: activa en producción, ausente en desarrollo.** Ver §11.5. Falta ejercerla en la app empaquetada: es el único punto de esta base cuyo fallo no aparece en `pnpm start`. |
+| Contraste sobre el hover en tema claro | **Medido y pendiente.** Con `--overlay-hover` al 8%, `--text-muted` cae a 3,88:1 y `--accent-fg` a 3,93:1 sobre `--bg-surface-alt`, por debajo del 4,5 de AA. No lo arregla bajar el overlay: los dos tokens parten de 4,62 y 4,68 sin él, así que ni un 2% cabe. Las salidas son oscurecer los dos tokens —lo que comprime la jerarquía de texto que §11.2 ensanchó a propósito— o prohibir que texto que no sea primario o secundario se pinte sobre un overlay. Hasta decidirlo, el spec sólo exige 4,5 a esos dos. |
 | Barra de título custom vs. nativa | **Cerrada: propia** (`decorations: false`). Ver §3.7. |
 | Versionado sincronizado `package.json` ↔ `tauri.conf.json` | Manual. No hay script de sync. |
 | Linter (ESLint / `angular-eslint`) | No instalado. |
