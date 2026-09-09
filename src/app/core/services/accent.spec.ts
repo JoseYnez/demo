@@ -155,6 +155,19 @@ describe("AccentService", () => {
       expect(localStorage.getItem("accent-hue")).toBeNull();
     });
 
+    it("reset vuelve al tono del entorno sin borrar lo guardado", () => {
+      entorno("245", true);
+      localStorage.setItem("accent-hue", "280");
+      const accents = TestBed.inject(AccentService);
+      accents.previewHue(10);
+
+      accents.reset();
+
+      expect(accents.hue()).toBe(245);
+      expect(document.documentElement.style.getPropertyValue("--accent-hue")).toBe("245");
+      expect(localStorage.getItem("accent-hue")).toBe("280");
+    });
+
     it("bloquear sin tono de entorno fija el defecto de fábrica", () => {
       entorno(undefined, true);
       localStorage.setItem("accent-hue", "280");

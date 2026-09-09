@@ -62,6 +62,10 @@ export class AccentService {
 
   reset(): void {
     this.#hue.set(this.baseHue);
+    if (this.locked) {
+      this.apply(this.baseHue);
+      return;
+    }
     localStorage.removeItem(STORAGE_KEY);
     if (this.#envHue === null) {
       document.documentElement.style.removeProperty(HUE_PROPERTY);
