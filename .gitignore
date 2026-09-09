@@ -45,3 +45,7 @@ Thumbs.db
 
 # Generado en cada build (scripts/generate-build-info.mjs)
 /src/app/core/build-info.ts
+
+# Nunca: este repo es de pnpm (§3.1)
+/package-lock.json
+/yarn.lock
