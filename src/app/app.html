@@ -116,7 +116,7 @@
           data-tauri-drag-region="false"
           [items]="notificaciones.items()"
           (dismissed)="notificaciones.dismiss($event)"
-          (cleared)="notificaciones.clear()"
+          (cleared)="vaciar()"
         />
       }
 

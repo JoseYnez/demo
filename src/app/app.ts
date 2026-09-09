@@ -109,6 +109,11 @@ export class App {
     this.panelAbierto.set(true);
   }
 
+  protected vaciar(): void {
+    this.notificaciones.clear();
+    this.cerrarPanel();
+  }
+
   protected cerrarPanel(devolverElFoco = true): void {
     if (!this.panelAbierto()) return;
     this.panelAbierto.set(false);

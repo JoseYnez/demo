@@ -283,4 +283,26 @@ describe("App", () => {
     await fixture.whenStable();
     expect(pantalla.active()).toBe(false);
   });
+
+  it("vaciar cierra el panel y devuelve el foco a la campana", async () => {
+    const notificaciones = TestBed.inject(NotificationsService);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    notificaciones.push({ title: "Primera" });
+    await fixture.whenStable();
+    campana(fixture).click();
+    await fixture.whenStable();
+    expect(panel(fixture)).not.toBeNull();
+
+    const vaciar = (fixture.nativeElement as HTMLElement).querySelector<
+      HTMLButtonElement
+    >(".np__vaciar")!;
+    vaciar.click();
+    await fixture.whenStable();
+
+    expect(panel(fixture)).toBeNull();
+    expect(notificaciones.items()).toEqual([]);
+    expect(document.activeElement).toBe(campana(fixture));
+  });
 });
