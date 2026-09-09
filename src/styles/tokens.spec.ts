@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
+  apcaContrast,
   compositeHex,
   contrastRatio,
   inSrgbGamut,
@@ -82,6 +83,12 @@ const HUES = Array.from({ length: 72 }, (_, i) => i * 5);
 
 const SURFACES = ["--bg-app", "--bg-surface", "--bg-surface-alt", "--bg-surface-raised"];
 
+const UMBRALES_APCA: readonly [string, number][] = [
+  ["--text-primary", 90],
+  ["--text-secondary", 62],
+  ["--text-muted", 45],
+];
+
 const SOBRE_TODA_SUPERFICIE: readonly [string, number][] = [
   ["--text-primary", 7.0],
   ["--text-secondary", 4.5],
@@ -136,6 +143,7 @@ function paresDeBarrido(): readonly Par[] {
     ...PARES_BORDE,
     ...PARES_ACENTO,
     ...PARES_ESTADO,
+    ...PARES_SEMANTICOS,
   ];
 }
 
@@ -183,6 +191,12 @@ describe("tokens.css", () => {
     expect(darkAttr).toEqual(darkMedia);
   });
 
+  it("declara color-scheme en los tres bloques estáticos", () => {
+    expect(extractBlock(baseCss, ROOT)).toContain("color-scheme: light");
+    expect(extractBlock(baseCss, DARK_ATTR)).toContain("color-scheme: dark");
+    expect(extractBlock(baseCss, DARK_MEDIA)).toContain("color-scheme: dark");
+  });
+
   it("mantiene los dos bloques oscuros del @supports idénticos", () => {
     expect(Object.keys(accentDarkAttr).sort()).toEqual(Object.keys(accentDarkMedia).sort());
     expect(accentDarkAttr).toEqual(accentDarkMedia);
@@ -219,7 +233,7 @@ describe("tokens.css", () => {
     ["oscuro", [darkAttr, light] as readonly Scope[]],
   ] as const) {
     describe(`tema ${tema} (fallback estático)`, () => {
-      for (const par of [...paresDeBarrido(), ...PARES_SEMANTICOS]) {
+      for (const par of paresDeBarrido()) {
         it(`${par.fg} sobre ${par.bg} cumple ${par.min}:1`, () => {
           const ratio = contrastRatio(
             lumAt(scopes, par.fg, DEFAULT_HUE),
@@ -227,6 +241,19 @@ describe("tokens.css", () => {
           );
           expect(ratio).toBeGreaterThanOrEqual(par.min);
         });
+      }
+
+      for (const [token, lc] of UMBRALES_APCA) {
+        for (const surface of SURFACES) {
+          it(`${token} sobre ${surface} llega a Lc ${lc}`, () => {
+            expect(
+              apcaContrast(
+                hexAt(scopes, token, DEFAULT_HUE),
+                hexAt(scopes, surface, DEFAULT_HUE),
+              ),
+            ).toBeGreaterThanOrEqual(lc);
+          });
+        }
       }
 
       for (const surface of ["--bg-app", "--bg-surface"]) {

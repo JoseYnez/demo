@@ -84,6 +84,7 @@ a:hover {
 }
 
 body {
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -91,5 +92,6 @@ input,
 textarea,
 [contenteditable],
 .selectable {
+  -webkit-user-select: text;
   user-select: text;
 }

@@ -59,6 +59,41 @@ export function contrastRatio(lumA: number, lumB: number): number {
   return (Math.max(lumA, lumB) + 0.05) / (Math.min(lumA, lumB) + 0.05);
 }
 
+const APCA = {
+  trc: 2.4,
+  normBg: 0.56,
+  normTxt: 0.57,
+  revTxt: 0.62,
+  revBg: 0.65,
+  blkThrs: 0.022,
+  blkClmp: 1.414,
+  scale: 1.14,
+  offset: 0.027,
+  loClip: 0.1,
+  deltaYmin: 0.0005,
+} as const;
+
+function apcaY(hex: string): number {
+  const channel = (i: number) =>
+    (parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255) ** APCA.trc;
+  const y =
+    0.2126729 * channel(0) + 0.7151522 * channel(1) + 0.072175 * channel(2);
+  return y < APCA.blkThrs ? y + (APCA.blkThrs - y) ** APCA.blkClmp : y;
+}
+
+export function apcaContrast(textHex: string, bgHex: string): number {
+  const txt = apcaY(textHex);
+  const bg = apcaY(bgHex);
+  if (Math.abs(bg - txt) < APCA.deltaYmin) return 0;
+
+  if (bg > txt) {
+    const sapc = (bg ** APCA.normBg - txt ** APCA.normTxt) * APCA.scale;
+    return sapc < APCA.loClip ? 0 : (sapc - APCA.offset) * 100;
+  }
+  const sapc = (bg ** APCA.revBg - txt ** APCA.revTxt) * APCA.scale;
+  return sapc > -APCA.loClip ? 0 : Math.abs(sapc + APCA.offset) * 100;
+}
+
 export function compositeHex(overHex: string, alpha: number, underHex: string): string {
   const channel = (i: number) => {
     const over = parseInt(overHex.slice(1 + i * 2, 3 + i * 2), 16);

@@ -1,4 +1,5 @@
 import {
+  apcaContrast,
   compositeHex,
   contrastRatio,
   inSrgbGamut,
@@ -66,6 +67,25 @@ describe("parseOklchValue", () => {
   it("devuelve null para valores sin oklch", () => {
     expect(parseOklchValue("#4c755d")).toBeNull();
     expect(parseOklchValue("0 0 0 3px rgb(76 117 93 / 25%)")).toBeNull();
+  });
+});
+
+describe("apcaContrast", () => {
+  it("reproduce los valores de referencia de APCA", () => {
+    expect(apcaContrast("#000000", "#ffffff")).toBeCloseTo(106.04, 1);
+    expect(apcaContrast("#ffffff", "#000000")).toBeCloseTo(107.88, 1);
+    expect(apcaContrast("#888888", "#ffffff")).toBeCloseTo(63.06, 1);
+  });
+
+  it("da cero cuando no hay diferencia que medir", () => {
+    expect(apcaContrast("#777777", "#777777")).toBe(0);
+  });
+
+  it("no es simétrico: la polaridad cuenta", () => {
+    expect(apcaContrast("#5a5a5a", "#ffffff")).not.toBeCloseTo(
+      apcaContrast("#ffffff", "#5a5a5a"),
+      1,
+    );
   });
 });
 
