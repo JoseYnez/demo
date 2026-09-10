@@ -32,6 +32,31 @@ export type {
   DateSpan,
 } from "./date-range-picker/date-range";
 
+export { DateTimeRangePicker } from "./date-time-range-picker/date-time-range-picker";
+export {
+  ahoraUTC,
+  aInstante,
+  aLocal,
+  esInstante,
+  esRangoConHoraValido,
+  finDeDiaLocal,
+  finDeMesLocal,
+  formatearRangoConHora,
+  inicioDeAnoLocal,
+  inicioDeDiaLocal,
+  inicioDeMesLocal,
+  inicioDeSemanaLocal,
+  RANGOS_HABITUALES_CON_HORA,
+  sumarDiasLocal,
+  sumarHoras,
+  sumarMinutos,
+} from "./date-time-range-picker/date-time-range";
+export type {
+  DateTimeRange,
+  DateTimeRangePreset,
+  DateTimeSpan,
+} from "./date-time-range-picker/date-time-range";
+
 export { GestureButton } from "./gesture-button/gesture-button";
 export type { Gesture } from "./gesture-button/gesture-button";
 

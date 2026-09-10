@@ -29,11 +29,13 @@ import type {
   NotificationVariant,
 } from "../../models/notification.model";
 import {
+  ahoraUTC,
   Badge,
   Button,
   Card,
   ConfirmDialog,
   DateRangePicker,
+  DateTimeRangePicker,
   FilePicker,
   GestureButton,
   hoyISO,
@@ -41,6 +43,8 @@ import {
   NotificationPanel,
   Select,
   sumarDias,
+  sumarHoras,
+  sumarMinutos,
   Textarea,
   Toast,
 } from "../../shared/ui";
@@ -50,6 +54,8 @@ import type {
   ButtonVariant,
   DateRange,
   DateRangePreset,
+  DateTimeRange,
+  DateTimeRangePreset,
   RejectedFile,
   SelectOption,
 } from "../../shared/ui";
@@ -58,6 +64,19 @@ const RETRASO_DE_PRUEBA = 5000;
 const TRABAJO_DE_PRUEBA = 1500;
 
 const SIN_PRESETS: readonly DateRangePreset[] = [];
+
+const TURNOS_DE_GUARDIA: readonly DateTimeRangePreset[] = [
+  {
+    id: "shift",
+    label: "Últimas 8 h",
+    resolve: (ahora) => ({ from: sumarHoras(ahora, -8), to: ahora }),
+  },
+  {
+    id: "quarter",
+    label: "Últimos 15 min",
+    resolve: (ahora) => ({ from: sumarMinutos(ahora, -15), to: ahora }),
+  },
+];
 
 const RANGOS_DE_INFORME: readonly DateRangePreset[] = [
   {
@@ -100,6 +119,7 @@ interface Alta {
     Card,
     ConfirmDialog,
     DateRangePicker,
+    DateTimeRangePicker,
     FilePicker,
     GestureButton,
     Input,
@@ -419,6 +439,29 @@ export class Styleguide {
   ].join("\n");
 
   protected comoJson(valor: DateRange | null): string {
+    return valor === null ? "null" : JSON.stringify(valor);
+  }
+
+  protected readonly turnosDeGuardia = TURNOS_DE_GUARDIA;
+  protected readonly momento = signal<DateTimeRange | null>(null);
+  protected readonly momentoPropio = signal<DateTimeRange | null>(null);
+  protected readonly momentoEnCuartos = signal<DateTimeRange | null>(null);
+  protected readonly momentoAcotado = signal<DateTimeRange | null>(null);
+
+  protected readonly haceUnDia = sumarHoras(ahoraUTC(), -24);
+  protected readonly ahora = ahoraUTC();
+
+  protected readonly ejemploDeTurno = [
+    "const TURNOS_DE_GUARDIA: readonly DateTimeRangePreset[] = [",
+    "  {",
+    '    id: "shift",',
+    '    label: "Últimas 8 h",',
+    "    resolve: (ahora) => ({ from: sumarHoras(ahora, -8), to: ahora }),",
+    "  },",
+    "];",
+  ].join("\n");
+
+  protected comoJsonConHora(valor: DateTimeRange | null): string {
     return valor === null ? "null" : JSON.stringify(valor);
   }
 

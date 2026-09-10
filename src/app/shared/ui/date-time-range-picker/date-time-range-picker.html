@@ -1,0 +1,139 @@
+<app-field-shell
+  [labelMode]="labelMode()"
+  [label]="label()"
+  [controlId]="id"
+  [floated]="floated()"
+  [required]="required()"
+  [disabled]="disabled()"
+  [hint]="hint()"
+  [error]="error()"
+>
+  <div
+    class="ui-anchor dtrp"
+    (keydown)="capa.alPulsarTecla($event)"
+    (focusout)="capa.alSalirElFoco($event)"
+  >
+    <button
+      #disparador
+      type="button"
+      class="ui-control ui-trigger"
+      [class.is-floating]="labelMode() === 'float'"
+      [class.is-inset]="labelMode() === 'inset'"
+      [class.is-invalid]="!!error()"
+      [id]="id"
+      [attr.name]="name() || null"
+      [disabled]="bloqueado()"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="capa.abierto()"
+      [attr.aria-readonly]="readonly() || null"
+      [attr.aria-invalid]="!!error()"
+      [attr.aria-describedby]="describedBy()"
+      (click)="alternar()"
+    >
+      <span class="ui-trigger__texto" [class.is-placeholder]="vacio()">
+        {{ etiqueta() }}
+      </span>
+      <svg
+        class="ui-trigger__icono"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        aria-hidden="true"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="8.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+        />
+        <path
+          d="M12 7.5V12l3 2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+
+    @if (capa.abierto()) {
+      <div
+        #panel
+        class="ui-panel"
+        [class.is-arriba]="capa.arriba()"
+        [class.is-derecha]="capa.aLaDerecha()"
+        role="dialog"
+        aria-label="Elegir un rango de fechas y horas"
+        tabindex="-1"
+      >
+        @if (opciones().length) {
+          <div
+            class="ui-panel__presets"
+            role="group"
+            aria-label="Rangos habituales"
+          >
+            @for (opcion of opciones(); track opcion.preset.id) {
+              <button
+                type="button"
+                class="ui-panel__preset"
+                [disabled]="!opcion.disponible"
+                [attr.aria-pressed]="esActivo(opcion.preset)"
+                (click)="elegir(opcion)"
+              >
+                {{ opcion.preset.label }}
+              </button>
+            }
+          </div>
+        }
+
+        <div class="ui-panel__custom">
+          <div class="ui-panel__campos">
+            <label class="ui-panel__campo">
+              <span class="ui-panel__campo-label">Desde</span>
+              <input
+                #campoDesde
+                type="datetime-local"
+                class="ui-control ui-panel__control"
+                [value]="desde()"
+                [step]="paso()"
+                [attr.min]="minLocal() || null"
+                [attr.max]="hasta() || maxLocal() || null"
+                (input)="desde.set(campoDesde.value)"
+              />
+            </label>
+
+            <label class="ui-panel__campo">
+              <span class="ui-panel__campo-label">Hasta</span>
+              <input
+                #campoHasta
+                type="datetime-local"
+                class="ui-control ui-panel__control"
+                [value]="hasta()"
+                [step]="paso()"
+                [attr.min]="desde() || minLocal() || null"
+                [attr.max]="maxLocal() || null"
+                (input)="hasta.set(campoHasta.value)"
+              />
+            </label>
+          </div>
+
+          @if (aviso()) {
+            <p class="ui-panel__aviso" role="alert">{{ aviso() }}</p>
+          }
+
+          <div class="ui-panel__acciones">
+            <app-button variant="ghost" size="sm" (click)="limpiar()">
+              Limpiar
+            </app-button>
+            <app-button variant="primary" size="sm" (click)="aplicar()">
+              Aplicar
+            </app-button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</app-field-shell>

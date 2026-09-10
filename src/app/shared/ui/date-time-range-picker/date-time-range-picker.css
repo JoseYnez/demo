@@ -1,0 +1,12 @@
+:host {
+  display: block;
+}
+
+.dtrp .ui-panel {
+  width: max(360px, 100%);
+}
+
+.dtrp .ui-panel__campos {
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}

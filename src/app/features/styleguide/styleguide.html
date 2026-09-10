@@ -989,6 +989,95 @@
     </p>
   </section>
 
+  <section class="sg__section" id="rango-con-hora">
+    <h2 class="sg__title">Rango de fecha y hora</h2>
+    <p class="sg__note selectable">
+      El mismo patrón que el rango de fechas, pero con reloj, y con una
+      diferencia que no es cosmética: aquí el valor es un
+      <strong>instante en UTC</strong> y lo que se ve es la
+      <strong>hora de este equipo</strong>. Por eso «última hora» y
+      «últimas 24&nbsp;h» son horas reales incluso el día del cambio de
+      horario, mientras que «hoy» empieza a tu medianoche. Un rango de fechas
+      sin hora no tiene zona y no se convierte nunca; ésa es la línea que
+      separa los dos componentes.
+    </p>
+
+    <div class="sg__cols">
+      <div class="sg__rows">
+        <app-date-time-range-picker
+          label="Momento"
+          hint="Los ocho rangos de fábrica."
+          [(value)]="momento"
+        />
+        <p class="sg__note selectable">
+          <code>{{ comoJsonConHora(momento()) }}</code>
+        </p>
+      </div>
+
+      <div class="sg__rows">
+        <app-date-time-range-picker
+          label="Ventana de guardia"
+          hint="Dos rangos propios, ninguno de fábrica."
+          [presets]="turnosDeGuardia"
+          [(value)]="momentoPropio"
+        />
+        <p class="sg__note selectable">
+          <code>{{ comoJsonConHora(momentoPropio()) }}</code>
+        </p>
+      </div>
+    </div>
+
+    <h3 class="sg__subtitle">Un preset propio</h3>
+    <p class="sg__note selectable">
+      Igual que en el rango de fechas, <code>presets</code> es un array de
+      <code>DateTimeRangePreset</code> y su <code>resolve(ahora)</code> recibe
+      un instante. El módulo exporta las dos familias que no se mezclan: la
+      aritmética exacta (<code>sumarMinutos</code>, <code>sumarHoras</code>) y
+      las fronteras civiles de tu zona (<code>inicioDeDiaLocal</code>,
+      <code>inicioDeMesLocal</code>…), que devuelven instantes pero se calculan
+      donde estás.
+    </p>
+
+    <app-card variant="outlined">
+      <div card-header><span>Un turno propio</span></div>
+      <pre class="sg__code selectable"><code>{{ ejemploDeTurno }}</code></pre>
+    </app-card>
+
+    <h3 class="sg__subtitle">Variantes</h3>
+    <div class="sg__grid">
+      <app-date-time-range-picker
+        label="De cuarto en cuarto"
+        hint="minuteStep: 15; el nativo sólo ofrece 00, 15, 30 y 45."
+        [minuteStep]="15"
+        [(value)]="momentoEnCuartos"
+      />
+      <app-date-time-range-picker
+        label="Acotado a las últimas 24 h"
+        hint="Lo que se sale de la ventana se deshabilita."
+        [minDateTime]="haceUnDia"
+        [maxDateTime]="ahora"
+        [(value)]="momentoAcotado"
+      />
+      <app-date-time-range-picker
+        label="Deshabilitado"
+        hint="No abre."
+        [disabled]="true"
+      />
+      <app-date-time-range-picker
+        label="Etiqueta flotante"
+        labelMode="float"
+        [presets]="sinPresets"
+      />
+    </div>
+
+    <p class="sg__note selectable">
+      Una hora que <strong>no existe</strong> —la que se salta el cambio a
+      horario de verano— no se rechaza ni se aplica en silencio: el campo se
+      repinta con la hora real, el panel avisa de por qué, y aplicar otra vez
+      la acepta. Así nunca se guarda un momento que no llegaste a ver.
+    </p>
+  </section>
+
   <section class="sg__section" id="comparativa">
     <h2 class="sg__title">Comparativa: dónde va la etiqueta</h2>
     <p class="sg__note selectable">
