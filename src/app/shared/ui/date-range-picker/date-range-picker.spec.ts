@@ -43,21 +43,21 @@ describe("DateRangePicker", () => {
   }
 
   function disparador(): HTMLButtonElement {
-    const boton = html().querySelector<HTMLButtonElement>(".drp__trigger");
+    const boton = html().querySelector<HTMLButtonElement>(".ui-trigger");
     if (!boton) throw new Error("no hay disparador");
     return boton;
   }
 
   function panel(): HTMLElement | null {
-    return html().querySelector<HTMLElement>(".drp__panel");
+    return html().querySelector<HTMLElement>(".ui-panel");
   }
 
   function presets(): HTMLButtonElement[] {
-    return [...html().querySelectorAll<HTMLButtonElement>(".drp__preset")];
+    return [...html().querySelectorAll<HTMLButtonElement>(".ui-panel__preset")];
   }
 
   function campo(cual: "Desde" | "Hasta"): HTMLInputElement {
-    const inputs = html().querySelectorAll<HTMLInputElement>(".drp__fecha");
+    const inputs = html().querySelectorAll<HTMLInputElement>(".ui-panel__control");
     const input = inputs[cual === "Desde" ? 0 : 1];
     if (!input) throw new Error(`no hay campo ${cual}`);
     return input;
@@ -72,7 +72,7 @@ describe("DateRangePicker", () => {
   }
 
   function aviso(): string {
-    return html().querySelector(".drp__aviso")?.textContent ?? "";
+    return html().querySelector(".ui-panel__aviso")?.textContent ?? "";
   }
 
   async function escribir(cual: "Desde" | "Hasta", iso: string): Promise<void> {
@@ -347,10 +347,10 @@ describe("DateRangePicker", () => {
         function (this: Element): DOMRect {
           let top = 0;
           let height = 0;
-          if (this.classList.contains("drp__trigger")) {
+          if (this.classList.contains("ui-trigger")) {
             top = disparadorTop;
             height = ALTO_DISPARADOR;
-          } else if (this.classList.contains("drp__panel")) {
+          } else if (this.classList.contains("ui-panel")) {
             height = ALTO_PANEL;
             top = this.classList.contains("is-arriba")
               ? disparadorTop - HUECO - ALTO_PANEL

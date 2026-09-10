@@ -9,14 +9,14 @@
   [error]="error()"
 >
   <div
-    class="drp"
+    class="ui-anchor"
     (keydown)="capa.alPulsarTecla($event)"
     (focusout)="capa.alSalirElFoco($event)"
   >
     <button
       #disparador
       type="button"
-      class="ui-control drp__trigger"
+      class="ui-control ui-trigger"
       [class.is-floating]="labelMode() === 'float'"
       [class.is-inset]="labelMode() === 'inset'"
       [class.is-invalid]="!!error()"
@@ -30,11 +30,11 @@
       [attr.aria-describedby]="describedBy()"
       (click)="alternar()"
     >
-      <span class="drp__texto" [class.is-placeholder]="vacio()">
+      <span class="ui-trigger__texto" [class.is-placeholder]="vacio()">
         {{ etiqueta() }}
       </span>
       <svg
-        class="drp__icono"
+        class="ui-trigger__icono"
         viewBox="0 0 24 24"
         width="16"
         height="16"
@@ -63,7 +63,7 @@
     @if (capa.abierto()) {
       <div
         #panel
-        class="drp__panel"
+        class="ui-panel"
         [class.is-arriba]="capa.arriba()"
         [class.is-derecha]="capa.aLaDerecha()"
         role="dialog"
@@ -71,11 +71,11 @@
         tabindex="-1"
       >
         @if (opciones().length) {
-          <div class="drp__presets" role="group" aria-label="Rangos habituales">
+          <div class="ui-panel__presets" role="group" aria-label="Rangos habituales">
             @for (opcion of opciones(); track opcion.preset.id) {
               <button
                 type="button"
-                class="drp__preset"
+                class="ui-panel__preset"
                 [disabled]="!opcion.disponible"
                 [attr.aria-pressed]="esActivo(opcion.preset)"
                 (click)="elegir(opcion)"
@@ -86,14 +86,14 @@
           </div>
         }
 
-        <div class="drp__custom">
-          <div class="drp__fechas">
-            <label class="drp__campo">
-              <span class="drp__campo-label">Desde</span>
+        <div class="ui-panel__custom">
+          <div class="ui-panel__campos">
+            <label class="ui-panel__campo">
+              <span class="ui-panel__campo-label">Desde</span>
               <input
                 #campoDesde
                 type="date"
-                class="ui-control drp__fecha"
+                class="ui-control ui-panel__control"
                 [value]="desde()"
                 [attr.min]="minDate() || null"
                 [attr.max]="hasta() || maxDate() || null"
@@ -101,12 +101,12 @@
               />
             </label>
 
-            <label class="drp__campo">
-              <span class="drp__campo-label">Hasta</span>
+            <label class="ui-panel__campo">
+              <span class="ui-panel__campo-label">Hasta</span>
               <input
                 #campoHasta
                 type="date"
-                class="ui-control drp__fecha"
+                class="ui-control ui-panel__control"
                 [value]="hasta()"
                 [attr.min]="desde() || minDate() || null"
                 [attr.max]="maxDate() || null"
@@ -116,10 +116,10 @@
           </div>
 
           @if (aviso()) {
-            <p class="drp__aviso" role="alert">{{ aviso() }}</p>
+            <p class="ui-panel__aviso" role="alert">{{ aviso() }}</p>
           }
 
-          <div class="drp__acciones">
+          <div class="ui-panel__acciones">
             <app-button variant="ghost" size="sm" (click)="limpiar()">
               Limpiar
             </app-button>
