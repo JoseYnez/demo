@@ -1,0 +1,105 @@
+:host {
+  display: block;
+}
+
+.combobox__control {
+  padding-right: var(--space-10);
+}
+
+.combobox__control.is-floating {
+  padding-top: var(--space-2);
+}
+
+.combobox__caret {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  z-index: 2;
+  color: var(--text-secondary);
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.combobox__caret.is-abierta {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.combobox__control:hover:where(:not(:disabled, :read-only)) ~ .combobox__caret,
+.combobox__control:focus ~ .combobox__caret {
+  color: var(--accent-fg);
+}
+
+.combobox__control:disabled ~ .combobox__caret,
+.combobox__control:read-only ~ .combobox__caret {
+  color: var(--text-muted);
+}
+
+.combobox__panel {
+  max-height: 252px;
+  padding: var(--space-1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.combobox__lista {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  list-style: none;
+}
+
+.combobox__opcion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.combobox__opcion:where(:not([aria-disabled="true"])):hover {
+  background-color: var(--overlay-hover);
+}
+
+.combobox__opcion.is-destacada {
+  background-color: var(--accent-subtle);
+}
+
+.combobox__opcion[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.combobox__label {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.combobox__match {
+  font-weight: var(--font-weight-semibold);
+}
+
+.combobox__detail {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.combobox__opcion[aria-disabled="true"] .combobox__label,
+.combobox__opcion[aria-disabled="true"] .combobox__detail {
+  color: var(--text-muted);
+}
+
+.combobox__vacio {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.combobox__anuncio {
+  position: absolute;
+  top: 0;
+  left: 0;
+}

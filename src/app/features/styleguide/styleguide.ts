@@ -33,6 +33,7 @@ import {
   Badge,
   Button,
   Card,
+  Combobox,
   comoVentana,
   ConfirmDialog,
   DateRangePicker,
@@ -53,6 +54,7 @@ import type {
   BadgeAppearance,
   BadgeVariant,
   ButtonVariant,
+  ComboboxOption,
   DateRange,
   DateRangePreset,
   DateTimeRange,
@@ -65,6 +67,28 @@ const RETRASO_DE_PRUEBA = 5000;
 const TRABAJO_DE_PRUEBA = 1500;
 
 const SIN_PRESETS: readonly DateRangePreset[] = [];
+
+const PROVINCIAS: readonly ComboboxOption[] = [
+  { label: "Ávila", detail: "Castilla y León" },
+  { label: "Barcelona", detail: "Cataluña" },
+  { label: "Cádiz", detail: "Andalucía" },
+  { label: "Gerona", detail: "Cataluña" },
+  { label: "La Coruña", detail: "Galicia" },
+  { label: "Madrid", detail: "Comunidad de Madrid" },
+  { label: "Málaga", detail: "Andalucía" },
+  { label: "Teruel", detail: "Aragón (sin cobertura)", disabled: true },
+  { label: "Toledo", detail: "Castilla-La Mancha" },
+  { label: "Valencia", detail: "Comunidad Valenciana" },
+];
+
+const SIN_SUGERENCIAS: readonly ComboboxOption[] = [];
+
+const ETIQUETAS: readonly ComboboxOption[] = [
+  { label: "urgente" },
+  { label: "regresión" },
+  { label: "documentación" },
+  { label: "accesibilidad" },
+];
 
 const TURNOS_DE_GUARDIA: readonly DateTimeRangePreset[] = [
   {
@@ -118,6 +142,7 @@ interface Alta {
     Badge,
     Button,
     Card,
+    Combobox,
     ConfirmDialog,
     DateRangePicker,
     DateTimeRangePicker,
@@ -410,6 +435,14 @@ export class Styleguide {
   protected readonly sueltoTexto = signal("");
   protected readonly sueltoArea = signal("");
   protected readonly sueltoNotas = signal("");
+
+  protected readonly provincias = PROVINCIAS;
+  protected readonly etiquetas = ETIQUETAS;
+  protected readonly sinSugerencias = SIN_SUGERENCIAS;
+  protected readonly provincia = signal("");
+  protected readonly provinciaFlotante = signal("");
+  protected readonly etiqueta = signal("");
+  protected readonly ultimaElegida = signal<ComboboxOption | null>(null);
 
   protected readonly rangosDeInforme = RANGOS_DE_INFORME;
   protected readonly sinPresets = SIN_PRESETS;

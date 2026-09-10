@@ -1,0 +1,109 @@
+<app-field-shell
+  [labelMode]="labelMode()"
+  [label]="label()"
+  [controlId]="id"
+  [floated]="floated()"
+  [required]="required()"
+  [disabled]="disabled()"
+  [hint]="hint()"
+  [error]="error()"
+>
+  <div
+    class="ui-anchor"
+    (keydown)="alPulsarTecla($event)"
+    (focusout)="capa.alSalirElFoco($event)"
+  >
+    <input
+      #disparador
+      class="ui-control combobox__control"
+      type="text"
+      role="combobox"
+      aria-autocomplete="list"
+      [class.is-floating]="labelMode() === 'float'"
+      [class.is-inset]="labelMode() === 'inset'"
+      [class.is-invalid]="!!error()"
+      [id]="id"
+      [attr.name]="name() || null"
+      [attr.autocomplete]="autocomplete() || null"
+      [attr.aria-controls]="listaId"
+      [attr.aria-expanded]="capa.abierto()"
+      [attr.aria-activedescendant]="idDestacado()"
+      [attr.aria-readonly]="readonly() || null"
+      [attr.aria-invalid]="!!error()"
+      [attr.aria-describedby]="describedBy()"
+      [placeholder]="visiblePlaceholder()"
+      [disabled]="disabled()"
+      [readOnly]="readonly()"
+      [required]="required()"
+      [value]="value()"
+      (input)="alEscribir(disparador.value)"
+      (click)="alPulsar()"
+      (focus)="focused.set(true)"
+      (blur)="alPerderElFoco()"
+    />
+
+    <svg
+      class="combobox__caret"
+      [class.is-abierta]="capa.abierto()"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden="true"
+    >
+      <path
+        d="m6 9.5 6 6 6-6"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+
+    @if (capa.abierto()) {
+      <div
+        #panel
+        class="ui-panel combobox__panel"
+        [class.is-arriba]="capa.arriba()"
+        [class.is-derecha]="capa.aLaDerecha()"
+      >
+        <ul class="combobox__lista" role="listbox" [id]="listaId" [attr.aria-label]="label()">
+          @for (fila of filas(); track fila.opcion.label; let i = $index) {
+            <li
+              #opcion
+              class="combobox__opcion"
+              role="option"
+              [id]="fila.id"
+              [class.is-destacada]="i === destacado()"
+              [attr.aria-selected]="i === destacado()"
+              [attr.aria-disabled]="fila.opcion.disabled || null"
+              (pointerdown)="$event.preventDefault()"
+              (click)="elegir(fila.opcion)"
+            >
+              <span class="combobox__label"
+                >{{ fila.label.antes
+                }}<span class="combobox__match">{{ fila.label.coincide }}</span>{{
+                  fila.label.despues
+                }}</span
+              >
+              @if (fila.detail) {
+                <span class="combobox__detail"
+                  >{{ fila.detail.antes
+                  }}<span class="combobox__match">{{ fila.detail.coincide }}</span>{{
+                    fila.detail.despues
+                  }}</span
+                >
+              }
+            </li>
+          }
+        </ul>
+
+        @if (!filas().length) {
+          <p class="combobox__vacio">{{ emptyMessage() }}</p>
+        }
+      </div>
+    }
+
+    <p class="combobox__anuncio sr-only" role="status">{{ anuncio() }}</p>
+  </div>
+</app-field-shell>

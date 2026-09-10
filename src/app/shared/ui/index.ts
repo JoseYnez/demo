@@ -7,6 +7,14 @@ export type { ButtonSize, ButtonType, ButtonVariant } from "./button/button";
 export { Card } from "./card/card";
 export type { CardPadding, CardVariant } from "./card/card";
 
+export { Combobox } from "./combobox/combobox";
+export {
+  filtrarSugerencias,
+  partirCoincidencia,
+  plegarTexto,
+} from "./combobox/suggestions";
+export type { Coincidencia, ComboboxOption } from "./combobox/suggestions";
+
 export { ConfirmDialog } from "./confirm-dialog/confirm-dialog";
 export type { ConfirmVariant } from "./confirm-dialog/confirm-dialog";
 

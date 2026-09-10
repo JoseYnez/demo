@@ -735,6 +735,106 @@
     <pre class="sg__output selectable">{{ sueltoTexto() }} | {{ sueltoArea() }} | {{ sueltoNotas() }}</pre>
   </section>
 
+  <section class="sg__section" id="combobox">
+    <h2 class="sg__title">Combobox</h2>
+    <p class="sg__note selectable">
+      Un campo de texto con sugerencias: la lista <strong>ayuda, no manda</strong>.
+      El valor es lo que hay escrito, así que se puede enviar algo que no esté en
+      la lista — quien necesite restringirlo pone un validador en su formulario.
+      Es el hueco que deja el <code>app-select</code>, que sólo admite lo que
+      ofrece.
+    </p>
+    <p class="sg__note selectable">
+      El desplegable es <strong>propio, no el <code>&lt;datalist&gt;</code>
+      nativo</strong>, por lo mismo que §11.2 dejó escrito para el
+      <code>&lt;select&gt;</code>: el popup del motor no admite ni un token, y el
+      criterio de filtrado cambia según el motor. Cuelga del mismo
+      <code>AnchoredPanel</code> que los dos selectores de fechas, así que se
+      voltea hacia arriba y se alinea a la derecha cuando no cabe.
+    </p>
+
+    <div class="sg__grid">
+      <app-combobox
+        label="Provincia"
+        placeholder="Escribe o despliega…"
+        hint="Busca también en la comunidad: prueba «andalucia»."
+        [options]="provincias"
+        [(value)]="provincia"
+        (picked)="ultimaElegida.set($event)"
+      />
+      <app-combobox
+        label="Etiqueta"
+        placeholder="Una de las de siempre, o la tuya"
+        hint="Sin detalle: sólo etiquetas."
+        [options]="etiquetas"
+        [(value)]="etiqueta"
+      />
+      <app-combobox
+        label="Provincia"
+        labelMode="float"
+        [options]="provincias"
+        [(value)]="provinciaFlotante"
+      />
+    </div>
+
+    <pre class="sg__output selectable">{{ provincia() || "—" }} | {{ etiqueta() || "—" }} | elegida: {{ ultimaElegida()?.detail ?? "—" }}</pre>
+
+    <h3 class="sg__subtitle">Lo que se filtra y lo que se resalta</h3>
+    <p class="sg__note selectable">
+      Filtra por <strong>subcadena, sin tildes y sin mayúsculas</strong>: «rid»
+      encuentra Madrid y «avila» encuentra Ávila. Lo que coincide se resalta en
+      negrita sobre el texto original —con su tilde—, y el resaltado no se
+      descoloca aunque plegar acorte la cadena. El detalle entra en la búsqueda,
+      así que «cataluña» saca Barcelona y Gerona.
+    </p>
+    <p class="sg__note selectable">
+      <strong>Escribir no destaca nada</strong>, a propósito: en un campo de texto
+      libre, auto-destacar la primera haría que <kbd>Enter</kbd> sustituyera en
+      silencio lo que acabas de teclear. Destacar es un gesto explícito, con las
+      flechas. Y la lista <strong>no se despliega para decir que no hay nada</strong>:
+      si ya estaba abierta se queda, con el mensaje de vacío; si estaba cerrada,
+      no asoma.
+    </p>
+
+    <h3 class="sg__subtitle">Teclado</h3>
+    <p class="sg__note selectable">
+      <kbd>↓</kbd> abre y destaca la primera, <kbd>↑</kbd> abre y destaca la
+      última, y las dos dan la vuelta saltando las deshabilitadas.
+      <kbd>Alt</kbd>+<kbd>↓</kbd> abre sin destacar y
+      <kbd>Alt</kbd>+<kbd>↑</kbd> cierra. <kbd>Enter</kbd> elige la destacada, y
+      sin nada destacado <strong>deja pasar el envío del formulario</strong>.
+      <kbd>Esc</kbd> cierra sin tocar el valor; <kbd>Inicio</kbd> y <kbd>Fin</kbd>
+      siguen moviendo el cursor por el texto, que es lo que se espera de un campo.
+    </p>
+    <p class="sg__note selectable">
+      El foco <strong>no entra nunca a la lista</strong>: se queda en el campo y
+      la opción activa viaja en <code>aria-activedescendant</code>, que es el
+      patrón de combobox de ARIA. Por eso éste es el único consumidor del panel
+      que pide <code>enfocarElPanel: false</code>.
+    </p>
+
+    <h3 class="sg__subtitle">Estados</h3>
+    <div class="sg__grid">
+      <app-combobox
+        label="Deshabilitado"
+        value="Madrid"
+        [options]="provincias"
+        [disabled]="true"
+      />
+      <app-combobox
+        label="Sólo lectura"
+        value="Madrid"
+        [options]="provincias"
+        [readonly]="true"
+      />
+      <app-combobox
+        label="Sin resultados posibles"
+        [options]="sinSugerencias"
+        emptyMessage="Aún no hay nada que sugerir"
+      />
+    </div>
+  </section>
+
   <section class="sg__section">
     <h2 class="sg__title">FilePicker</h2>
     <p class="sg__note selectable">

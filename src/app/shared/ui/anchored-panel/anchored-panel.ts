@@ -10,6 +10,7 @@ import {
 export interface AnchoredPanelOptions {
   readonly disparador: Signal<ElementRef<HTMLElement> | undefined>;
   readonly panel: Signal<ElementRef<HTMLElement> | undefined>;
+  readonly enfocarElPanel?: boolean;
   readonly alAbrir?: () => void;
   readonly alCerrar?: () => void;
 }
@@ -40,7 +41,9 @@ export class AnchoredPanel {
       const panel = this.#opciones.panel()?.nativeElement;
       if (!panel) return;
       untracked(() => {
-        panel.focus({ preventScroll: true });
+        if (this.#opciones.enfocarElPanel !== false) {
+          panel.focus({ preventScroll: true });
+        }
         this.#colocar(panel);
       });
     });
