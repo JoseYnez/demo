@@ -10,8 +10,8 @@
 >
   <div
     class="drp"
-    (keydown)="alPulsarTecla($event)"
-    (focusout)="alSalirElFoco($event)"
+    (keydown)="capa.alPulsarTecla($event)"
+    (focusout)="capa.alSalirElFoco($event)"
   >
     <button
       #disparador
@@ -24,7 +24,7 @@
       [attr.name]="name() || null"
       [disabled]="bloqueado()"
       aria-haspopup="dialog"
-      [attr.aria-expanded]="abierto()"
+      [attr.aria-expanded]="capa.abierto()"
       [attr.aria-readonly]="readonly() || null"
       [attr.aria-invalid]="!!error()"
       [attr.aria-describedby]="describedBy()"
@@ -60,12 +60,12 @@
       </svg>
     </button>
 
-    @if (abierto()) {
+    @if (capa.abierto()) {
       <div
         #panel
         class="drp__panel"
-        [class.is-arriba]="arriba()"
-        [class.is-derecha]="aLaDerecha()"
+        [class.is-arriba]="capa.arriba()"
+        [class.is-derecha]="capa.aLaDerecha()"
         role="dialog"
         aria-label="Elegir un rango de fechas"
         tabindex="-1"

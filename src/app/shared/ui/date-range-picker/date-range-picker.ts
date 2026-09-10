@@ -2,18 +2,16 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   ElementRef,
-  inject,
   input,
   model,
   output,
   signal,
-  untracked,
   viewChild,
 } from "@angular/core";
 import { FormValueControl, ValidationError } from "@angular/forms/signals";
 
+import { AnchoredPanel } from "../anchored-panel/anchored-panel";
 import { Button } from "../button/button";
 import {
   idDeControl,
@@ -35,12 +33,6 @@ interface PresetResuelto {
   readonly preset: DateRangePreset;
   readonly rango: DateSpan;
   readonly disponible: boolean;
-}
-
-interface ZonaVisible {
-  readonly top: number;
-  readonly bottom: number;
-  readonly right: number;
 }
 
 @Component({
@@ -70,15 +62,27 @@ export class DateRangePicker implements FormValueControl<DateRange | null> {
 
   readonly touch = output<void>();
 
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly disparador =
     viewChild.required<ElementRef<HTMLButtonElement>>("disparador");
   private readonly panel = viewChild<ElementRef<HTMLElement>>("panel");
 
+  protected readonly capa = new AnchoredPanel({
+    disparador: this.disparador,
+    panel: this.panel,
+    alAbrir: () => {
+      const rango = this.value();
+      this.desde.set(rango?.from ?? "");
+      this.hasta.set(rango?.to ?? "");
+      this.aviso.set("");
+      this.hoy.set(hoyISO());
+    },
+    alCerrar: () => {
+      this.aviso.set("");
+      this.touch.emit();
+    },
+  });
+
   protected readonly id = idDeControl("app-date-range-picker");
-  protected readonly abierto = signal(false);
-  protected readonly arriba = signal(false);
-  protected readonly aLaDerecha = signal(false);
   protected readonly aviso = signal("");
   protected readonly desde = signal("");
   protected readonly hasta = signal("");
@@ -121,69 +125,19 @@ export class DateRangePicker implements FormValueControl<DateRange | null> {
     });
   });
 
-  constructor() {
-    effect(() => {
-      const panel = this.panel()?.nativeElement;
-      if (!panel) return;
-      untracked(() => {
-        panel.focus({ preventScroll: true });
-        this.colocar(panel);
-      });
-    });
-
-    effect((alLimpiar) => {
-      if (!this.abierto()) return;
-      const alPulsarFuera = (event: PointerEvent) => {
-        const destino = event.target;
-        if (
-          destino instanceof Node &&
-          this.host.nativeElement.contains(destino)
-        ) {
-          return;
-        }
-        untracked(() => this.cerrar(false));
-      };
-      document.addEventListener("pointerdown", alPulsarFuera, true);
-      alLimpiar(() =>
-        document.removeEventListener("pointerdown", alPulsarFuera, true),
-      );
-    });
-  }
-
   focus(): void {
     this.disparador().nativeElement.focus();
   }
 
   protected alternar(): void {
     if (this.bloqueado()) return;
-    if (this.abierto()) {
-      this.cerrar();
-      return;
-    }
-    const rango = this.value();
-    this.desde.set(rango?.from ?? "");
-    this.hasta.set(rango?.to ?? "");
-    this.aviso.set("");
-    this.hoy.set(hoyISO());
-    this.arriba.set(false);
-    this.aLaDerecha.set(false);
-    this.abierto.set(true);
-  }
-
-  protected cerrar(devolverElFoco = true): void {
-    if (!this.abierto()) return;
-    this.abierto.set(false);
-    this.aviso.set("");
-    this.touch.emit();
-    if (devolverElFoco) {
-      this.disparador().nativeElement.focus();
-    }
+    this.capa.alternar();
   }
 
   protected elegir(opcion: PresetResuelto): void {
     if (!opcion.disponible) return;
     this.value.set({ ...opcion.rango, presetId: opcion.preset.id });
-    this.cerrar();
+    this.capa.cerrar();
   }
 
   protected esActivo(preset: DateRangePreset): boolean {
@@ -216,66 +170,17 @@ export class DateRangePicker implements FormValueControl<DateRange | null> {
       return;
     }
     this.value.set({ from, to });
-    this.cerrar();
+    this.capa.cerrar();
   }
 
   protected limpiar(): void {
     this.desde.set("");
     this.hasta.set("");
     this.value.set(null);
-    this.cerrar();
-  }
-
-  protected alPulsarTecla(event: KeyboardEvent): void {
-    if (event.key !== "Escape" || !this.abierto()) return;
-    event.preventDefault();
-    event.stopPropagation();
-    this.cerrar();
-  }
-
-  protected alSalirElFoco(event: FocusEvent): void {
-    const siguiente = event.relatedTarget;
-    if (!(siguiente instanceof Node)) return;
-    if (this.host.nativeElement.contains(siguiente)) return;
-    this.cerrar(false);
+    this.capa.cerrar();
   }
 
   private comoTexto(iso: string): string {
     return formatearRango({ from: iso, to: iso });
-  }
-
-  private colocar(panel: HTMLElement): void {
-    const caja = panel.getBoundingClientRect();
-    if (caja.height === 0) return;
-    const disparador = this.disparador().nativeElement.getBoundingClientRect();
-    const zona = this.zonaVisible();
-    const hueco = caja.top - disparador.bottom;
-    const cabeDebajo = caja.bottom <= zona.bottom;
-    const cabeEncima = disparador.top - hueco - caja.height >= zona.top;
-    this.arriba.set(!cabeDebajo && cabeEncima);
-    this.aLaDerecha.set(caja.right > zona.right);
-    if (!cabeDebajo && !cabeEncima) {
-      panel.scrollIntoView({ block: "nearest" });
-    }
-  }
-
-  private zonaVisible(): ZonaVisible {
-    const raiz = document.documentElement;
-    const zona = { top: 0, bottom: raiz.clientHeight, right: raiz.clientWidth };
-    for (
-      let el = this.host.nativeElement.parentElement;
-      el;
-      el = el.parentElement
-    ) {
-      const { overflowY } = getComputedStyle(el);
-      if (overflowY !== "auto" && overflowY !== "scroll") continue;
-      const caja = el.getBoundingClientRect();
-      return {
-        top: Math.max(caja.top, zona.top),
-        bottom: Math.min(caja.bottom, zona.bottom),
-        right: Math.min(caja.right, zona.right),
-      };
-    }
-    return zona;
   }
 }
