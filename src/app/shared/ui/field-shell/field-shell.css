@@ -30,6 +30,7 @@
   border-radius: var(--radius-md);
   transition:
     border-color var(--transition-fast),
+    border-width var(--transition-fast),
     box-shadow var(--transition-fast);
 }
 
@@ -82,14 +83,17 @@
 }
 
 .fs--float:focus-within .fs__outline {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 2px;
+  border-width: 2px;
   border-color: var(--accent-fg);
   box-shadow: var(--ring-focus);
 }
 
 .fs--float:focus-within .fs__label {
   color: var(--text-primary);
+}
+
+.fs--float:focus-within.is-floated .fs__label {
+  left: calc(var(--space-2) + 2px);
 }
 
 .fs--float:where(:not(:focus-within, .is-invalid, .is-disabled))
@@ -103,7 +107,6 @@
 }
 
 .fs--float.is-invalid:focus-within .fs__outline {
-  outline-color: var(--color-danger-fg);
   border-color: var(--color-danger-fg);
   box-shadow: var(--ring-danger);
 }

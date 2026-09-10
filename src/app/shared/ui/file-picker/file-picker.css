@@ -37,7 +37,7 @@
 
 .fp__zone:focus-visible {
   outline: 2px solid var(--border-focus);
-  outline-offset: 2px;
+  outline-offset: -1px;
   border-color: var(--accent-fg);
   box-shadow: var(--ring-focus);
 }
