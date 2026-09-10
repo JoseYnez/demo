@@ -153,13 +153,23 @@ describe("DateTimeRangePicker", () => {
     expect(panel()).toBeNull();
   });
 
+  it("rechaza un rango vacío, que en semiabierto no es nada", async () => {
+    await abrir();
+    await escribir("Desde", "2026-09-10T08:00");
+    await escribir("Hasta", "2026-09-10T08:00");
+    await aplicar();
+
+    expect(aviso()).toBe("El final tiene que ser posterior al inicio.");
+    expect(fixture.componentInstance.value()).toBeNull();
+  });
+
   it("rechaza el orden invertido y se queda abierto", async () => {
     await abrir();
     await escribir("Desde", "2026-09-10T18:00");
     await escribir("Hasta", "2026-09-10T08:00");
     await aplicar();
 
-    expect(aviso()).toBe("El inicio no puede ser posterior al final.");
+    expect(aviso()).toBe("El final tiene que ser posterior al inicio.");
     expect(panel()).not.toBeNull();
     expect(fixture.componentInstance.value()).toBeNull();
   });

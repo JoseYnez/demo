@@ -23,6 +23,7 @@ import {
   ahoraUTC,
   aInstante,
   aLocal,
+  formatearInstante,
   formatearRangoConHora,
   RANGOS_HABITUALES_CON_HORA,
   type DateTimeRange,
@@ -175,8 +176,8 @@ export class DateTimeRangePicker
       this.aviso.set(`Los minutos van de ${this.minuteStep()} en ${this.minuteStep()}.`);
       return;
     }
-    if (from > to) {
-      this.aviso.set("El inicio no puede ser posterior al final.");
+    if (from >= to) {
+      this.aviso.set("El final tiene que ser posterior al inicio.");
       return;
     }
     const min = this.minDateTime();
@@ -229,6 +230,6 @@ export class DateTimeRangePicker
   }
 
   private comoTexto(instante: string): string {
-    return formatearRangoConHora({ from: instante, to: instante });
+    return formatearInstante(instante);
   }
 }

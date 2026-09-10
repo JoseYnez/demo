@@ -5,9 +5,8 @@ import {
   aInstante,
   aLocal,
   esInstante,
+  comoVentana,
   esRangoConHoraValido,
-  finDeDiaLocal,
-  finDeMesLocal,
   formatearRangoConHora,
   inicioDeDiaLocal,
   inicioDeMesLocal,
@@ -15,6 +14,7 @@ import {
   RANGOS_HABITUALES_CON_HORA,
   sumarDiasLocal,
   sumarHoras,
+  sumarMesesLocal,
   sumarMinutos,
   type DateTimeRangePreset,
 } from "./date-time-range";
@@ -134,21 +134,27 @@ describe("date-time-range", () => {
   describe("fronteras civiles locales", () => {
     const jueves = "2026-09-10T12:00:00Z";
 
-    it("el fin del día es el último minuto local", () => {
-      expect(aLocal(finDeDiaLocal(jueves))).toBe("2026-09-10T23:59");
+    it("no hay «fin de día»: la cota es la medianoche siguiente", () => {
+      expect(aLocal(inicioDeDiaLocal(sumarDiasLocal(jueves, 1)))).toBe(
+        "2026-09-11T00:00",
+      );
     });
 
     it("la semana empieza en lunes", () => {
       expect(aLocal(inicioDeSemanaLocal(jueves))).toBe("2026-09-07T00:00");
     });
 
-    it("el mes va del día uno al último, a medianoche y al último minuto", () => {
+    it("el mes empieza el día uno a medianoche local", () => {
       expect(aLocal(inicioDeMesLocal(jueves))).toBe("2026-09-01T00:00");
-      expect(aLocal(finDeMesLocal(jueves))).toBe("2026-09-30T23:59");
     });
 
-    it("febrero de un bisiesto termina el 29", () => {
-      expect(aLocal(finDeMesLocal("2028-02-10T12:00:00Z"))).toBe("2028-02-29T23:59");
+    it("sumar meses recorta al último día del mes destino", () => {
+      expect(aLocal(sumarMesesLocal("2026-03-31T12:00:00Z", -1))).toBe(
+        "2026-02-28T14:00",
+      );
+      expect(aLocal(sumarMesesLocal("2028-01-31T12:00:00Z", 1))).toBe(
+        "2028-02-29T13:00",
+      );
     });
 
     it("sumar días locales cruza el fin de mes", () => {
@@ -182,10 +188,10 @@ describe("date-time-range", () => {
       expect(to).toBe(ahora);
     });
 
-    it("ayer está cerrado de punta a punta", () => {
+    it("ayer va de medianoche a medianoche, sin perder el último minuto", () => {
       const { from, to } = preset("yesterday").resolve(ahora);
       expect(aLocal(from)).toBe("2026-09-09T00:00");
-      expect(aLocal(to)).toBe("2026-09-09T23:59");
+      expect(aLocal(to)).toBe("2026-09-10T00:00");
     });
 
     it("los últimos 7 días arrancan seis días antes, a medianoche", () => {
@@ -206,6 +212,58 @@ describe("date-time-range", () => {
       for (const p of RANGOS_HABITUALES_CON_HORA) {
         const { from, to } = p.resolve(ahora);
         expect(esRangoConHoraValido(from, to)).toBe(true);
+      }
+    });
+  });
+
+  describe("cruce desde una fecha civil", () => {
+    it("un solo día va de su medianoche a la siguiente", () => {
+      const ventana = comoVentana({ from: "2026-09-09", to: "2026-09-09" });
+      expect(ventana && aLocal(ventana.from)).toBe("2026-09-09T00:00");
+      expect(ventana && aLocal(ventana.to)).toBe("2026-09-10T00:00");
+    });
+
+    it("la ventana es de instantes, y no son las 00:00Z", () => {
+      expect(comoVentana({ from: "2026-09-09", to: "2026-09-09" })).toEqual({
+        from: "2026-09-08T22:00:00Z",
+        to: "2026-09-09T22:00:00Z",
+      });
+    });
+
+    it("no pierde el último segundo del día", () => {
+      const ventana = comoVentana({ from: "2026-09-09", to: "2026-09-09" });
+      const alFilo = Date.parse("2026-09-09T23:59:59.999");
+      expect(ventana && alFilo < Date.parse(ventana.to)).toBe(true);
+    });
+
+    it("el día del cambio de hora dura 23, no 24", () => {
+      const ventana = comoVentana({ from: "2026-03-29", to: "2026-03-29" });
+      expect(ventana && horasEntre(ventana.from, ventana.to)).toBe(23);
+    });
+
+    it("un rango de varios días llega hasta la medianoche del siguiente", () => {
+      const ventana = comoVentana({ from: "2026-09-01", to: "2026-09-30" });
+      expect(ventana && aLocal(ventana.to)).toBe("2026-10-01T00:00");
+    });
+
+    it("un rango civil que no vale no da ventana", () => {
+      expect(comoVentana({ from: "2026-09-10", to: "2026-09-09" })).toBeNull();
+      expect(comoVentana({ from: "2026-02-30", to: "2026-03-01" })).toBeNull();
+    });
+  });
+
+  describe("intervalo semiabierto", () => {
+    it("un rango vacío no es válido", () => {
+      expect(
+        esRangoConHoraValido("2026-09-09T08:00:00Z", "2026-09-09T08:00:00Z"),
+      ).toBe(false);
+    });
+
+    it("todos los rangos de fábrica tienen anchura", () => {
+      const ahora = aInstante("2026-09-10T15:30");
+      for (const p of RANGOS_HABITUALES_CON_HORA) {
+        const { from, to } = p.resolve(ahora);
+        expect(from < to).toBe(true);
       }
     });
   });

@@ -33,6 +33,7 @@ import {
   Badge,
   Button,
   Card,
+  comoVentana,
   ConfirmDialog,
   DateRangePicker,
   DateTimeRangePicker,
@@ -440,6 +441,11 @@ export class Styleguide {
 
   protected comoJson(valor: DateRange | null): string {
     return valor === null ? "null" : JSON.stringify(valor);
+  }
+
+  protected comoVentanaJson(valor: DateRange | null): string {
+    const ventana = valor && comoVentana(valor);
+    return ventana === null ? "null" : JSON.stringify(ventana);
   }
 
   protected readonly turnosDeGuardia = TURNOS_DE_GUARDIA;

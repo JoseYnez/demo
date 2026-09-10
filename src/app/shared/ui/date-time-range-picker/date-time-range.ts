@@ -1,3 +1,5 @@
+import { esRangoValido, type DateSpan } from "../date-range-picker/date-range";
+
 export interface DateTimeSpan {
   readonly from: string;
   readonly to: string;
@@ -22,6 +24,11 @@ function dos(n: number): string {
 
 function comoInstante(fecha: Date): string {
   return `${fecha.toISOString().slice(0, 16)}:00Z`;
+}
+
+function medianocheLocal(fecha: string, dias: number): string {
+  const [ano, mes, dia] = fecha.split("-").map(Number);
+  return comoInstante(new Date(ano, mes - 1, dia + dias));
 }
 
 function diaLocal(instante: string, dias: number, hora = 0, minuto = 0): string {
@@ -85,10 +92,6 @@ export function inicioDeDiaLocal(instante: string): string {
   return diaLocal(instante, 0);
 }
 
-export function finDeDiaLocal(instante: string): string {
-  return diaLocal(instante, 0, 23, 59);
-}
-
 export function inicioDeSemanaLocal(instante: string): string {
   const dia = (new Date(instante).getDay() + 6) % 7;
   return diaLocal(instante, -dia);
@@ -99,9 +102,19 @@ export function inicioDeMesLocal(instante: string): string {
   return comoInstante(new Date(f.getFullYear(), f.getMonth(), 1));
 }
 
-export function finDeMesLocal(instante: string): string {
+export function sumarMesesLocal(instante: string, meses: number): string {
   const f = new Date(instante);
-  return comoInstante(new Date(f.getFullYear(), f.getMonth() + 1, 0, 23, 59));
+  const mes = f.getMonth() + meses;
+  const ultimo = new Date(f.getFullYear(), mes + 1, 0).getDate();
+  return comoInstante(
+    new Date(
+      f.getFullYear(),
+      mes,
+      Math.min(f.getDate(), ultimo),
+      f.getHours(),
+      f.getMinutes(),
+    ),
+  );
 }
 
 export function inicioDeAnoLocal(instante: string): string {
@@ -134,7 +147,7 @@ export const RANGOS_HABITUALES_CON_HORA: readonly DateTimeRangePreset[] = [
     label: "Ayer",
     resolve: (ahora) => ({
       from: diaLocal(ahora, -1),
-      to: diaLocal(ahora, -1, 23, 59),
+      to: diaLocal(ahora, 0),
     }),
   },
   {
@@ -155,7 +168,30 @@ export const RANGOS_HABITUALES_CON_HORA: readonly DateTimeRangePreset[] = [
 ];
 
 export function esRangoConHoraValido(from: string, to: string): boolean {
-  return esInstante(from) && esInstante(to) && from <= to;
+  return esInstante(from) && esInstante(to) && from < to;
+}
+
+export function comoVentana(rango: DateSpan): DateTimeSpan | null {
+  if (!esRangoValido(rango.from, rango.to)) {
+    return null;
+  }
+  return {
+    from: medianocheLocal(rango.from, 0),
+    to: medianocheLocal(rango.to, 1),
+  };
+}
+
+export function formatearInstante(instante: string): string {
+  if (!esInstante(instante)) {
+    return "";
+  }
+  return new Intl.DateTimeFormat("es", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(instante));
 }
 
 export function formatearRangoConHora(rango: DateTimeSpan): string {
@@ -163,14 +199,7 @@ export function formatearRangoConHora(rango: DateTimeSpan): string {
   if (!esRangoConHoraValido(from, to)) {
     return "";
   }
-  const fechaHora = new Intl.DateTimeFormat("es", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  const desde = fechaHora.format(new Date(from));
+  const desde = formatearInstante(from);
   if (aLocal(from).slice(0, 10) === aLocal(to).slice(0, 10)) {
     const soloHora = new Intl.DateTimeFormat("es", {
       hour: "2-digit",
@@ -178,5 +207,5 @@ export function formatearRangoConHora(rango: DateTimeSpan): string {
     });
     return `${desde} – ${soloHora.format(new Date(to))}`;
   }
-  return `${desde} – ${fechaHora.format(new Date(to))}`;
+  return `${desde} – ${formatearInstante(to)}`;
 }

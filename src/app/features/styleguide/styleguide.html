@@ -904,6 +904,21 @@
         </p>
       </div>
     </div>
+    <h3 class="sg__subtitle">De fecha civil a ventana de instantes</h3>
+    <p class="sg__note selectable">
+      El valor de arriba son dos <strong>fechas civiles</strong>: no tienen
+      zona y no se convierten nunca, porque el mismo tipo sirve a una fecha de
+      nacimiento. Cuando ese rango va a filtrar datos que sí son instantes,
+      el cruce es explícito — <code>comoVentana()</code> lo pasa a UTC usando
+      la zona de este equipo, y devuelve un intervalo
+      <strong>semiabierto</strong>: de la medianoche del primer día a la
+      medianoche del siguiente al último. Así «ayer» no pierde el último
+      segundo del día ni se lo lleva del día de al lado.
+    </p>
+    <p class="sg__note selectable">
+      <code>{{ comoVentanaJson(periodo()) }}</code>
+    </p>
+
 
     <h3 class="sg__subtitle">Los rangos los eliges tú</h3>
     <p class="sg__note selectable">

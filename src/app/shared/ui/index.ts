@@ -39,8 +39,8 @@ export {
   aLocal,
   esInstante,
   esRangoConHoraValido,
-  finDeDiaLocal,
-  finDeMesLocal,
+  comoVentana,
+  formatearInstante,
   formatearRangoConHora,
   inicioDeAnoLocal,
   inicioDeDiaLocal,
@@ -49,6 +49,7 @@ export {
   RANGOS_HABITUALES_CON_HORA,
   sumarDiasLocal,
   sumarHoras,
+  sumarMesesLocal,
   sumarMinutos,
 } from "./date-time-range-picker/date-time-range";
 export type {
