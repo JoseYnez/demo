@@ -1349,6 +1349,23 @@ El maestro-detalle a dos columnas está **descartado como norma**, y las cifras 
 
 **La ficha se apaña con la lista que ya hay, sin comando nuevo.** Entrar en `/x/:id` con el store vacío dispara la carga y espera; si el id no aparece cuando termina, la pantalla lo dice y ofrece volver, en vez de quedarse en blanco. Un `get_one` en Rust sería un comando y una fila de §7 a cambio de nada mientras la lista quepa en memoria.
 
+### 11.9 Fechas y horas
+
+**Un instante se guarda en UTC y se pinta en la zona del equipo.** Vale para el almacenamiento y para lo que salga hacia un servicio externo; la zona sólo aparece al dibujar. Hoy ya se cumple, y conviene que deje de ser suerte: `clock.rs` devuelve milisegundos desde epoch —que son UTC por construcción—, y el `Intl.DateTimeFormat` de [contact-list.ts](src/app/features/contacts/contact-list/contact-list.ts) va **sin `timeZone`**, que es lo que hace que use la del equipo. El `hace()` de [notification-panel.ts](src/app/shared/ui/notification-panel/notification-panel.ts) resta instantes, así que es inmune a la zona.
+
+**Un instante no es una fecha civil, y confundirlos es el error caro.** Son dos tipos con dos reglas:
+
+| | Qué es | Cómo se guarda | Zona |
+|---|---|---|---|
+| **Instante** | Un momento: cuándo se creó un contacto, cuándo llegó un aviso | `u64` de epoch dentro de la app; `YYYY-MM-DDTHH:mm:ssZ` hacia fuera | UTC siempre; la del equipo sólo al pintar |
+| **Fecha civil** | Un día del calendario: una fecha de nacimiento, el rango del `DateRangePicker` | Texto `YYYY-MM-DD` | **Ninguna.** No se convierte nunca |
+
+Convertir una fecha civil a UTC la corre un día en medio mundo. Es el bug que enuncia el test «no corre el día por la zona horaria» de [date-range.spec.ts](src/app/shared/ui/date-range-picker/date-range.spec.ts), y por eso el `Intl` de ese módulo **sí** lleva `timeZone: "UTC"`: ahí es un truco para que el formateador no mueva el día, no una decisión de almacenamiento. `hoyISO()` es la cara contraria de lo mismo — se construye con los componentes **locales**, porque «hoy» es el de quien mira la pantalla.
+
+**El instante que sale de la app lleva los segundos.** `YYYY-MM-DDTHH:mm:ssZ`, aunque sean siempre `00`: RFC 3339 los exige y `chrono` rechaza la forma corta, mientras que `new Date()` acepta las dos. Con la `Z` y los segundos puestos, dos instantes se ordenan comparando las cadenas. El formato se valida en el newtype de Rust, en el límite (§9 regla 4), no en el frontend.
+
+**La conversión entre UTC y la hora del equipo vive en un solo módulo, y la validación va sobre el instante.** Comparar dos horas locales como texto es lo que funciona con fechas civiles y es una trampa con horas: el mapa de hora local a instante no conserva el orden estricto al cruzar un cambio de offset, así que se convierte primero y se compara después. Dos hechos del motor que hay que anclar en tests y no descubrir en producción: una hora local **inexistente** —la que salta el cambio a horario de verano— la empuja hacia adelante (`2026-03-29T02:30` en Madrid vuelve como 03:30), y una hora **ambigua** —la que ocurre dos veces al volver— se resuelve por la primera ocurrencia. Los tests que ejerzan esto tienen que fijar `process.env.TZ`: la zona de desarrollo puede no tener horario de verano, y entonces no prueban nada.
+
 ---
 
 ## 12. Testing
