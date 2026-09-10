@@ -442,6 +442,7 @@ export class Styleguide {
   protected readonly provincia = signal("");
   protected readonly provinciaFlotante = signal("");
   protected readonly etiqueta = signal("");
+  protected readonly provinciaLimpia = signal("Madrid");
   protected readonly ultimaElegida = signal<ComboboxOption | null>(null);
 
   protected readonly rangosDeInforme = RANGOS_DE_INFORME;

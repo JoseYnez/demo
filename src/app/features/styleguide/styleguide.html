@@ -813,6 +813,37 @@
       que pide <code>enfocarElPanel: false</code>.
     </p>
 
+    <h3 class="sg__subtitle">Limpiar al abrir</h3>
+    <p class="sg__note selectable">
+      <code>clearOnOpen</code> es opcional y viene apagado. Con él, abrir la lista
+      <strong>vacía lo que se ve</strong> —para no tener que hacer Ctrl+A y borrar
+      antes de buscar otra cosa— y salir sin tocar nada <strong>devuelve el
+      valor</strong>. Lo que escribas sí se queda, elijas o no de la lista: el
+      campo sigue siendo de texto libre.
+    </p>
+    <p class="sg__note selectable">
+      Lo que se vacía es <strong>el texto, no el modelo</strong>. Si vaciara el
+      modelo, entrar y salir marcaría el formulario como <code>dirty</code> y
+      saltaría el aviso de cambios sin guardar (§11.8) sobre algo que nadie
+      editó, y un campo <code>required</code> ya tocado enseñaría «obligatorio»
+      mientras escribes. Manteniéndolo intacto, restaurar es sólo dejar de
+      taparlo. Y se dispara <strong>al abrir la lista</strong> —click o
+      <kbd>↓</kbd>—, no al recibir el foco: tabular por un formulario no hace
+      desaparecer valores al pasar.
+    </p>
+
+    <div class="sg__grid">
+      <app-combobox
+        label="Provincia"
+        placeholder="Escribe o despliega…"
+        hint="Pulsa: se vacía. Sal con Esc: vuelve."
+        [options]="provincias"
+        [clearOnOpen]="true"
+        [(value)]="provinciaLimpia"
+      />
+    </div>
+    <pre class="sg__output selectable">valor: {{ provinciaLimpia() || "—" }}</pre>
+
     <h3 class="sg__subtitle">Estados</h3>
     <div class="sg__grid">
       <app-combobox

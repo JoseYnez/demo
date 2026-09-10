@@ -52,6 +52,7 @@ export class Combobox implements FormValueControl<string> {
   readonly hint = input("");
   readonly emptyMessage = input("Sin coincidencias");
   readonly autocomplete = input("off");
+  readonly clearOnOpen = input(false);
 
   readonly errors = input<readonly ValidationError.WithOptionalFieldTree[]>([]);
   readonly disabled = input(false);
@@ -72,7 +73,10 @@ export class Combobox implements FormValueControl<string> {
     disparador: this.disparador,
     panel: this.panel,
     enfocarElPanel: false,
-    alCerrar: () => this.destacado.set(-1),
+    alCerrar: () => {
+      this.destacado.set(-1);
+      this.vaciado.set(false);
+    },
   });
 
   protected readonly id = idDeControl("app-combobox");
@@ -81,6 +85,9 @@ export class Combobox implements FormValueControl<string> {
   protected readonly destacado = signal(-1);
   protected readonly focused = signal(false);
   private readonly consulta = signal("");
+  private readonly vaciado = signal(false);
+
+  protected readonly texto = computed(() => (this.vaciado() ? "" : this.value()));
 
   protected readonly bloqueado = computed(() => this.disabled() || this.readonly());
 
@@ -132,6 +139,7 @@ export class Combobox implements FormValueControl<string> {
   }
 
   protected alEscribir(texto: string): void {
+    this.vaciado.set(false);
     this.value.set(texto);
     this.consulta.set(texto);
     this.destacado.set(-1);
@@ -181,6 +189,7 @@ export class Combobox implements FormValueControl<string> {
 
   protected elegir(opcion: ComboboxOption): void {
     if (opcion.disabled) return;
+    this.vaciado.set(false);
     this.value.set(opcion.label);
     this.picked.emit(opcion);
     this.capa.cerrar();
@@ -194,6 +203,7 @@ export class Combobox implements FormValueControl<string> {
   private desplegar(): void {
     this.consulta.set("");
     this.destacado.set(-1);
+    this.vaciado.set(this.clearOnOpen());
     this.capa.abrir();
   }
 

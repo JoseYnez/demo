@@ -268,6 +268,65 @@ describe("Combobox", () => {
     expect(tocado).toBe(1);
   });
 
+  describe("clearOnOpen", () => {
+    beforeEach(async () => {
+      fixture.componentRef.setInput("clearOnOpen", true);
+      fixture.componentRef.setInput("value", "Madrid");
+      await fixture.whenStable();
+    });
+
+    it("abrir vacía lo que se ve, nunca el valor", async () => {
+      await pulsarCampo();
+
+      expect(campo().value).toBe("");
+      expect(fixture.componentInstance.value()).toBe("Madrid");
+      expect(opciones()).toHaveLength(5);
+    });
+
+    it("salir sin tocar nada devuelve el texto", async () => {
+      await pulsarCampo();
+      await tecla("Escape");
+
+      expect(campo().value).toBe("Madrid");
+      expect(fixture.componentInstance.value()).toBe("Madrid");
+    });
+
+    it("lo escrito se queda al salir aunque no salga de la lista", async () => {
+      await pulsarCampo();
+      await escribir("Cuenca de la Sierra");
+      await tecla("Escape");
+
+      expect(campo().value).toBe("Cuenca de la Sierra");
+      expect(fixture.componentInstance.value()).toBe("Cuenca de la Sierra");
+    });
+
+    it("elegir de la lista manda sobre el vaciado", async () => {
+      await pulsarCampo();
+      const toledo = opciones().find((li) => li.textContent?.includes("Toledo"));
+      toledo?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await fixture.whenStable();
+
+      expect(campo().value).toBe("Toledo");
+      expect(fixture.componentInstance.value()).toBe("Toledo");
+    });
+
+    it("llegar con el foco sin abrir la lista no vacía nada", async () => {
+      campo().dispatchEvent(new FocusEvent("focus"));
+      await fixture.whenStable();
+
+      expect(campo().value).toBe("Madrid");
+      expect(lista()).toBeNull();
+    });
+
+    it("sin la opción puesta, abrir conserva el texto", async () => {
+      fixture.componentRef.setInput("clearOnOpen", false);
+      await fixture.whenStable();
+      await pulsarCampo();
+
+      expect(campo().value).toBe("Madrid");
+      expect(opciones()).toHaveLength(5);
+    });
+  });
 
   it("la región viva existe desde el primer render y cuenta las sugerencias", async () => {
     const region = html().querySelector(".combobox__anuncio");
