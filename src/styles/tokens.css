@@ -125,8 +125,8 @@
   --control-h-float: 40px;
   --control-h-inset: 52px;
 
-  --ring-focus: 0 0 0 3px rgb(76 117 93 / 25%);
-  --ring-danger: 0 0 0 3px rgb(163 54 48 / 25%);
+  --ring-focus: 0 0 0 4px rgb(76 117 93 / 25%);
+  --ring-danger: 0 0 0 4px rgb(163 54 48 / 25%);
 
   --field-bg: var(--bg-app);
 }
@@ -204,8 +204,8 @@
 
   --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
 
-  --ring-focus: 0 0 0 3px rgb(152 196 169 / 25%);
-  --ring-danger: 0 0 0 3px rgb(255 194 186 / 25%);
+  --ring-focus: 0 0 0 4px rgb(152 196 169 / 25%);
+  --ring-danger: 0 0 0 4px rgb(255 194 186 / 25%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -282,8 +282,8 @@
 
     --edge-raised: inset 0 1px 0 rgb(255 255 255 / 3%);
 
-    --ring-focus: 0 0 0 3px rgb(152 196 169 / 25%);
-    --ring-danger: 0 0 0 3px rgb(255 194 186 / 25%);
+    --ring-focus: 0 0 0 4px rgb(152 196 169 / 25%);
+    --ring-danger: 0 0 0 4px rgb(255 194 186 / 25%);
   }
 }
 
@@ -296,7 +296,7 @@
     --accent-border: oklch(0.865 0.04 var(--accent-hue));
     --accent-tonal: oklch(0.72 0.06 var(--accent-hue));
     --accent-on-tonal: oklch(0.3 0.05 var(--accent-hue));
-    --ring-focus: 0 0 0 3px oklch(0.525 0.06 var(--accent-hue) / 25%);
+    --ring-focus: 0 0 0 4px oklch(0.525 0.06 var(--accent-hue) / 25%);
 
     --color-neutral-tonal: oklch(0.72 0.008 var(--accent-hue));
     --color-neutral-on-tonal: oklch(0.3 0.008 var(--accent-hue));
@@ -323,7 +323,7 @@
     --accent-border: oklch(0.4 0.032 var(--accent-hue));
     --accent-tonal: oklch(0.41 0.06 var(--accent-hue));
     --accent-on-tonal: oklch(0.92 0.035 var(--accent-hue));
-    --ring-focus: 0 0 0 3px oklch(0.78 0.06 var(--accent-hue) / 25%);
+    --ring-focus: 0 0 0 4px oklch(0.78 0.06 var(--accent-hue) / 25%);
 
     --color-neutral-tonal: oklch(0.41 0.008 var(--accent-hue));
     --color-neutral-on-tonal: oklch(0.92 0.008 var(--accent-hue));
@@ -353,7 +353,7 @@
       --accent-border: oklch(0.4 0.032 var(--accent-hue));
       --accent-tonal: oklch(0.41 0.06 var(--accent-hue));
       --accent-on-tonal: oklch(0.92 0.035 var(--accent-hue));
-      --ring-focus: 0 0 0 3px oklch(0.78 0.06 var(--accent-hue) / 25%);
+      --ring-focus: 0 0 0 4px oklch(0.78 0.06 var(--accent-hue) / 25%);
 
       --color-neutral-tonal: oklch(0.41 0.008 var(--accent-hue));
       --color-neutral-on-tonal: oklch(0.92 0.008 var(--accent-hue));
